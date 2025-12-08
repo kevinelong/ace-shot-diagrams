@@ -1252,7 +1252,39 @@
           if (pocket) pocket.classList.add('selected');
         }
 
+        // Auto-position ghost ball when pocket is selected
+        autoPositionGhostBall();
+
         updateShotGeometry();
+      }
+
+      // Auto-position the ghost ball (AIM) to the correct contact point
+      // Places it exactly one ball diameter behind the object ball, along the pocket line
+      // So ghost ball and object ball are just touching (not overlapping)
+      function autoPositionGhostBall() {
+        const objBallPos = selectedBallId ? ballPositions[selectedBallId] : null;
+        const pocketPos = selectedPocket ? pocketCenters[selectedPocket] : null;
+
+        // Need both object ball and pocket selected
+        if (!objBallPos || !pocketPos) return;
+
+        // Calculate ideal ghost ball position
+        // Ghost ball center is exactly 2 ball radii from object ball center (just touching)
+        const objToPocket = vectorNormalize(vectorSubtract(pocketPos, objBallPos));
+        const ghostBallX = objBallPos.x - objToPocket.x * (BALL_RADIUS * 2);
+        const ghostBallY = objBallPos.y - objToPocket.y * (BALL_RADIUS * 2);
+
+        // Check if position is on the playing surface
+        if (!isOnPlayingSurface(ghostBallX, ghostBallY)) return;
+
+        // Update ghost ball position
+        ballPositions['ghost'] = { x: ghostBallX, y: ghostBallY };
+
+        // Move the ghost ball element
+        const ghostBall = document.getElementById('ball-ghost');
+        if (ghostBall) {
+          positionBallOnTable(ghostBall, ghostBallX, ghostBallY);
+        }
       }
 
       // Setup pocket click handlers
@@ -1361,6 +1393,8 @@
           // Auto-select object balls when dropped (not cue or ghost)
           if (ballId !== 'cue' && ballId !== 'ghost') {
             selectBall(ballId);
+            // Auto-position ghost ball when object ball is moved
+            autoPositionGhostBall();
           }
         } else {
           // Return to rack
