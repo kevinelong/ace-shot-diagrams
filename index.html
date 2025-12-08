@@ -399,10 +399,10 @@
     <div class="table-wrapper" id="tableWrapper">
       <!-- Connection line SVG overlay -->
       <svg id="connection-overlay" viewBox="-8 -8 116 66" preserveAspectRatio="xMidYMid meet">
-        <!-- Cue to Ghost aiming line -->
-        <line id="cue-ghost-line" x1="0" y1="0" x2="0" y2="0"
+        <!-- Cue to Ghost aiming line (path to support kick shots with bounces) -->
+        <path id="cue-ghost-line" d=""
               stroke="#fff" stroke-width="0.3" stroke-dasharray="1,1"
-              visibility="hidden"/>
+              fill="none" visibility="hidden"/>
         <!-- Object ball to Pocket target line -->
         <line id="target-line" x1="0" y1="0" x2="0" y2="0"
               stroke="#ffd700" stroke-width="0.25"
@@ -746,6 +746,161 @@
         const n2 = vectorNormalize(v2);
         const dot = Math.max(-1, Math.min(1, dotProduct(n1, n2))); // Clamp to [-1, 1]
         return Math.acos(dot) * (180 / Math.PI);
+      }
+
+      // Check if a line segment passes too close to a circle (blocked by ball)
+      // Returns true if the path is blocked
+      function isPathBlockedByBall(start, end, ballCenter, ballRadius) {
+        // Vector from start to end
+        const d = vectorSubtract(end, start);
+        // Vector from start to ball center
+        const f = vectorSubtract(start, ballCenter);
+
+        const a = dotProduct(d, d);
+        const b = 2 * dotProduct(f, d);
+        const c = dotProduct(f, f) - ballRadius * ballRadius;
+
+        let discriminant = b * b - 4 * a * c;
+        if (discriminant < 0) {
+          return false; // No intersection
+        }
+
+        discriminant = Math.sqrt(discriminant);
+        const t1 = (-b - discriminant) / (2 * a);
+        const t2 = (-b + discriminant) / (2 * a);
+
+        // Check if intersection is within the segment (0 to 1)
+        // Use small margin to avoid edge cases
+        if ((t1 >= 0.05 && t1 <= 0.95) || (t2 >= 0.05 && t2 <= 0.95)) {
+          return true; // Path is blocked
+        }
+        return false;
+      }
+
+      // Mirror a point across a rail for kick shot calculation
+      function mirrorAcrossRail(point, railName) {
+        const rail = RAILS[railName];
+        if (railName === 'top' || railName === 'bottom') {
+          // Horizontal rail - mirror y coordinate
+          return { x: point.x, y: 2 * rail.y - point.y };
+        } else {
+          // Vertical rail - mirror x coordinate
+          return { x: 2 * rail.x - point.x, y: point.y };
+        }
+      }
+
+      // Find intersection of line with rail
+      function lineRailIntersection(start, end, railName) {
+        const rail = RAILS[railName];
+        const d = vectorSubtract(end, start);
+
+        if (railName === 'top' || railName === 'bottom') {
+          // Horizontal rail
+          if (Math.abs(d.y) < 0.001) return null;
+          const t = (rail.y - start.y) / d.y;
+          if (t < 0 || t > 1) return null;
+          const x = start.x + d.x * t;
+          if (x < RAILS.left.x || x > RAILS.right.x) return null;
+          return { x, y: rail.y };
+        } else {
+          // Vertical rail
+          if (Math.abs(d.x) < 0.001) return null;
+          const t = (rail.x - start.x) / d.x;
+          if (t < 0 || t > 1) return null;
+          const y = start.y + d.y * t;
+          if (y < RAILS.top.y || y > RAILS.bottom.y) return null;
+          return { x: rail.x, y };
+        }
+      }
+
+      // Find a kick shot path that avoids the object ball
+      // Returns { bouncePoints: [{x,y}], rails: [railName] } or null if no path found
+      function findKickPath(cuePos, ghostPos, objBallPos, english) {
+        const blockRadius = BALL_RADIUS * 2.5; // Clearance needed
+
+        // Check if direct path is blocked
+        if (!isPathBlockedByBall(cuePos, ghostPos, objBallPos, blockRadius)) {
+          return null; // Direct shot is fine, no kick needed
+        }
+
+        // Try one-rail kicks
+        const railNames = ['top', 'bottom', 'left', 'right'];
+        const validKicks = [];
+
+        for (const railName of railNames) {
+          // Mirror ghost ball across the rail
+          const mirroredGhost = mirrorAcrossRail(ghostPos, railName);
+
+          // Find where line from cue to mirrored ghost crosses the rail
+          const bouncePoint = lineRailIntersection(cuePos, mirroredGhost, railName);
+
+          if (bouncePoint) {
+            // Check if both segments of the kick path avoid the object ball
+            const segment1Clear = !isPathBlockedByBall(cuePos, bouncePoint, objBallPos, blockRadius);
+            const segment2Clear = !isPathBlockedByBall(bouncePoint, ghostPos, objBallPos, blockRadius);
+
+            if (segment1Clear && segment2Clear) {
+              // Valid kick path found
+              const dist1 = vectorLength(vectorSubtract(bouncePoint, cuePos));
+              const dist2 = vectorLength(vectorSubtract(ghostPos, bouncePoint));
+              validKicks.push({
+                rails: [railName],
+                bouncePoints: [bouncePoint],
+                totalLength: dist1 + dist2
+              });
+            }
+          }
+        }
+
+        // If no one-rail kick works, try two-rail kicks
+        if (validKicks.length === 0) {
+          for (const rail1 of railNames) {
+            for (const rail2 of railNames) {
+              if (rail1 === rail2) continue;
+              // Skip opposite rails (usually not useful)
+              if ((rail1 === 'top' && rail2 === 'bottom') ||
+                  (rail1 === 'bottom' && rail2 === 'top') ||
+                  (rail1 === 'left' && rail2 === 'right') ||
+                  (rail1 === 'right' && rail2 === 'left')) continue;
+
+              // Double mirror: first across rail2, then across rail1
+              const mirror1 = mirrorAcrossRail(ghostPos, rail2);
+              const mirror2 = mirrorAcrossRail(mirror1, rail1);
+
+              // Find first bounce point
+              const bounce1 = lineRailIntersection(cuePos, mirror2, rail1);
+              if (!bounce1) continue;
+
+              // Find second bounce point
+              const bounce2 = lineRailIntersection(bounce1, ghostPos, rail2);
+              if (!bounce2) continue;
+
+              // Check all three segments
+              const seg1Clear = !isPathBlockedByBall(cuePos, bounce1, objBallPos, blockRadius);
+              const seg2Clear = !isPathBlockedByBall(bounce1, bounce2, objBallPos, blockRadius);
+              const seg3Clear = !isPathBlockedByBall(bounce2, ghostPos, objBallPos, blockRadius);
+
+              if (seg1Clear && seg2Clear && seg3Clear) {
+                const d1 = vectorLength(vectorSubtract(bounce1, cuePos));
+                const d2 = vectorLength(vectorSubtract(bounce2, bounce1));
+                const d3 = vectorLength(vectorSubtract(ghostPos, bounce2));
+                validKicks.push({
+                  rails: [rail1, rail2],
+                  bouncePoints: [bounce1, bounce2],
+                  totalLength: d1 + d2 + d3
+                });
+              }
+            }
+          }
+        }
+
+        // Return shortest valid kick path
+        if (validKicks.length > 0) {
+          validKicks.sort((a, b) => a.totalLength - b.totalLength);
+          return validKicks[0];
+        }
+
+        return null; // No valid kick path found
       }
 
       // Get ball hit fraction name from cut angle
@@ -1219,18 +1374,43 @@
       }
 
       // Update the cue-ghost connection line
+      // Store current kick path info for display
+      let currentKickPath = null;
+
       function updateCueGhostLine() {
         const cuePos = ballPositions['cue'];
         const ghostPos = ballPositions['ghost'];
+        const objBallPos = selectedBallId ? ballPositions[selectedBallId] : null;
 
         if (cuePos && ghostPos) {
-          cueGhostLine.setAttribute('x1', cuePos.x);
-          cueGhostLine.setAttribute('y1', cuePos.y);
-          cueGhostLine.setAttribute('x2', ghostPos.x);
-          cueGhostLine.setAttribute('y2', ghostPos.y);
+          // Check if we need a kick shot (object ball blocking direct path)
+          let pathD;
+          currentKickPath = null;
+
+          if (objBallPos) {
+            const kickPath = findKickPath(cuePos, ghostPos, objBallPos, contactOffset.x);
+
+            if (kickPath) {
+              // Draw kick shot path with bounce points
+              currentKickPath = kickPath;
+              pathD = `M ${cuePos.x} ${cuePos.y}`;
+              for (const point of kickPath.bouncePoints) {
+                pathD += ` L ${point.x} ${point.y}`;
+              }
+              pathD += ` L ${ghostPos.x} ${ghostPos.y}`;
+            }
+          }
+
+          // If no kick needed or no obj ball, draw direct line
+          if (!pathD) {
+            pathD = `M ${cuePos.x} ${cuePos.y} L ${ghostPos.x} ${ghostPos.y}`;
+          }
+
+          cueGhostLine.setAttribute('d', pathD);
           cueGhostLine.setAttribute('visibility', 'visible');
         } else {
           cueGhostLine.setAttribute('visibility', 'hidden');
+          currentKickPath = null;
         }
 
         // Update shot geometry whenever cue-ghost line changes
