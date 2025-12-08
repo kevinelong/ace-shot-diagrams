@@ -1255,7 +1255,8 @@
         // Auto-position ghost ball when pocket is selected
         autoPositionGhostBall();
 
-        updateShotGeometry();
+        // Update aim line to point at new ghost ball position
+        updateCueGhostLine();
       }
 
       // Auto-position the ghost ball (AIM) to the correct contact point
