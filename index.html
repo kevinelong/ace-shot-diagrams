@@ -64,17 +64,17 @@
       margin-bottom: 8px;
     }
 
-    /* Ball styling */
+    /* Ball styling - size set dynamically via JS to match SVG scale */
     .ball {
-      width: 24px;
-      height: 24px;
+      width: var(--ball-size, 24px);
+      height: var(--ball-size, 24px);
       border-radius: 50%;
       cursor: grab;
       user-select: none;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 9px;
+      font-size: var(--ball-font-size, 9px);
       font-weight: bold;
       color: #fff;
       text-shadow: 0 1px 1px rgba(0,0,0,0.6);
@@ -645,6 +645,28 @@
       };
 
       const BALL_RADIUS = 1.125; // inches (2.25" diameter / 2)
+
+      // Current ball size in pixels (calculated dynamically)
+      let ballSizePx = 24;  // Default, updated by updateBallSizes()
+
+      // Calculate and update ball sizes based on current SVG scale
+      function updateBallSizes() {
+        const rect = tableSvg.getBoundingClientRect();
+        const viewBox = tableSvg.viewBox.baseVal;
+
+        // Calculate pixels per SVG unit
+        const pxPerUnit = rect.width / viewBox.width;
+
+        // Ball diameter in SVG units is 2 * BALL_RADIUS = 2.25
+        const ballDiameterSvg = BALL_RADIUS * 2;
+
+        // Ball size in pixels
+        ballSizePx = Math.round(ballDiameterSvg * pxPerUnit);
+
+        // Set CSS variables for ball size
+        document.documentElement.style.setProperty('--ball-size', ballSizePx + 'px');
+        document.documentElement.style.setProperty('--ball-font-size', Math.max(7, Math.round(ballSizePx * 0.38)) + 'px');
+      }
 
       // Selection state
       let selectedBallId = null;  // Last dragged object ball
@@ -1309,9 +1331,12 @@
         const wrapperRect = tableWrapper.getBoundingClientRect();
         const pagePos = svgToPage(svgX, svgY);
 
+        // Use half of current ball size for centering offset
+        const halfBall = ballSizePx / 2;
+
         ball.style.position = 'absolute';
-        ball.style.left = (pagePos.x - wrapperRect.left - 12) + 'px'; // 12 = half ball width
-        ball.style.top = (pagePos.y - wrapperRect.top - 12) + 'px';
+        ball.style.left = (pagePos.x - wrapperRect.left - halfBall) + 'px';
+        ball.style.top = (pagePos.y - wrapperRect.top - halfBall) + 'px';
         ball.classList.add('on-table');
 
         if (ball.parentElement !== tableWrapper) {
@@ -1343,8 +1368,9 @@
         const clientX = e.clientX || (e.touches && e.touches[0].clientX);
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
 
-        offsetX = clientX - rect.left - 12;
-        offsetY = clientY - rect.top - 12;
+        const halfBall = ballSizePx / 2;
+        offsetX = clientX - rect.left - halfBall;
+        offsetY = clientY - rect.top - halfBall;
 
         // Move to table wrapper for dragging
         if (!ball.classList.contains('on-table')) {
@@ -1365,8 +1391,9 @@
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
 
         const wrapperRect = tableWrapper.getBoundingClientRect();
-        const newLeft = clientX - wrapperRect.left - offsetX - 12;
-        const newTop = clientY - wrapperRect.top - offsetY - 12;
+        const halfBall = ballSizePx / 2;
+        const newLeft = clientX - wrapperRect.left - offsetX - halfBall;
+        const newTop = clientY - wrapperRect.top - offsetY - halfBall;
 
         draggedBall.style.left = newLeft + 'px';
         draggedBall.style.top = newTop + 'px';
@@ -1380,8 +1407,9 @@
 
         const ballId = draggedBall.dataset.ballId;
         const rect = draggedBall.getBoundingClientRect();
-        const centerX = rect.left + 12;
-        const centerY = rect.top + 12;
+        const halfBall = ballSizePx / 2;
+        const centerX = rect.left + halfBall;
+        const centerY = rect.top + halfBall;
 
         const svgPos = pageToSvg(centerX, centerY);
 
@@ -1426,7 +1454,11 @@
       document.addEventListener('touchend', endDrag);
 
       // Reposition on resize
-      window.addEventListener('resize', repositionAllBalls);
+      // On resize, update ball sizes and reposition all balls
+      window.addEventListener('resize', () => {
+        updateBallSizes();
+        repositionAllBalls();
+      });
 
       // Contact point drag handlers
       function getContactDiagramCoords(e) {
@@ -1574,6 +1606,7 @@
       }
 
       // Initialize
+      updateBallSizes();  // Calculate ball size based on current SVG scale
       createBalls();
       setupPocketHandlers();
 
