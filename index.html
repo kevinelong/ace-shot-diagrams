@@ -174,8 +174,8 @@
     .pocket-target:hover { fill: rgba(255,215,0,0.3); }
     .pocket-target.selected { fill: rgba(0,255,170,0.4); stroke: #0fa; stroke-width: 0.5; }
 
-    /* Selected ball highlight */
-    .ball.selected { box-shadow: 0 0 0 3px #0fa, 2px 2px 4px rgba(0,0,0,0.5); }
+    /* Selected ball highlight - uses CSS variable for responsive sizing */
+    .ball.selected { box-shadow: 0 0 0 var(--selection-ring, 2px) #0fa, 2px 2px 4px rgba(0,0,0,0.5); }
 
     /* Cue Controls Panel */
     .cue-controls-panel {
@@ -664,9 +664,10 @@
         // Ball size in pixels
         ballSizePx = Math.round(ballDiameterSvg * pxPerUnit);
 
-        // Set CSS variables for ball size
+        // Set CSS variables for ball size and related proportional elements
         document.documentElement.style.setProperty('--ball-size', ballSizePx + 'px');
-        document.documentElement.style.setProperty('--ball-font-size', Math.max(7, Math.round(ballSizePx * 0.38)) + 'px');
+        document.documentElement.style.setProperty('--ball-font-size', Math.max(8, Math.round(ballSizePx * 0.45)) + 'px');
+        document.documentElement.style.setProperty('--selection-ring', Math.max(1, Math.round(ballSizePx * 0.1)) + 'px');
       }
 
       // Selection state
