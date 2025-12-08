@@ -1482,8 +1482,8 @@
         updateShotGeometry();
       });
 
-      // Set up a default demo shot - classic 45° cut to corner
-      // This helps verify the physics visually
+      // Set up a default demo shot - shows follow curve clearly
+      // Max follow + max force to demonstrate the curved cue ball path
       function setupDemoShot() {
         // Object ball at center-right area
         const objBallX = 70;
@@ -1521,6 +1521,18 @@
         // Select the gray ball and pocket
         selectBall('gray');
         selectPocket(pocketId);
+
+        // Set MAX FOLLOW (top spin) - contact point at top of safe zone
+        // y = -0.56 is the maximum safe offset (half ball radius)
+        contactOffset = { x: 0, y: -0.5 };  // Strong follow
+        contactPoint.setAttribute('cx', contactOffset.x);
+        contactPoint.setAttribute('cy', contactOffset.y);
+        spinTypeDisplay.textContent = getSpinType(contactOffset);
+
+        // Set MAX FORCE for dramatic curve effect
+        shotForce = 10;
+        forceSlider.value = shotForce;
+        forceValueDisplay.textContent = shotForce;
 
         // Update all visualizations
         updateCueGhostLine();
