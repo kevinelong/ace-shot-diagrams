@@ -197,8 +197,15 @@
       margin-bottom: 8px;
     }
 
-    /* Overlap Diagram (Shooter's View) */
+    /* Overlap Diagram (Shooter's View) - horizontal layout */
     .overlap-diagram-container {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .overlap-diagram-wrapper {
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -209,15 +216,37 @@
       border: 1px solid #333;
     }
 
-    .overlap-display {
-      margin-top: 6px;
-      font-size: 13px;
+    .overlap-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 100px;
+    }
+
+    .overlap-info .control-label {
+      margin-bottom: 4px;
+    }
+
+    .overlap-fraction-english {
+      font-size: 15px;
+      color: #0fa;
+      font-weight: bold;
+    }
+
+    .overlap-fraction-slash {
+      font-size: 20px;
+      color: #fff;
+      font-weight: bold;
+      font-family: 'Times New Roman', serif;
+    }
+
+    .overlap-percent {
+      font-size: 12px;
       color: #888;
     }
 
-    .overlap-display span {
+    .overlap-percent span {
       color: #0fa;
-      font-weight: bold;
     }
 
     /* Contact Diagram */
@@ -537,26 +566,30 @@
     <div class="cue-controls-panel">
       <!-- Shooter's Eye View - Ball Overlap Diagram -->
       <div class="overlap-diagram-container">
-        <div class="control-label">Shooter's View</div>
-        <svg id="overlap-diagram" viewBox="-3 -1.5 6 3" width="140" height="70">
-          <!-- Background -->
-          <rect x="-3" y="-1.5" width="6" height="3" fill="#1a1a2e"/>
-          <!-- Object Ball (solid, slightly right) -->
-          <circle id="overlap-obj-ball" cx="0.5" cy="0" r="1" fill="none" stroke="#ff6b35" stroke-width="0.08"/>
-          <text x="0.5" y="0.05" text-anchor="middle" font-size="0.35" fill="#ff6b35">OB</text>
-          <!-- Ghost Ball (dashed, position based on overlap) -->
-          <circle id="overlap-ghost-ball" cx="-0.5" cy="0" r="1" fill="rgba(255,215,0,0.15)" stroke="#ffd700" stroke-width="0.08" stroke-dasharray="0.15,0.1"/>
-          <text id="overlap-ghost-label" x="-0.5" y="0.05" text-anchor="middle" font-size="0.35" fill="#ffd700">GB</text>
-          <!-- Overlap region highlight -->
-          <clipPath id="clip-obj-ball">
-            <circle cx="0.5" cy="0" r="1"/>
-          </clipPath>
-          <circle id="overlap-region" cx="-0.5" cy="0" r="1" fill="rgba(0,255,170,0.25)" clip-path="url(#clip-obj-ball)"/>
-          <!-- Center line reference -->
-          <line x1="-3" y1="0" x2="3" y2="0" stroke="#333" stroke-width="0.03" stroke-dasharray="0.1,0.1"/>
-        </svg>
-        <div class="overlap-display">
-          <span id="overlapPercent">50%</span> overlap
+        <div class="overlap-diagram-wrapper">
+          <svg id="overlap-diagram" viewBox="-3 -1.5 6 3" width="200" height="100">
+            <!-- Background -->
+            <rect x="-3" y="-1.5" width="6" height="3" fill="#1a1a2e"/>
+            <!-- Object Ball (solid, slightly right) -->
+            <circle id="overlap-obj-ball" cx="0.5" cy="0" r="1" fill="none" stroke="#ff6b35" stroke-width="0.06"/>
+            <text x="0.5" y="0.05" text-anchor="middle" font-size="0.28" fill="#ff6b35">OB</text>
+            <!-- Ghost Ball (dashed, position based on overlap) -->
+            <circle id="overlap-ghost-ball" cx="-0.5" cy="0" r="1" fill="rgba(255,215,0,0.15)" stroke="#ffd700" stroke-width="0.06" stroke-dasharray="0.12,0.08"/>
+            <text id="overlap-ghost-label" x="-0.5" y="0.05" text-anchor="middle" font-size="0.28" fill="#ffd700">GB</text>
+            <!-- Overlap region highlight -->
+            <clipPath id="clip-obj-ball">
+              <circle cx="0.5" cy="0" r="1"/>
+            </clipPath>
+            <circle id="overlap-region" cx="-0.5" cy="0" r="1" fill="rgba(0,255,170,0.25)" clip-path="url(#clip-obj-ball)"/>
+            <!-- Center line reference -->
+            <line x1="-3" y1="0" x2="3" y2="0" stroke="#333" stroke-width="0.02" stroke-dasharray="0.08,0.08"/>
+          </svg>
+        </div>
+        <div class="overlap-info">
+          <div class="control-label">Shooter's View</div>
+          <div class="overlap-fraction-english" id="overlapEnglish">Half ball</div>
+          <div class="overlap-fraction-slash" id="overlapSlash">1/2</div>
+          <div class="overlap-percent"><span id="overlapPercent">50%</span> overlap</div>
         </div>
       </div>
 
@@ -632,6 +665,8 @@
       const overlapGhostLabel = document.getElementById('overlap-ghost-label');
       const overlapRegion = document.getElementById('overlap-region');
       const overlapPercentDisplay = document.getElementById('overlapPercent');
+      const overlapEnglishDisplay = document.getElementById('overlapEnglish');
+      const overlapSlashDisplay = document.getElementById('overlapSlash');
       const cbFinalPosition = document.getElementById('cb-final-position');
 
       // Pocket mouth centers (narrowest entry point for aiming)
@@ -715,6 +750,29 @@
         return 'Thin cut';
       }
 
+      // Standard ball-hit fractions used in pool
+      const BALL_HIT_FRACTIONS = [
+        { threshold: 0.9375, english: 'Full ball', slash: 'Full' },
+        { threshold: 0.8125, english: 'Seven-eighths', slash: '7/8' },
+        { threshold: 0.6875, english: 'Three-quarters', slash: '3/4' },
+        { threshold: 0.5625, english: 'Five-eighths', slash: '5/8' },
+        { threshold: 0.4375, english: 'Half ball', slash: '1/2' },
+        { threshold: 0.3125, english: 'Three-eighths', slash: '3/8' },
+        { threshold: 0.1875, english: 'Quarter ball', slash: '1/4' },
+        { threshold: 0.0625, english: 'One-eighth', slash: '1/8' },
+        { threshold: 0, english: 'Thin cut', slash: 'Thin' }
+      ];
+
+      // Convert overlap fraction to nearest standard pool fraction
+      function getOverlapFraction(overlapFraction) {
+        for (const frac of BALL_HIT_FRACTIONS) {
+          if (overlapFraction >= frac.threshold) {
+            return frac;
+          }
+        }
+        return BALL_HIT_FRACTIONS[BALL_HIT_FRACTIONS.length - 1];
+      }
+
       // Update the shooter's eye view overlap diagram
       // Shows ghost ball and object ball overlap as seen from behind cue ball
       function updateOverlapDiagram(overlapFraction) {
@@ -736,8 +794,13 @@
         overlapGhostLabel.setAttribute('x', ghostBallX);
         overlapRegion.setAttribute('cx', ghostBallX);
 
-        // Update percentage display
+        // Get nearest standard pool fraction
+        const fraction = getOverlapFraction(overlapFraction);
+
+        // Update all displays
         overlapPercentDisplay.textContent = Math.round(overlapFraction * 100) + '%';
+        overlapEnglishDisplay.textContent = fraction.english;
+        overlapSlashDisplay.textContent = fraction.slash;
       }
 
       // Calculate overlap fraction (1 = full ball, 0 = no overlap)
