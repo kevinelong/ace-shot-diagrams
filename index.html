@@ -943,8 +943,9 @@
 
       // Calculate cue ball path after contact with rail bounces
       // Physics: CB travels perpendicular to OB path (90° rule for stun), then bounces off rails
+      // Energy transfer: CB retains sin²(cutAngle) of energy, OB gets cos²(cutAngle)
       // Follow/Draw creates initial curve (friction on cloth), English affects bounce angles
-      function calculateCueBallPath(ghostBallPos, objBallDirection, contactOff, force) {
+      function calculateCueBallPath(ghostBallPos, objBallDirection, contactOff, force, cutAngleDeg) {
         // Tangent line is perpendicular to object ball path
         const tangent1 = vectorPerpendicular(objBallDirection);
         const tangent2 = vectorScale(tangent1, -1);
@@ -958,21 +959,52 @@
         const dot1 = dotProduct(tangent1, cueToGhost);
         const tangent = dot1 > 0 ? tangent1 : tangent2;
 
-        // Total path length depends on force
-        const totalLength = 10 + force * 5;  // 15 to 60 units total travel
+        // Physics: CB speed after collision = initial_speed × sin(cut_angle)
+        // For stun shot, CB retains sin(cutAngle) of its speed
+        const cutAngleRad = (cutAngleDeg || 30) * Math.PI / 180;
+        const cbSpeedFactor = Math.sin(cutAngleRad);
+
+        // Base path length from force, scaled by energy retained
+        const baseLength = 10 + force * 5;  // 15 to 60 units base
+        let totalLength = baseLength * Math.max(0.1, cbSpeedFactor);  // Min 10% to show something
 
         // Calculate spin effect for the curved first segment
         // Follow (y < 0) curves forward, Draw (y > 0) curves backward
         const spinAmount = Math.abs(contactOff.y) * (force / 5);
         const hasSpin = Math.abs(contactOff.y) > 0.05;
-        const curveDirection = contactOff.y > 0
-          ? vectorScale(objBallDirection, -1)  // Draw: curve back toward shooter
-          : objBallDirection;  // Follow: curve forward with OB
+        const isFollow = contactOff.y < -0.05;
+        const isDraw = contactOff.y > 0.05;
+
+        // For near-full ball hits (cut < 10°), spin dominates the CB motion
+        const isFullBallHit = cutAngleDeg < 10;
+
+        // Spin adds energy to CB path (follow continues forward, draw pulls back)
+        if (hasSpin) {
+          // Spin effect adds to path length - more spin = more CB travel
+          const spinBonus = spinAmount * baseLength * 0.5;
+          totalLength = Math.max(totalLength, spinBonus);
+        }
+
+        // Determine CB direction based on cut angle and spin
+        let curveDirection;
+        if (isFullBallHit && isDraw) {
+          // Draw on full ball: CB comes back toward shooter
+          curveDirection = vectorScale(objBallDirection, -1);
+        } else if (isFullBallHit && isFollow) {
+          // Follow on full ball: CB continues forward with OB
+          curveDirection = objBallDirection;
+        } else if (isDraw) {
+          // Draw on cut shot: curves back
+          curveDirection = vectorScale(objBallDirection, -1);
+        } else {
+          // Follow or stun on cut shot: curves forward
+          curveDirection = objBallDirection;
+        }
 
         // First segment: curved path showing follow/draw effect
         // The curve length is where spin "settles" into natural roll
         const curveLength = Math.min(8 + force * 2, totalLength * 0.6);  // 10-18 units, max 60% of path
-        const curveAmount = spinAmount * 20;
+        const curveAmount = spinAmount * (isFullBallHit ? 30 : 20);  // More curve effect on full ball hits
 
         // Calculate bezier curve points for first segment
         const start = { ...ghostBallPos };
@@ -1224,8 +1256,22 @@
           ghostBallIndicator.setAttribute('cy', ghostBallY);
           ghostBallIndicator.setAttribute('visibility', 'visible');
 
-          // Object ball path - from OB center toward pocket (the actual path OB travels)
-          const objPathLength = 60;  // Extend line to edge of table
+          // Calculate cut angle FIRST so we can use it for path calculations
+          // (Need cue and ghost positions for this)
+          let cutAngle = 30;  // Default to half-ball if we can't calculate
+          if (cuePos && ghostPos) {
+            const aimVector = vectorSubtract(ghostPos, cuePos);
+            const targetVector = vectorSubtract(pocketPos, objBallPos);
+            cutAngle = angleBetweenVectors(aimVector, targetVector);
+          }
+
+          // Physics: OB receives cos²(cutAngle) of energy, speed ∝ cos(cutAngle)
+          const cutAngleRad = cutAngle * Math.PI / 180;
+          const obSpeedFactor = Math.cos(cutAngleRad);
+
+          // Object ball path - length scaled by energy transfer and force
+          const baseObjPathLength = 10 + shotForce * 5;
+          const objPathLength = baseObjPathLength * obSpeedFactor;
           const objPathEnd = vectorAdd(objBallPos, vectorScale(objToPocket, objPathLength));
           objBallPath.setAttribute('x1', objBallPos.x);
           objBallPath.setAttribute('y1', objBallPos.y);
@@ -1234,8 +1280,9 @@
           objBallPath.setAttribute('visibility', 'visible');
 
           // Cue ball path after contact (curved first segment + rail bounces)
+          // Physics: CB retains sin²(cutAngle) of energy
           if (cuePos) {
-            const cbPath = calculateCueBallPath(ghostBallPosition, objToPocket, contactOffset, shotForce);
+            const cbPath = calculateCueBallPath(ghostBallPosition, objToPocket, contactOffset, shotForce, cutAngle);
             if (cbPath) {
               // Build path string: bezier curve first, then straight segments
               let pathD;
@@ -1273,28 +1320,15 @@
             cbFinalPosition.setAttribute('visibility', 'hidden');
           }
 
-          // If we have cue and aim positions, calculate the cut angle
-          if (cuePos && ghostPos) {
-            // Vector from cue to ghost (aim point)
-            const aimVector = vectorSubtract(ghostPos, cuePos);
-            // Vector from object ball to pocket
-            const targetVector = vectorSubtract(pocketPos, objBallPos);
+          // Update displays with cut angle (already calculated above)
+          const overlap = calculateOverlap(cutAngle);
+          const hitName = getBallHitName(cutAngle);
 
-            // Cut angle is the angle between these two vectors
-            const cutAngle = angleBetweenVectors(aimVector, targetVector);
-            const overlap = calculateOverlap(cutAngle);
-            const hitName = getBallHitName(cutAngle);
+          cutAngleDisplay.textContent = cutAngle.toFixed(1) + '°';
+          overlapDisplay.textContent = `${hitName} (${(overlap * 100).toFixed(0)}%)`;
 
-            cutAngleDisplay.textContent = cutAngle.toFixed(1) + '°';
-            overlapDisplay.textContent = `${hitName} (${(overlap * 100).toFixed(0)}%)`;
-
-            // Update shooter's eye view overlap diagram
-            updateOverlapDiagram(overlap);
-          } else {
-            cutAngleDisplay.textContent = '--';
-            overlapDisplay.textContent = '--';
-            updateOverlapDiagram(0.5);  // Default to half-ball view
-          }
+          // Update shooter's eye view overlap diagram
+          updateOverlapDiagram(overlap);
         } else {
           targetLine.setAttribute('visibility', 'hidden');
           ghostBallIndicator.setAttribute('visibility', 'hidden');
