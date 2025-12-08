@@ -1137,11 +1137,11 @@
           ghostBallIndicator.setAttribute('cy', ghostBallY);
           ghostBallIndicator.setAttribute('visibility', 'visible');
 
-          // Object ball path - from ghost ball through object ball, extended
+          // Object ball path - from OB center toward pocket (the actual path OB travels)
           const objPathLength = 60;  // Extend line to edge of table
           const objPathEnd = vectorAdd(objBallPos, vectorScale(objToPocket, objPathLength));
-          objBallPath.setAttribute('x1', ghostBallX);
-          objBallPath.setAttribute('y1', ghostBallY);
+          objBallPath.setAttribute('x1', objBallPos.x);
+          objBallPath.setAttribute('y1', objBallPos.y);
           objBallPath.setAttribute('x2', objPathEnd.x);
           objBallPath.setAttribute('y2', objPathEnd.y);
           objBallPath.setAttribute('visibility', 'visible');
