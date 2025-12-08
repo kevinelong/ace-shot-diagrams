@@ -790,19 +790,25 @@
           ? vectorScale(objBallDirection, -1)  // Draw: curve back toward shooter
           : objBallDirection;  // Follow: curve forward with OB
 
-        const curveAmount = spinAmount * 10;
+        // Increase curve amount for visibility (spin has major effect)
+        const curveAmount = spinAmount * 25;  // More pronounced curve
         const curvedEnd = vectorAdd(tangentEnd, vectorScale(curveDirection, curveAmount));
 
         // For path visualization, use quadratic bezier for curved path
-        // Control point is along tangent, end point has the curve
-        const controlDist = baseLength * 0.6;
-        const control = vectorAdd(start, vectorScale(tangent, controlDist));
+        // Control point should also shift toward curve direction for natural arc
+        const controlDist = baseLength * 0.5;
+        const controlBase = vectorAdd(start, vectorScale(tangent, controlDist));
+        // Shift control point toward curve direction (half the end offset for smooth arc)
+        const controlCurveShift = vectorScale(curveDirection, curveAmount * 0.3);
+        const control = Math.abs(contactOff.y) > 0.05
+          ? vectorAdd(controlBase, controlCurveShift)
+          : controlBase;
 
         return {
           start: start,
           control: control,
-          end: Math.abs(contactOff.y) > 0.1 ? curvedEnd : tangentEnd,
-          isCurved: Math.abs(contactOff.y) > 0.1
+          end: Math.abs(contactOff.y) > 0.05 ? curvedEnd : tangentEnd,
+          isCurved: Math.abs(contactOff.y) > 0.05
         };
       }
 
