@@ -1189,20 +1189,8 @@
         };
       }
 
-      function startContactDrag(e) {
-        if (e.target === contactPoint) {
-          e.preventDefault();
-          isDraggingContact = true;
-        }
-      }
-
-      function doContactDrag(e) {
-        if (!isDraggingContact) return;
-        e.preventDefault();
-
-        const coords = getContactDiagramCoords(e);
-
-        // Limit to within ball radius (with some buffer for miscue zone)
+      // Helper to clamp coords to safe zone and update contact point
+      function setContactPosition(coords) {
         const maxRadius = 0.56;  // Half ball radius = safe zone
         const dist = Math.sqrt(coords.x * coords.x + coords.y * coords.y);
 
@@ -1221,6 +1209,26 @@
 
         // Update shot geometry
         updateShotGeometry();
+      }
+
+      function startContactDrag(e) {
+        // Allow clicking anywhere on the diagram (not just the contact point)
+        if (e.target === contactPoint || e.target.closest('#contact-diagram')) {
+          e.preventDefault();
+          isDraggingContact = true;
+
+          // Snap contact point to clicked location immediately
+          const coords = getContactDiagramCoords(e);
+          setContactPosition(coords);
+        }
+      }
+
+      function doContactDrag(e) {
+        if (!isDraggingContact) return;
+        e.preventDefault();
+
+        const coords = getContactDiagramCoords(e);
+        setContactPosition(coords);
       }
 
       function endContactDrag(e) {
