@@ -425,6 +425,12 @@
           <line x1="-0.7" y1="-0.7" x2="0.7" y2="0.7" stroke="#00bfff" stroke-width="0.15"/>
           <line x1="0.7" y1="-0.7" x2="-0.7" y2="0.7" stroke="#00bfff" stroke-width="0.15"/>
         </g>
+        <!-- Object ball final resting position indicator (circle with X) - orange to match OB path -->
+        <g id="ob-final-position" visibility="hidden">
+          <circle cx="0" cy="0" r="1.125" fill="none" stroke="#ff6b35" stroke-width="0.15"/>
+          <line x1="-0.7" y1="-0.7" x2="0.7" y2="0.7" stroke="#ff6b35" stroke-width="0.15"/>
+          <line x1="0.7" y1="-0.7" x2="-0.7" y2="0.7" stroke="#ff6b35" stroke-width="0.15"/>
+        </g>
         <!-- Pocket click targets (invisible hit areas) -->
         <g id="pocket-targets">
           <circle class="pocket-target" data-pocket="corner-tl" cx="1.5" cy="1.5" r="4"/>
@@ -668,6 +674,7 @@
       const overlapEnglishDisplay = document.getElementById('overlapEnglish');
       const overlapSlashDisplay = document.getElementById('overlapSlash');
       const cbFinalPosition = document.getElementById('cb-final-position');
+      const obFinalPosition = document.getElementById('ob-final-position');
 
       // Pocket mouth centers (narrowest entry point for aiming)
       const pocketCenters = {
@@ -1271,13 +1278,35 @@
 
           // Object ball path - length scaled by energy transfer and force
           const baseObjPathLength = 10 + shotForce * 5;
-          const objPathLength = baseObjPathLength * obSpeedFactor;
+          let objPathLength = baseObjPathLength * obSpeedFactor;
+
+          // Check distance to target pocket - if OB would reach pocket, stop there
+          const distToPocket = vectorLength(vectorSubtract(pocketPos, objBallPos));
+          const pocketRadius = 2.5;  // Pocket opening radius
+          let obMadeIt = false;  // Did OB reach the pocket?
+
+          // If path length reaches the pocket, stop at pocket center
+          if (objPathLength >= distToPocket - pocketRadius) {
+            objPathLength = distToPocket;
+            obMadeIt = true;
+          }
+
           const objPathEnd = vectorAdd(objBallPos, vectorScale(objToPocket, objPathLength));
           objBallPath.setAttribute('x1', objBallPos.x);
           objBallPath.setAttribute('y1', objBallPos.y);
           objBallPath.setAttribute('x2', objPathEnd.x);
           objBallPath.setAttribute('y2', objPathEnd.y);
           objBallPath.setAttribute('visibility', 'visible');
+
+          // Show OB final position indicator
+          if (obMadeIt) {
+            // Ball made it to pocket - show at pocket center
+            obFinalPosition.setAttribute('transform', `translate(${pocketPos.x}, ${pocketPos.y})`);
+          } else {
+            // Ball stopped before pocket - show at path end
+            obFinalPosition.setAttribute('transform', `translate(${objPathEnd.x}, ${objPathEnd.y})`);
+          }
+          obFinalPosition.setAttribute('visibility', 'visible');
 
           // Cue ball path after contact (curved first segment + rail bounces)
           // Physics: CB retains sin²(cutAngle) of energy
@@ -1333,6 +1362,7 @@
           targetLine.setAttribute('visibility', 'hidden');
           ghostBallIndicator.setAttribute('visibility', 'hidden');
           objBallPath.setAttribute('visibility', 'hidden');
+          obFinalPosition.setAttribute('visibility', 'hidden');
           cueBallPath.setAttribute('visibility', 'hidden');
           cbFinalPosition.setAttribute('visibility', 'hidden');
           cutAngleDisplay.textContent = '--';
