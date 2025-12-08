@@ -856,7 +856,7 @@
 
       // Calculate cue ball path after contact with rail bounces
       // Physics: CB travels perpendicular to OB path (90° rule for stun), then bounces off rails
-      // Follow/Draw affects initial curve, English affects bounce angles
+      // Follow/Draw creates initial curve (friction on cloth), English affects bounce angles
       function calculateCueBallPath(ghostBallPos, objBallDirection, contactOff, force) {
         // Tangent line is perpendicular to object ball path
         const tangent1 = vectorPerpendicular(objBallDirection);
@@ -871,58 +871,147 @@
         const dot1 = dotProduct(tangent1, cueToGhost);
         const tangent = dot1 > 0 ? tangent1 : tangent2;
 
-        // Base path length depends on force
+        // Total path length depends on force
         const totalLength = 10 + force * 5;  // 15 to 60 units total travel
 
-        // Calculate initial direction with spin curve
+        // Calculate spin effect for the curved first segment
         // Follow (y < 0) curves forward, Draw (y > 0) curves backward
         const spinAmount = Math.abs(contactOff.y) * (force / 5);
+        const hasSpin = Math.abs(contactOff.y) > 0.05;
         const curveDirection = contactOff.y > 0
-          ? vectorScale(objBallDirection, -1)  // Draw: back
-          : objBallDirection;  // Follow: forward
+          ? vectorScale(objBallDirection, -1)  // Draw: curve back toward shooter
+          : objBallDirection;  // Follow: curve forward with OB
 
-        // Initial direction combines tangent with spin curve
-        const curveInfluence = spinAmount * 0.5;
-        let direction = vectorNormalize(vectorAdd(
-          tangent,
-          vectorScale(curveDirection, curveInfluence)
-        ));
+        // First segment: curved path showing follow/draw effect
+        // The curve length is where spin "settles" into natural roll
+        const curveLength = Math.min(8 + force * 2, totalLength * 0.6);  // 10-18 units, max 60% of path
+        const curveAmount = spinAmount * 20;
 
-        // Build path segments with rail bounces
-        const segments = [];
-        let currentPos = { ...ghostBallPos };
-        let remainingLength = totalLength;
-        const maxBounces = 3;
-        let bounces = 0;
+        // Calculate bezier curve points for first segment
+        const start = { ...ghostBallPos };
+        const tangentEnd = vectorAdd(start, vectorScale(tangent, curveLength));
+        const curvedEnd = hasSpin
+          ? vectorAdd(tangentEnd, vectorScale(curveDirection, curveAmount))
+          : tangentEnd;
 
-        while (remainingLength > 1 && bounces <= maxBounces) {
-          // Find rail intersection
-          const intersection = findRailIntersection(currentPos, direction, remainingLength);
+        // Control point for smooth bezier curve
+        const controlDist = curveLength * 0.5;
+        const controlBase = vectorAdd(start, vectorScale(tangent, controlDist));
+        const controlCurveShift = vectorScale(curveDirection, curveAmount * 0.3);
+        const control = hasSpin
+          ? vectorAdd(controlBase, controlCurveShift)
+          : controlBase;
 
-          if (intersection && intersection.t < remainingLength) {
-            // Path hits a rail
-            segments.push({
-              start: { ...currentPos },
-              end: { ...intersection.point }
-            });
+        // Direction at end of curve (for subsequent straight segments)
+        // Approximate: direction from control to end
+        let direction = vectorNormalize(vectorSubtract(curvedEnd, control));
 
-            // Reflect off rail with english effect
-            direction = reflectOffRail(direction, intersection.normal, contactOff);
-            currentPos = intersection.point;
-            remainingLength -= intersection.t;
-            bounces++;
-          } else {
-            // No rail hit - finish the path
-            const endPoint = vectorAdd(currentPos, vectorScale(direction, remainingLength));
-            segments.push({
-              start: { ...currentPos },
-              end: endPoint
-            });
+        // Check if curve segment hits a rail
+        // Sample points along bezier to detect rail intersection
+        let curveHitsRail = false;
+        let railHitPoint = null;
+        let railHitT = 1;
+        let hitRailNormal = null;
+
+        for (let t = 0.1; t <= 1; t += 0.1) {
+          // Quadratic bezier: B(t) = (1-t)²P0 + 2(1-t)tP1 + t²P2
+          const mt = 1 - t;
+          const px = mt * mt * start.x + 2 * mt * t * control.x + t * t * curvedEnd.x;
+          const py = mt * mt * start.y + 2 * mt * t * control.y + t * t * curvedEnd.y;
+
+          // Check rail boundaries
+          if (py <= RAILS.top.y) {
+            curveHitsRail = true;
+            railHitPoint = { x: px, y: RAILS.top.y };
+            railHitT = t;
+            hitRailNormal = RAILS.top.normal;
+            break;
+          } else if (py >= RAILS.bottom.y) {
+            curveHitsRail = true;
+            railHitPoint = { x: px, y: RAILS.bottom.y };
+            railHitT = t;
+            hitRailNormal = RAILS.bottom.normal;
+            break;
+          } else if (px <= RAILS.left.x) {
+            curveHitsRail = true;
+            railHitPoint = { x: RAILS.left.x, y: py };
+            railHitT = t;
+            hitRailNormal = RAILS.left.normal;
+            break;
+          } else if (px >= RAILS.right.x) {
+            curveHitsRail = true;
+            railHitPoint = { x: RAILS.right.x, y: py };
+            railHitT = t;
+            hitRailNormal = RAILS.right.normal;
             break;
           }
         }
 
-        return { segments, isCurved: false };
+        // Build the path result
+        const result = {
+          // First segment is always the bezier curve (or portion of it)
+          curveStart: start,
+          curveControl: control,
+          curveEnd: curveHitsRail ? railHitPoint : curvedEnd,
+          hasCurve: hasSpin,
+          segments: []  // Additional straight segments after bounces
+        };
+
+        // If curve hits rail, calculate bounces from that point
+        if (curveHitsRail) {
+          // Get direction at point of rail contact (tangent to bezier)
+          const mt = 1 - railHitT;
+          const dx = 2 * mt * (control.x - start.x) + 2 * railHitT * (curvedEnd.x - control.x);
+          const dy = 2 * mt * (control.y - start.y) + 2 * railHitT * (curvedEnd.y - control.y);
+          direction = vectorNormalize({ x: dx, y: dy });
+
+          // Reflect and continue
+          direction = reflectOffRail(direction, hitRailNormal, contactOff);
+          let currentPos = { ...railHitPoint };
+          let remainingLength = totalLength - (curveLength * railHitT);
+          let bounces = 1;
+          const maxBounces = 3;
+
+          while (remainingLength > 1 && bounces <= maxBounces) {
+            const intersection = findRailIntersection(currentPos, direction, remainingLength);
+
+            if (intersection && intersection.t < remainingLength) {
+              result.segments.push({ start: { ...currentPos }, end: { ...intersection.point } });
+              direction = reflectOffRail(direction, intersection.normal, contactOff);
+              currentPos = intersection.point;
+              remainingLength -= intersection.t;
+              bounces++;
+            } else {
+              const endPoint = vectorAdd(currentPos, vectorScale(direction, remainingLength));
+              result.segments.push({ start: { ...currentPos }, end: endPoint });
+              break;
+            }
+          }
+        } else {
+          // Curve didn't hit rail - continue with straight segments from curve end
+          let currentPos = { ...curvedEnd };
+          let remainingLength = totalLength - curveLength;
+          let bounces = 0;
+          const maxBounces = 3;
+
+          while (remainingLength > 1 && bounces <= maxBounces) {
+            const intersection = findRailIntersection(currentPos, direction, remainingLength);
+
+            if (intersection && intersection.t < remainingLength) {
+              result.segments.push({ start: { ...currentPos }, end: { ...intersection.point } });
+              direction = reflectOffRail(direction, intersection.normal, contactOff);
+              currentPos = intersection.point;
+              remainingLength -= intersection.t;
+              bounces++;
+            } else {
+              const endPoint = vectorAdd(currentPos, vectorScale(direction, remainingLength));
+              result.segments.push({ start: { ...currentPos }, end: endPoint });
+              break;
+            }
+          }
+        }
+
+        return result;
       }
 
       // Ball definitions in order
@@ -1057,21 +1146,36 @@
           objBallPath.setAttribute('y2', objPathEnd.y);
           objBallPath.setAttribute('visibility', 'visible');
 
-          // Cue ball path after contact (with rail bounces)
+          // Cue ball path after contact (curved first segment + rail bounces)
           if (cuePos) {
             const cbPath = calculateCueBallPath(ghostBallPosition, objToPocket, contactOffset, shotForce);
-            if (cbPath && cbPath.segments && cbPath.segments.length > 0) {
-              // Build path string from segments
-              let pathD = `M ${cbPath.segments[0].start.x} ${cbPath.segments[0].start.y}`;
+            if (cbPath) {
+              // Build path string: bezier curve first, then straight segments
+              let pathD;
+              if (cbPath.hasCurve) {
+                // Quadratic bezier for follow/draw curve effect
+                pathD = `M ${cbPath.curveStart.x} ${cbPath.curveStart.y} Q ${cbPath.curveControl.x} ${cbPath.curveControl.y} ${cbPath.curveEnd.x} ${cbPath.curveEnd.y}`;
+              } else {
+                // Straight line for stun shot
+                pathD = `M ${cbPath.curveStart.x} ${cbPath.curveStart.y} L ${cbPath.curveEnd.x} ${cbPath.curveEnd.y}`;
+              }
+
+              // Add straight segments for rail bounces
               cbPath.segments.forEach(seg => {
                 pathD += ` L ${seg.end.x} ${seg.end.y}`;
               });
+
               cueBallPath.setAttribute('d', pathD);
               cueBallPath.setAttribute('visibility', 'visible');
 
-              // Position final resting indicator at end of last segment
-              const lastSeg = cbPath.segments[cbPath.segments.length - 1];
-              cbFinalPosition.setAttribute('transform', `translate(${lastSeg.end.x}, ${lastSeg.end.y})`);
+              // Position final resting indicator at end of path
+              let finalPos;
+              if (cbPath.segments.length > 0) {
+                finalPos = cbPath.segments[cbPath.segments.length - 1].end;
+              } else {
+                finalPos = cbPath.curveEnd;
+              }
+              cbFinalPosition.setAttribute('transform', `translate(${finalPos.x}, ${finalPos.y})`);
               cbFinalPosition.setAttribute('visibility', 'visible');
             } else {
               cueBallPath.setAttribute('visibility', 'hidden');
