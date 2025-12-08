@@ -645,6 +645,7 @@
       };
 
       const BALL_RADIUS = 1.125; // inches (2.25" diameter / 2)
+      const GHOST_BALL_OFFSET = BALL_RADIUS * 2 + 0.3; // Add small visual buffer for clarity
 
       // Current ball size in pixels (calculated dynamically)
       let ballSizePx = 24;  // Default, updated by updateBallSizes()
@@ -1151,8 +1152,8 @@
           // Calculate ghost ball position (where cue ball should contact object ball)
           // Ghost ball is positioned along the obj-pocket line, one ball diameter back from object ball
           const objToPocket = vectorNormalize(vectorSubtract(pocketPos, objBallPos));
-          const ghostBallX = objBallPos.x - objToPocket.x * (BALL_RADIUS * 2);
-          const ghostBallY = objBallPos.y - objToPocket.y * (BALL_RADIUS * 2);
+          const ghostBallX = objBallPos.x - objToPocket.x * GHOST_BALL_OFFSET;
+          const ghostBallY = objBallPos.y - objToPocket.y * GHOST_BALL_OFFSET;
           const ghostBallPosition = { x: ghostBallX, y: ghostBallY };
 
           ghostBallIndicator.setAttribute('cx', ghostBallX);
@@ -1292,10 +1293,10 @@
         if (!objBallPos || !pocketPos) return;
 
         // Calculate ideal ghost ball position
-        // Ghost ball center is exactly 2 ball radii from object ball center (just touching)
+        // Ghost ball center is offset from object ball with small visual buffer
         const objToPocket = vectorNormalize(vectorSubtract(pocketPos, objBallPos));
-        const ghostBallX = objBallPos.x - objToPocket.x * (BALL_RADIUS * 2);
-        const ghostBallY = objBallPos.y - objToPocket.y * (BALL_RADIUS * 2);
+        const ghostBallX = objBallPos.x - objToPocket.x * GHOST_BALL_OFFSET;
+        const ghostBallY = objBallPos.y - objToPocket.y * GHOST_BALL_OFFSET;
 
         // Check if position is on the playing surface
         if (!isOnPlayingSurface(ghostBallX, ghostBallY)) return;
@@ -1562,8 +1563,8 @@
 
         // Calculate ghost ball position (where CB must contact OB)
         const objToPocket = vectorNormalize(vectorSubtract(pocket, { x: objBallX, y: objBallY }));
-        const ghostBallX = objBallX - objToPocket.x * (BALL_RADIUS * 2);
-        const ghostBallY = objBallY - objToPocket.y * (BALL_RADIUS * 2);
+        const ghostBallX = objBallX - objToPocket.x * GHOST_BALL_OFFSET;
+        const ghostBallY = objBallY - objToPocket.y * GHOST_BALL_OFFSET;
 
         // Cue ball at head area, positioned for the cut shot
         const cueBallX = 25;
