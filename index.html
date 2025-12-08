@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ACE Shot Diagrams - Pool Table Preview</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    h1 { text-align: center; margin-bottom: 10px; color: #0fa; }
+    .version-info { text-align: center; color: #888; margin-bottom: 20px; font-size: 14px; }
+
+    .diagram-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .table-wrapper {
+      position: relative;
+      background: #222;
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .table-wrapper svg { display: block; width: 100%; height: auto; }
+
+    /* Cue-ghost connection line overlay */
+    #connection-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 50;
+    }
+    /* Allow pocket targets to receive clicks */
+    #pocket-targets {
+      pointer-events: all;
+    }
+
+    /* Ball rack below table */
+    .ball-rack {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      margin-top: 20px;
+      padding: 12px 20px;
+      background: #2a2a4a;
+      border-radius: 8px;
+      flex-wrap: wrap;
+    }
+    .rack-label {
+      width: 100%;
+      text-align: center;
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    /* Ball styling */
+    .ball {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: grab;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 1px 1px rgba(0,0,0,0.6);
+      box-shadow: 2px 2px 4px rgba(0,0,0,0.5), inset -2px -2px 3px rgba(0,0,0,0.3), inset 2px 2px 3px rgba(255,255,255,0.2);
+      transition: transform 0.1s;
+      flex-shrink: 0;
+    }
+    .ball:hover { transform: scale(1.1); }
+    .ball.dragging { cursor: grabbing; z-index: 200; transform: scale(1.15); box-shadow: 0 6px 12px rgba(0,0,0,0.5); }
+    .ball.on-table { position: absolute; z-index: 100; }
+
+    /* Solid balls - white number circle (larger to fit text at same size as stripes) */
+    .ball-1 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #ffe44d, #ffd700, #c9a600); color: #000; text-shadow: none; }
+    .ball-2 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #4d8fcc, #0066cc, #004c99); color: #000; text-shadow: none; }
+    .ball-3 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #ff6666, #ff4444, #cc0000); color: #000; text-shadow: none; }
+    .ball-4 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #9955bb, #6b2d8b, #4a1f61); color: #000; text-shadow: none; }
+    .ball-5 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #ff8833, #ff6600, #cc5200); color: #000; text-shadow: none; }
+    .ball-6 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #339955, #006633, #004422); color: #000; text-shadow: none; }
+    .ball-7 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #cc3333, #8b0000, #5c0000); color: #000; text-shadow: none; }
+    .ball-8 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #444, #111, #000); color: #000; text-shadow: none; }
+
+    /* Striped balls - white band in middle */
+    .ball-9, .ball-10, .ball-11, .ball-12, .ball-13, .ball-14, .ball-15 {
+      position: relative;
+      overflow: hidden;
+    }
+    .ball-9 { background: linear-gradient(180deg, #ffd700 0%, #ffd700 25%, #fff 25%, #fff 75%, #ffd700 75%); color: #000; text-shadow: none; }
+    .ball-10 { background: linear-gradient(180deg, #0066cc 0%, #0066cc 25%, #fff 25%, #fff 75%, #0066cc 75%); color: #000; text-shadow: none; }
+    .ball-11 { background: linear-gradient(180deg, #ff4444 0%, #ff4444 25%, #fff 25%, #fff 75%, #ff4444 75%); color: #000; text-shadow: none; }
+    .ball-12 { background: linear-gradient(180deg, #6b2d8b 0%, #6b2d8b 25%, #fff 25%, #fff 75%, #6b2d8b 75%); color: #000; text-shadow: none; }
+    .ball-13 { background: linear-gradient(180deg, #ff6600 0%, #ff6600 25%, #fff 25%, #fff 75%, #ff6600 75%); color: #000; text-shadow: none; }
+    .ball-14 { background: linear-gradient(180deg, #006633 0%, #006633 25%, #fff 25%, #fff 75%, #006633 75%); color: #000; text-shadow: none; }
+    .ball-15 { background: linear-gradient(180deg, #8b0000 0%, #8b0000 25%, #fff 25%, #fff 75%, #8b0000 75%); color: #000; text-shadow: none; }
+
+    /* Cue ball */
+    .ball-cue {
+      background: radial-gradient(circle at 30% 30%, #fff, #f0f0f0, #d0d0d0);
+      color: #666;
+      font-size: 7px;
+      text-shadow: none;
+    }
+
+    /* Ghost ball - transparent with dashed outline */
+    .ball-ghost {
+      background: transparent;
+      border: 2px dashed rgba(255,255,255,0.6);
+      box-shadow: none;
+      color: rgba(255,255,255,0.7);
+      font-size: 7px;
+    }
+
+    /* Generic gray object ball */
+    .ball-gray {
+      background: radial-gradient(circle at 30% 30%, #aaa, #777, #555);
+      color: #fff;
+      font-size: 7px;
+      text-shadow: 0 1px 1px rgba(0,0,0,0.5);
+    }
+
+    /* Separator in rack */
+    .rack-separator {
+      width: 1px;
+      height: 24px;
+      background: #444;
+      margin: 0 8px;
+    }
+
+    .instructions {
+      text-align: center;
+      margin-top: 15px;
+      color: #666;
+      font-size: 13px;
+    }
+
+    /* Shot info panel */
+    .shot-info {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: #2a2a4a;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .info-row { display: flex; gap: 8px; }
+    .info-label { color: #888; }
+    .info-row span:last-child { color: #0fa; font-weight: bold; }
+
+    /* Pocket targets */
+    .pocket-target {
+      cursor: pointer;
+      pointer-events: all;
+      fill: rgba(255,215,0,0);
+      transition: fill 0.2s;
+    }
+    .pocket-target:hover { fill: rgba(255,215,0,0.3); }
+    .pocket-target.selected { fill: rgba(0,255,170,0.4); stroke: #0fa; stroke-width: 0.5; }
+
+    /* Selected ball highlight */
+    .ball.selected { box-shadow: 0 0 0 3px #0fa, 2px 2px 4px rgba(0,0,0,0.5); }
+
+    /* Cue Controls Panel */
+    .cue-controls-panel {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 30px;
+      margin-top: 15px;
+      padding: 15px 20px;
+      background: #2a2a4a;
+      border-radius: 8px;
+      flex-wrap: wrap;
+    }
+
+    .control-label {
+      font-size: 12px;
+      color: #888;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    /* Overlap Diagram (Shooter's View) */
+    .overlap-diagram-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #overlap-diagram {
+      border-radius: 4px;
+      border: 1px solid #333;
+    }
+
+    .overlap-display {
+      margin-top: 6px;
+      font-size: 13px;
+      color: #888;
+    }
+
+    .overlap-display span {
+      color: #0fa;
+      font-weight: bold;
+    }
+
+    /* Contact Diagram */
+    .contact-diagram-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #contact-diagram {
+      background: #1a1a2e;
+      border-radius: 50%;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    #contact-point {
+      transition: fill 0.15s;
+    }
+    #contact-point:hover {
+      fill: #0088ff;
+    }
+
+    .spin-display {
+      margin-top: 6px;
+      font-size: 13px;
+      color: #0fa;
+      font-weight: bold;
+    }
+
+    /* Force Slider */
+    .force-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 150px;
+    }
+
+    .force-slider-wrapper {
+      width: 100%;
+    }
+
+    #forceSlider {
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: linear-gradient(to right, #4a9, #fa0, #f44);
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    #forceSlider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid #333;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    #forceSlider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid #333;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .force-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .force-value {
+      margin-top: 6px;
+      font-size: 14px;
+      color: #0fa;
+      font-weight: bold;
+    }
+
+    /* Path Legend */
+    .path-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 11px;
+      color: #888;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-line {
+      width: 20px;
+      height: 3px;
+      border-radius: 1px;
+    }
+
+    .legend-line.aim-line {
+      background: #fff;
+      background: repeating-linear-gradient(90deg, #fff 0, #fff 4px, transparent 4px, transparent 8px);
+    }
+
+    .legend-line.target-line {
+      background: #ffd700;
+    }
+
+    .legend-line.obj-path {
+      background: #ff6b35;
+    }
+
+    .legend-line.cb-path {
+      background: #00bfff;
+    }
+
+    /* Print styles - preserve ball positions */
+    @media print {
+      body { background: #fff; padding: 10px; }
+      h1, .version-info, .instructions { display: none; }
+      .ball-rack { display: none; }
+      .cue-controls-panel { display: none; }
+      .diagram-container { max-width: 100%; }
+      .table-wrapper { background: none; padding: 0; }
+      .ball {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+      .ball-ghost {
+        border-color: #666;
+      }
+      #connection-overlay line {
+        stroke: #333;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>ACE Shot Diagrams</h1>
+  <p class="version-info">Pool Table Template v009 - Drag balls to create shot diagrams</p>
+
+  <div class="diagram-container" id="diagramContainer">
+    <div class="table-wrapper" id="tableWrapper">
+      <!-- Connection line SVG overlay -->
+      <svg id="connection-overlay" viewBox="-8 -8 116 66" preserveAspectRatio="xMidYMid meet">
+        <!-- Cue to Ghost aiming line -->
+        <line id="cue-ghost-line" x1="0" y1="0" x2="0" y2="0"
+              stroke="#fff" stroke-width="0.3" stroke-dasharray="1,1"
+              visibility="hidden"/>
+        <!-- Object ball to Pocket target line -->
+        <line id="target-line" x1="0" y1="0" x2="0" y2="0"
+              stroke="#ffd700" stroke-width="0.25"
+              visibility="hidden"/>
+        <!-- Object ball path (where OB actually travels based on aim) -->
+        <line id="obj-ball-path" x1="0" y1="0" x2="0" y2="0"
+              stroke="#ff6b35" stroke-width="0.3"
+              visibility="hidden"/>
+        <!-- Cue ball deflection path (tangent line + curve for spin) -->
+        <path id="cue-ball-path" d=""
+              stroke="#00bfff" stroke-width="0.3" fill="none"
+              visibility="hidden"/>
+        <!-- Ghost ball position indicator -->
+        <circle id="ghost-ball-indicator" cx="0" cy="0" r="1.125"
+              fill="none" stroke="#ffd700" stroke-width="0.2" stroke-dasharray="0.5,0.5"
+              visibility="hidden"/>
+        <!-- Pocket click targets (invisible hit areas) -->
+        <g id="pocket-targets">
+          <circle class="pocket-target" data-pocket="corner-tl" cx="1.5" cy="1.5" r="4"/>
+          <circle class="pocket-target" data-pocket="corner-tr" cx="98.5" cy="1.5" r="4"/>
+          <circle class="pocket-target" data-pocket="corner-bl" cx="1.5" cy="48.5" r="4"/>
+          <circle class="pocket-target" data-pocket="corner-br" cx="98.5" cy="48.5" r="4"/>
+          <ellipse class="pocket-target" data-pocket="side-top" cx="50" cy="0" rx="4" ry="3"/>
+          <ellipse class="pocket-target" data-pocket="side-bottom" cx="50" cy="50" rx="4" ry="3"/>
+        </g>
+      </svg>
+
+      <!-- Pool Table SVG embedded inline (v009) -->
+      <svg id="pool-table-svg" xmlns="http://www.w3.org/2000/svg" viewBox="-8 -8 116 66" role="img" aria-label="Pool table diagram">
+        <title>Pool Table - Top Down View</title>
+        <defs>
+          <pattern id="wood-grain" patternUnits="userSpaceOnUse" width="4" height="4">
+            <rect width="4" height="4" fill="#5a3825"/>
+            <path d="M0 2 Q1 1.5 2 2 T4 2" stroke="#4a2c2a" stroke-width="0.3" fill="none" opacity="0.5"/>
+            <path d="M0 3.5 Q1 3 2 3.5 T4 3.5" stroke="#6b4332" stroke-width="0.2" fill="none" opacity="0.3"/>
+          </pattern>
+          <pattern id="cloth-texture" patternUnits="userSpaceOnUse" width="2" height="2">
+            <rect width="2" height="2" fill="#50a6c2"/>
+            <circle cx="0.5" cy="0.5" r="0.1" fill="#5ab0cc" opacity="0.3"/>
+            <circle cx="1.5" cy="1.5" r="0.1" fill="#4596b2" opacity="0.3"/>
+          </pattern>
+          <!-- ClipPaths for inside-only cushion strokes -->
+          <clipPath id="clip-cushion-head"><polygon points="0,3.5 0,46.5 2,44.5 2,5.5"/></clipPath>
+          <clipPath id="clip-cushion-foot"><polygon points="100,3.5 100,46.5 98,44.5 98,5.5"/></clipPath>
+          <clipPath id="clip-cushion-top-left"><polygon points="3.5,0 47,0 45,2 5.5,2"/></clipPath>
+          <clipPath id="clip-cushion-top-right"><polygon points="53,0 96.5,0 94.5,2 55,2"/></clipPath>
+          <clipPath id="clip-cushion-bottom-left"><polygon points="3.5,50 47,50 45,48 5.5,48"/></clipPath>
+          <clipPath id="clip-cushion-bottom-right"><polygon points="53,50 96.5,50 94.5,48 55,48"/></clipPath>
+        </defs>
+
+        <!-- Layer 1: Rails (Wood with rounded corners) -->
+        <g id="layer-rails">
+          <path id="rail-frame" d="M -2,-6 L 102,-6 A 4,4 0 0,1 106,-2 L 106,52 A 4,4 0 0,1 102,56 L -2,56 A 4,4 0 0,1 -6,52 L -6,-2 A 4,4 0 0,1 -2,-6 Z M 0,0 L 0,50 L 100,50 L 100,0 Z" fill="url(#wood-grain)" fill-rule="evenodd"/>
+        </g>
+
+        <!-- Layer 3: Pocket Voids -->
+        <g id="layer-pocket-voids">
+          <circle cx="0" cy="0" r="4" fill="#050505"/>
+          <circle cx="100" cy="0" r="4" fill="#050505"/>
+          <circle cx="0" cy="50" r="4" fill="#050505"/>
+          <circle cx="100" cy="50" r="4" fill="#050505"/>
+          <ellipse cx="50" cy="0" rx="3" ry="2.5" fill="#050505"/>
+          <ellipse cx="50" cy="50" rx="3" ry="2.5" fill="#050505"/>
+        </g>
+
+        <!-- Layer 4: Slate/Cloth -->
+        <g id="layer-slate-cloth">
+          <path id="slate-surface" d="M 0,3.5 A 3.5,3.5 0 0,0 3.5,0 L 47,0 L 47,0.3 A 3,0.3 0 0,0 53,0.3 L 53,0 L 96.5,0 A 3.5,3.5 0 0,0 100,3.5 L 100,46.5 A 3.5,3.5 0 0,0 96.5,50 L 53,50 L 53,49.7 A 3,0.3 0 0,0 47,49.7 L 47,50 L 3.5,50 A 3.5,3.5 0 0,0 0,46.5 Z" fill="#50a6c2"/>
+          <path d="M 0,3.5 A 3.5,3.5 0 0,0 3.5,0 L 47,0 L 47,0.3 A 3,0.3 0 0,0 53,0.3 L 53,0 L 96.5,0 A 3.5,3.5 0 0,0 100,3.5 L 100,46.5 A 3.5,3.5 0 0,0 96.5,50 L 53,50 L 53,49.7 A 3,0.3 0 0,0 47,49.7 L 47,50 L 3.5,50 A 3.5,3.5 0 0,0 0,46.5 Z" fill="url(#cloth-texture)" opacity="0.1"/>
+        </g>
+
+        <!-- Layer 5: Cushions with inside-only strokes -->
+        <g id="layer-cushions">
+          <polygon points="0,3.5 0,46.5 2,44.5 2,5.5" fill="#50a6c2"/>
+          <polygon points="0,3.5 0,46.5 2,44.5 2,5.5" fill="none" stroke="#a8d3e1" stroke-width="0.35" clip-path="url(#clip-cushion-head)"/>
+          <polygon points="100,3.5 100,46.5 98,44.5 98,5.5" fill="#50a6c2"/>
+          <polygon points="100,3.5 100,46.5 98,44.5 98,5.5" fill="none" stroke="#a8d3e1" stroke-width="0.35" clip-path="url(#clip-cushion-foot)"/>
+          <polygon points="3.5,0 47,0 45,2 5.5,2" fill="#50a6c2"/>
+          <polygon points="3.5,0 47,0 45,2 5.5,2" fill="none" stroke="#a8d3e1" stroke-width="0.35" clip-path="url(#clip-cushion-top-left)"/>
+          <polygon points="53,0 96.5,0 94.5,2 55,2" fill="#50a6c2"/>
+          <polygon points="53,0 96.5,0 94.5,2 55,2" fill="none" stroke="#a8d3e1" stroke-width="0.35" clip-path="url(#clip-cushion-top-right)"/>
+          <polygon points="3.5,50 47,50 45,48 5.5,48" fill="#50a6c2"/>
+          <polygon points="3.5,50 47,50 45,48 5.5,48" fill="none" stroke="#a8d3e1" stroke-width="0.35" clip-path="url(#clip-cushion-bottom-left)"/>
+          <polygon points="53,50 96.5,50 94.5,48 55,48" fill="#50a6c2"/>
+          <polygon points="53,50 96.5,50 94.5,48 55,48" fill="none" stroke="#a8d3e1" stroke-width="0.35" clip-path="url(#clip-cushion-bottom-right)"/>
+        </g>
+
+        <!-- Layer 6: Diamonds -->
+        <g id="layer-diamonds">
+          <g id="diamonds-top">
+            <polygon points="12.5,-3 13,-3.5 13.5,-3 13,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+            <polygon points="25,-3 25.5,-3.5 26,-3 25.5,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+            <polygon points="37.5,-3 38,-3.5 38.5,-3 38,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+            <polygon points="62.5,-3 63,-3.5 63.5,-3 63,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+            <polygon points="75,-3 75.5,-3.5 76,-3 75.5,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+            <polygon points="87.5,-3 88,-3.5 88.5,-3 88,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+          </g>
+          <g id="diamonds-bottom">
+            <polygon points="12.5,53 13,52.5 13.5,53 13,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+            <polygon points="25,53 25.5,52.5 26,53 25.5,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+            <polygon points="37.5,53 38,52.5 38.5,53 38,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+            <polygon points="62.5,53 63,52.5 63.5,53 63,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+            <polygon points="75,53 75.5,52.5 76,53 75.5,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+            <polygon points="87.5,53 88,52.5 88.5,53 88,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+          </g>
+          <g id="diamonds-head">
+            <polygon points="-3,12.5 -3.5,13 -3,13.5 -2.5,13" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+            <polygon points="-3,25 -3.5,25.5 -3,26 -2.5,25.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+            <polygon points="-3,37.5 -3.5,38 -3,38.5 -2.5,38" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+          </g>
+          <g id="diamonds-foot">
+            <polygon points="103,12.5 102.5,13 103,13.5 103.5,13" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+            <polygon points="103,25 102.5,25.5 103,26 103.5,25.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+            <polygon points="103,37.5 102.5,38 103,38.5 103.5,38" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+          </g>
+        </g>
+
+        <!-- Layer 8: Spots -->
+        <g id="layer-spots">
+          <g id="head-spot"><circle cx="25" cy="25" r="0.8" fill="#1a1a1a"/><circle cx="25" cy="25" r="0.25" fill="#ffffff"/></g>
+          <g id="center-spot"><circle cx="50" cy="25" r="0.6" fill="#1a1a1a"/><circle cx="50" cy="25" r="0.2" fill="#ffffff"/></g>
+          <g id="foot-spot"><circle cx="75" cy="25" r="0.8" fill="#1a1a1a"/><circle cx="75" cy="25" r="0.25" fill="#ffffff"/></g>
+        </g>
+
+        <!-- Layer 9: Grid (hidden by default) -->
+        <g id="layer-grid" opacity="0.15" visibility="visible">
+          <line x1="12.5" y1="2" x2="12.5" y2="48" stroke="#ffffff" stroke-width="0.15"/>
+          <line x1="25" y1="2" x2="25" y2="48" stroke="#ffffff" stroke-width="0.15"/>
+          <line x1="37.5" y1="2" x2="37.5" y2="48" stroke="#ffffff" stroke-width="0.15"/>
+          <line x1="50" y1="2" x2="50" y2="48" stroke="#ffffff" stroke-width="0.15"/>
+          <line x1="62.5" y1="2" x2="62.5" y2="48" stroke="#ffffff" stroke-width="0.15"/>
+          <line x1="75" y1="2" x2="75" y2="48" stroke="#ffffff" stroke-width="0.15"/>
+          <line x1="87.5" y1="2" x2="87.5" y2="48" stroke="#ffffff" stroke-width="0.15"/>
+          <line x1="2" y1="12.5" x2="98" y2="12.5" stroke="#ffffff" stroke-width="0.15"/>
+          <line x1="2" y1="25" x2="98" y2="25" stroke="#ffffff" stroke-width="0.15"/>
+          <line x1="2" y1="37.5" x2="98" y2="37.5" stroke="#ffffff" stroke-width="0.15"/>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Ball Rack -->
+    <div class="ball-rack" id="ballRack">
+      <div class="rack-label">Drag balls onto the table - positions are preserved when printing</div>
+    </div>
+
+    <p class="instructions">Drag balls from rack to table. Balls return to rack if dropped outside. Cue-Ghost line appears when both are placed. Click a pocket to set target.</p>
+
+    <!-- Shot Info Panel -->
+    <div class="shot-info" id="shotInfo">
+      <div class="info-row"><span class="info-label">Cut Angle:</span> <span id="cutAngleDisplay">--</span></div>
+      <div class="info-row"><span class="info-label">Ball Hit:</span> <span id="overlapDisplay">--</span></div>
+    </div>
+
+    <!-- Cue Ball Controls Panel -->
+    <div class="cue-controls-panel">
+      <!-- Shooter's Eye View - Ball Overlap Diagram -->
+      <div class="overlap-diagram-container">
+        <div class="control-label">Shooter's View</div>
+        <svg id="overlap-diagram" viewBox="-3 -1.5 6 3" width="140" height="70">
+          <!-- Background -->
+          <rect x="-3" y="-1.5" width="6" height="3" fill="#1a1a2e"/>
+          <!-- Object Ball (solid, slightly right) -->
+          <circle id="overlap-obj-ball" cx="0.5" cy="0" r="1" fill="none" stroke="#ff6b35" stroke-width="0.08"/>
+          <text x="0.5" y="0.05" text-anchor="middle" font-size="0.35" fill="#ff6b35">OB</text>
+          <!-- Ghost Ball (dashed, position based on overlap) -->
+          <circle id="overlap-ghost-ball" cx="-0.5" cy="0" r="1" fill="rgba(255,215,0,0.15)" stroke="#ffd700" stroke-width="0.08" stroke-dasharray="0.15,0.1"/>
+          <text id="overlap-ghost-label" x="-0.5" y="0.05" text-anchor="middle" font-size="0.35" fill="#ffd700">GB</text>
+          <!-- Overlap region highlight -->
+          <clipPath id="clip-obj-ball">
+            <circle cx="0.5" cy="0" r="1"/>
+          </clipPath>
+          <circle id="overlap-region" cx="-0.5" cy="0" r="1" fill="rgba(0,255,170,0.25)" clip-path="url(#clip-obj-ball)"/>
+          <!-- Center line reference -->
+          <line x1="-3" y1="0" x2="3" y2="0" stroke="#333" stroke-width="0.03" stroke-dasharray="0.1,0.1"/>
+        </svg>
+        <div class="overlap-display">
+          <span id="overlapPercent">50%</span> overlap
+        </div>
+      </div>
+
+      <!-- Cue Ball Contact Diagram -->
+      <div class="contact-diagram-container">
+        <div class="control-label">Cue Tip Contact</div>
+        <svg id="contact-diagram" viewBox="-1.5 -1.5 3 3" width="100" height="100">
+          <!-- Ball outline -->
+          <circle cx="0" cy="0" r="1.125" fill="#e8e8e8" stroke="#999" stroke-width="0.05"/>
+          <!-- Miscue zone (outer ring) -->
+          <circle cx="0" cy="0" r="1.125" fill="none" stroke="#ff4444" stroke-width="0.1" stroke-dasharray="0.15,0.1" opacity="0.3"/>
+          <!-- Safe zone boundary -->
+          <circle cx="0" cy="0" r="0.56" fill="none" stroke="#4a4a4a" stroke-width="0.02" stroke-dasharray="0.1,0.05"/>
+          <!-- Crosshairs -->
+          <line x1="-0.8" y1="0" x2="0.8" y2="0" stroke="#ccc" stroke-width="0.03"/>
+          <line x1="0" y1="-0.8" x2="0" y2="0.8" stroke="#ccc" stroke-width="0.03"/>
+          <!-- Zone labels -->
+          <text x="0" y="-0.95" text-anchor="middle" font-size="0.18" fill="#666">Follow</text>
+          <text x="0" y="1.05" text-anchor="middle" font-size="0.18" fill="#666">Draw</text>
+          <text x="-0.95" y="0.05" text-anchor="middle" font-size="0.15" fill="#666">L</text>
+          <text x="0.95" y="0.05" text-anchor="middle" font-size="0.15" fill="#666">R</text>
+          <!-- Cue tip contact point (draggable) -->
+          <circle id="contact-point" cx="0" cy="0" r="0.15" fill="#0066cc" stroke="#003366" stroke-width="0.03" cursor="move"/>
+        </svg>
+        <div class="spin-display">
+          <span id="spinType">Center</span>
+        </div>
+      </div>
+
+      <!-- Force Slider -->
+      <div class="force-container">
+        <div class="control-label">Power</div>
+        <div class="force-slider-wrapper">
+          <input type="range" id="forceSlider" min="1" max="10" value="5" step="0.5"/>
+          <div class="force-labels">
+            <span>Soft</span>
+            <span>Medium</span>
+            <span>Hard</span>
+          </div>
+        </div>
+        <div class="force-value"><span id="forceValue">5</span>/10</div>
+      </div>
+
+      <!-- Legend -->
+      <div class="path-legend">
+        <div class="legend-item"><span class="legend-line aim-line"></span> Aim Line</div>
+        <div class="legend-item"><span class="legend-line target-line"></span> Target</div>
+        <div class="legend-item"><span class="legend-line obj-path"></span> OB Path</div>
+        <div class="legend-item"><span class="legend-line cb-path"></span> CB Path</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const container = document.getElementById('diagramContainer');
+      const tableWrapper = document.getElementById('tableWrapper');
+      const ballRack = document.getElementById('ballRack');
+      const cueGhostLine = document.getElementById('cue-ghost-line');
+      const targetLine = document.getElementById('target-line');
+      const ghostBallIndicator = document.getElementById('ghost-ball-indicator');
+      const tableSvg = document.getElementById('pool-table-svg');
+      const cutAngleDisplay = document.getElementById('cutAngleDisplay');
+      const overlapDisplay = document.getElementById('overlapDisplay');
+      const objBallPath = document.getElementById('obj-ball-path');
+      const cueBallPath = document.getElementById('cue-ball-path');
+      const contactPoint = document.getElementById('contact-point');
+      const contactDiagram = document.getElementById('contact-diagram');
+      const spinTypeDisplay = document.getElementById('spinType');
+      const forceSlider = document.getElementById('forceSlider');
+      const forceValueDisplay = document.getElementById('forceValue');
+      const overlapGhostBall = document.getElementById('overlap-ghost-ball');
+      const overlapGhostLabel = document.getElementById('overlap-ghost-label');
+      const overlapRegion = document.getElementById('overlap-region');
+      const overlapPercentDisplay = document.getElementById('overlapPercent');
+
+      // Pocket mouth centers (narrowest entry point for aiming)
+      const pocketCenters = {
+        'corner-tl': { x: 1.5, y: 1.5 },
+        'corner-tr': { x: 98.5, y: 1.5 },
+        'corner-bl': { x: 1.5, y: 48.5 },
+        'corner-br': { x: 98.5, y: 48.5 },
+        'side-top': { x: 50, y: 0 },
+        'side-bottom': { x: 50, y: 50 }
+      };
+
+      const BALL_RADIUS = 1.125; // inches (2.25" diameter / 2)
+
+      // Selection state
+      let selectedBallId = null;  // Last dragged object ball
+      let selectedPocket = null;  // Clicked pocket
+
+      // Cue ball contact state (offset from center, in ball radii)
+      let contactOffset = { x: 0, y: 0 };  // x: english (+ = right), y: spin (- = follow, + = draw)
+      let shotForce = 5;  // 1-10 scale
+      let isDraggingContact = false;
+
+      // Geometry helper functions
+      function vectorSubtract(a, b) {
+        return { x: a.x - b.x, y: a.y - b.y };
+      }
+
+      function vectorLength(v) {
+        return Math.sqrt(v.x * v.x + v.y * v.y);
+      }
+
+      function vectorNormalize(v) {
+        const len = vectorLength(v);
+        if (len === 0) return { x: 0, y: 0 };
+        return { x: v.x / len, y: v.y / len };
+      }
+
+      function dotProduct(a, b) {
+        return a.x * b.x + a.y * b.y;
+      }
+
+      // Calculate angle between two vectors (in degrees)
+      function angleBetweenVectors(v1, v2) {
+        const n1 = vectorNormalize(v1);
+        const n2 = vectorNormalize(v2);
+        const dot = Math.max(-1, Math.min(1, dotProduct(n1, n2))); // Clamp to [-1, 1]
+        return Math.acos(dot) * (180 / Math.PI);
+      }
+
+      // Get ball hit fraction name from cut angle
+      function getBallHitName(cutAngle) {
+        if (cutAngle < 7) return 'Full ball';
+        if (cutAngle < 22) return '3/4 ball';
+        if (cutAngle < 40) return '1/2 ball';
+        if (cutAngle < 58) return '1/4 ball';
+        return 'Thin cut';
+      }
+
+      // Update the shooter's eye view overlap diagram
+      // Shows ghost ball and object ball overlap as seen from behind cue ball
+      function updateOverlapDiagram(overlapFraction) {
+        // Ball radius in the diagram is 1 unit
+        // Object ball is fixed at x=0.5
+        // Ghost ball position: offset based on overlap
+        // offset = (1 - overlap) * 2 * radius
+        // For overlap=1 (full): ghost at 0.5 (same as OB)
+        // For overlap=0.5 (half): ghost at -0.5 (offset by 1 radius)
+        // For overlap=0 (miss): ghost at -1.5 (offset by 2 radii)
+
+        const objBallX = 0.5;
+        const ballRadius = 1;
+        const offset = (1 - overlapFraction) * 2 * ballRadius;
+        const ghostBallX = objBallX - offset;
+
+        // Update ghost ball position
+        overlapGhostBall.setAttribute('cx', ghostBallX);
+        overlapGhostLabel.setAttribute('x', ghostBallX);
+        overlapRegion.setAttribute('cx', ghostBallX);
+
+        // Update percentage display
+        overlapPercentDisplay.textContent = Math.round(overlapFraction * 100) + '%';
+      }
+
+      // Calculate overlap fraction (1 = full ball, 0 = no overlap)
+      function calculateOverlap(cutAngleDegrees) {
+        const cutAngleRad = cutAngleDegrees * (Math.PI / 180);
+        return 1 - Math.sin(cutAngleRad);
+      }
+
+      // Get spin type description from contact offset
+      function getSpinType(offset) {
+        const threshold = 0.15;
+        const parts = [];
+
+        if (offset.y < -threshold) parts.push('Follow');
+        else if (offset.y > threshold) parts.push('Draw');
+
+        if (offset.x < -threshold) parts.push('Left');
+        else if (offset.x > threshold) parts.push('Right');
+
+        if (parts.length === 0) return 'Center';
+        return parts.join(' + ');
+      }
+
+      // Calculate perpendicular vector (90° rotation)
+      function vectorPerpendicular(v) {
+        return { x: -v.y, y: v.x };
+      }
+
+      // Scale a vector
+      function vectorScale(v, s) {
+        return { x: v.x * s, y: v.y * s };
+      }
+
+      // Add two vectors
+      function vectorAdd(a, b) {
+        return { x: a.x + b.x, y: a.y + b.y };
+      }
+
+      // Clamp a value between min and max
+      function clamp(val, min, max) {
+        return Math.max(min, Math.min(max, val));
+      }
+
+      // Calculate cue ball path after contact (tangent line + curve for spin)
+      // Physics: After collision, CB travels perpendicular to OB path (90° rule for stun)
+      // Follow (top spin) curves forward, Draw (back spin) curves backward
+      function calculateCueBallPath(ghostBallPos, objBallDirection, contactOff, force) {
+        // Tangent line is perpendicular to object ball path
+        const tangent1 = vectorPerpendicular(objBallDirection);
+        const tangent2 = vectorScale(tangent1, -1);
+
+        // Get cue ball position to determine which tangent direction
+        const cuePos = ballPositions['cue'];
+        if (!cuePos) return null;
+
+        // The CB deflects in the direction of its velocity component perpendicular to the contact line
+        // This is the tangent that has a POSITIVE dot product with the incoming direction
+        const cueToGhost = vectorSubtract(ghostBallPos, cuePos);
+        const dot1 = dotProduct(tangent1, cueToGhost);
+        const tangent = dot1 > 0 ? tangent1 : tangent2;  // Choose tangent aligned with incoming perpendicular component
+
+        // Base path length depends on force (longer for harder shots)
+        const baseLength = 5 + force * 3;  // 8 to 35 units
+
+        // Contact diagram: y < 0 = Follow (top), y > 0 = Draw (bottom)
+        // Follow (top spin): CB curves FORWARD (same direction as OB went)
+        // Draw (back spin): CB curves BACKWARD (opposite to OB direction)
+        const spinAmount = Math.abs(contactOff.y) * (force / 5);
+
+        // Calculate end point
+        // Start: ghost ball position (where cue ball will be after contact)
+        const start = ghostBallPos;
+
+        // For a stun shot, end is along tangent
+        const tangentEnd = vectorAdd(start, vectorScale(tangent, baseLength));
+
+        // Curve direction based on spin type
+        // contactOff.y < 0 = Follow = curve toward OB direction (forward)
+        // contactOff.y > 0 = Draw = curve opposite OB direction (backward)
+        const curveDirection = contactOff.y > 0
+          ? vectorScale(objBallDirection, -1)  // Draw: curve back toward shooter
+          : objBallDirection;  // Follow: curve forward with OB
+
+        const curveAmount = spinAmount * 10;
+        const curvedEnd = vectorAdd(tangentEnd, vectorScale(curveDirection, curveAmount));
+
+        // For path visualization, use quadratic bezier for curved path
+        // Control point is along tangent, end point has the curve
+        const controlDist = baseLength * 0.6;
+        const control = vectorAdd(start, vectorScale(tangent, controlDist));
+
+        return {
+          start: start,
+          control: control,
+          end: Math.abs(contactOff.y) > 0.1 ? curvedEnd : tangentEnd,
+          isCurved: Math.abs(contactOff.y) > 0.1
+        };
+      }
+
+      // Ball definitions in order
+      const balls = [
+        { id: 'cue', label: 'CUE', cls: 'ball-cue' },
+        { id: 'ghost', label: 'AIM', cls: 'ball-ghost' },
+        { id: '1', label: '1', cls: 'ball-1' },
+        { id: '2', label: '2', cls: 'ball-2' },
+        { id: '3', label: '3', cls: 'ball-3' },
+        { id: '4', label: '4', cls: 'ball-4' },
+        { id: '5', label: '5', cls: 'ball-5' },
+        { id: '6', label: '6', cls: 'ball-6' },
+        { id: '7', label: '7', cls: 'ball-7' },
+        { id: '8', label: '8', cls: 'ball-8' },
+        { id: '9', label: '9', cls: 'ball-9' },
+        { id: '10', label: '10', cls: 'ball-10' },
+        { id: '11', label: '11', cls: 'ball-11' },
+        { id: '12', label: '12', cls: 'ball-12' },
+        { id: '13', label: '13', cls: 'ball-13' },
+        { id: '14', label: '14', cls: 'ball-14' },
+        { id: '15', label: '15', cls: 'ball-15' },
+        { id: 'gray', label: 'OBJ', cls: 'ball-gray' }
+      ];
+
+      let draggedBall = null;
+      let offsetX = 0, offsetY = 0;
+      const ballPositions = {}; // Track SVG coordinates for balls on table
+
+      // Create balls in rack
+      function createBalls() {
+        balls.forEach((ball, i) => {
+          const el = document.createElement('div');
+          el.className = `ball ${ball.cls}`;
+          el.id = `ball-${ball.id}`;
+          el.textContent = ball.label;
+          el.dataset.ballId = ball.id;
+          ballRack.appendChild(el);
+
+          // Add separator after ghost ball
+          if (ball.id === 'ghost') {
+            const sep = document.createElement('div');
+            sep.className = 'rack-separator';
+            ballRack.appendChild(sep);
+          }
+        });
+      }
+
+      // Convert page coordinates to SVG coordinates
+      function pageToSvg(pageX, pageY) {
+        const rect = tableSvg.getBoundingClientRect();
+        const viewBox = tableSvg.viewBox.baseVal;
+
+        const scaleX = viewBox.width / rect.width;
+        const scaleY = viewBox.height / rect.height;
+
+        return {
+          x: (pageX - rect.left) * scaleX + viewBox.x,
+          y: (pageY - rect.top) * scaleY + viewBox.y
+        };
+      }
+
+      // Convert SVG coordinates to page position (for ball placement)
+      function svgToPage(svgX, svgY) {
+        const rect = tableSvg.getBoundingClientRect();
+        const viewBox = tableSvg.viewBox.baseVal;
+
+        const scaleX = rect.width / viewBox.width;
+        const scaleY = rect.height / viewBox.height;
+
+        return {
+          x: (svgX - viewBox.x) * scaleX + rect.left,
+          y: (svgY - viewBox.y) * scaleY + rect.top
+        };
+      }
+
+      // Check if SVG point is on the playing surface
+      function isOnPlayingSurface(svgX, svgY) {
+        return svgX >= 2 && svgX <= 98 && svgY >= 2 && svgY <= 48;
+      }
+
+      // Update the cue-ghost connection line
+      function updateCueGhostLine() {
+        const cuePos = ballPositions['cue'];
+        const ghostPos = ballPositions['ghost'];
+
+        if (cuePos && ghostPos) {
+          cueGhostLine.setAttribute('x1', cuePos.x);
+          cueGhostLine.setAttribute('y1', cuePos.y);
+          cueGhostLine.setAttribute('x2', ghostPos.x);
+          cueGhostLine.setAttribute('y2', ghostPos.y);
+          cueGhostLine.setAttribute('visibility', 'visible');
+        } else {
+          cueGhostLine.setAttribute('visibility', 'hidden');
+        }
+
+        // Update shot geometry whenever cue-ghost line changes
+        updateShotGeometry();
+      }
+
+      // Update target line and calculate aiming angles
+      function updateShotGeometry() {
+        const ghostPos = ballPositions['ghost'];
+        const objBallPos = selectedBallId ? ballPositions[selectedBallId] : null;
+        const pocketPos = selectedPocket ? pocketCenters[selectedPocket] : null;
+        const cuePos = ballPositions['cue'];
+
+        // Need object ball and pocket selected to show target line
+        if (objBallPos && pocketPos) {
+          targetLine.setAttribute('x1', objBallPos.x);
+          targetLine.setAttribute('y1', objBallPos.y);
+          targetLine.setAttribute('x2', pocketPos.x);
+          targetLine.setAttribute('y2', pocketPos.y);
+          targetLine.setAttribute('visibility', 'visible');
+
+          // Calculate ghost ball position (where cue ball should contact object ball)
+          // Ghost ball is positioned along the obj-pocket line, one ball diameter back from object ball
+          const objToPocket = vectorNormalize(vectorSubtract(pocketPos, objBallPos));
+          const ghostBallX = objBallPos.x - objToPocket.x * (BALL_RADIUS * 2);
+          const ghostBallY = objBallPos.y - objToPocket.y * (BALL_RADIUS * 2);
+          const ghostBallPosition = { x: ghostBallX, y: ghostBallY };
+
+          ghostBallIndicator.setAttribute('cx', ghostBallX);
+          ghostBallIndicator.setAttribute('cy', ghostBallY);
+          ghostBallIndicator.setAttribute('visibility', 'visible');
+
+          // Object ball path - from ghost ball through object ball, extended
+          const objPathLength = 60;  // Extend line to edge of table
+          const objPathEnd = vectorAdd(objBallPos, vectorScale(objToPocket, objPathLength));
+          objBallPath.setAttribute('x1', ghostBallX);
+          objBallPath.setAttribute('y1', ghostBallY);
+          objBallPath.setAttribute('x2', objPathEnd.x);
+          objBallPath.setAttribute('y2', objPathEnd.y);
+          objBallPath.setAttribute('visibility', 'visible');
+
+          // Cue ball path after contact
+          if (cuePos) {
+            const cbPath = calculateCueBallPath(ghostBallPosition, objToPocket, contactOffset, shotForce);
+            if (cbPath) {
+              if (cbPath.isCurved) {
+                // Quadratic bezier curve for spin effects
+                cueBallPath.setAttribute('d',
+                  `M ${cbPath.start.x} ${cbPath.start.y} Q ${cbPath.control.x} ${cbPath.control.y} ${cbPath.end.x} ${cbPath.end.y}`
+                );
+              } else {
+                // Straight line for stun shot
+                cueBallPath.setAttribute('d',
+                  `M ${cbPath.start.x} ${cbPath.start.y} L ${cbPath.end.x} ${cbPath.end.y}`
+                );
+              }
+              cueBallPath.setAttribute('visibility', 'visible');
+            } else {
+              cueBallPath.setAttribute('visibility', 'hidden');
+            }
+          } else {
+            cueBallPath.setAttribute('visibility', 'hidden');
+          }
+
+          // If we have cue and aim positions, calculate the cut angle
+          if (cuePos && ghostPos) {
+            // Vector from cue to ghost (aim point)
+            const aimVector = vectorSubtract(ghostPos, cuePos);
+            // Vector from object ball to pocket
+            const targetVector = vectorSubtract(pocketPos, objBallPos);
+
+            // Cut angle is the angle between these two vectors
+            const cutAngle = angleBetweenVectors(aimVector, targetVector);
+            const overlap = calculateOverlap(cutAngle);
+            const hitName = getBallHitName(cutAngle);
+
+            cutAngleDisplay.textContent = cutAngle.toFixed(1) + '°';
+            overlapDisplay.textContent = `${hitName} (${(overlap * 100).toFixed(0)}%)`;
+
+            // Update shooter's eye view overlap diagram
+            updateOverlapDiagram(overlap);
+          } else {
+            cutAngleDisplay.textContent = '--';
+            overlapDisplay.textContent = '--';
+            updateOverlapDiagram(0.5);  // Default to half-ball view
+          }
+        } else {
+          targetLine.setAttribute('visibility', 'hidden');
+          ghostBallIndicator.setAttribute('visibility', 'hidden');
+          objBallPath.setAttribute('visibility', 'hidden');
+          cueBallPath.setAttribute('visibility', 'hidden');
+          cutAngleDisplay.textContent = '--';
+          overlapDisplay.textContent = '--';
+          updateOverlapDiagram(0.5);  // Default to half-ball view
+        }
+      }
+
+      // Select a ball (highlight it)
+      function selectBall(ballId) {
+        // Remove previous selection highlight
+        if (selectedBallId) {
+          const prevBall = document.getElementById(`ball-${selectedBallId}`);
+          if (prevBall) prevBall.classList.remove('selected');
+        }
+
+        selectedBallId = ballId;
+
+        // Add selection highlight
+        if (selectedBallId) {
+          const ball = document.getElementById(`ball-${selectedBallId}`);
+          if (ball) ball.classList.add('selected');
+        }
+
+        updateShotGeometry();
+      }
+
+      // Select a pocket (highlight it)
+      function selectPocket(pocketId) {
+        // Remove previous pocket highlight
+        document.querySelectorAll('.pocket-target').forEach(p => p.classList.remove('selected'));
+
+        selectedPocket = pocketId;
+
+        // Add highlight to selected pocket
+        if (selectedPocket) {
+          const pocket = document.querySelector(`.pocket-target[data-pocket="${selectedPocket}"]`);
+          if (pocket) pocket.classList.add('selected');
+        }
+
+        updateShotGeometry();
+      }
+
+      // Setup pocket click handlers
+      function setupPocketHandlers() {
+        document.querySelectorAll('.pocket-target').forEach(pocket => {
+          pocket.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const pocketId = pocket.dataset.pocket;
+            // Toggle selection
+            if (selectedPocket === pocketId) {
+              selectPocket(null);
+            } else {
+              selectPocket(pocketId);
+            }
+          });
+        });
+      }
+
+      // Position ball element on table using SVG coordinates
+      function positionBallOnTable(ball, svgX, svgY) {
+        const wrapperRect = tableWrapper.getBoundingClientRect();
+        const pagePos = svgToPage(svgX, svgY);
+
+        ball.style.position = 'absolute';
+        ball.style.left = (pagePos.x - wrapperRect.left - 12) + 'px'; // 12 = half ball width
+        ball.style.top = (pagePos.y - wrapperRect.top - 12) + 'px';
+        ball.classList.add('on-table');
+
+        if (ball.parentElement !== tableWrapper) {
+          tableWrapper.appendChild(ball);
+        }
+      }
+
+      // Reposition all balls on table (call on resize)
+      function repositionAllBalls() {
+        Object.keys(ballPositions).forEach(ballId => {
+          const pos = ballPositions[ballId];
+          const ball = document.getElementById(`ball-${ballId}`);
+          if (ball && pos) {
+            positionBallOnTable(ball, pos.x, pos.y);
+          }
+        });
+      }
+
+      // Start drag
+      function startDrag(e) {
+        const ball = e.target.closest('.ball');
+        if (!ball) return;
+
+        e.preventDefault();
+        draggedBall = ball;
+        draggedBall.classList.add('dragging');
+
+        const rect = ball.getBoundingClientRect();
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+        offsetX = clientX - rect.left - 12;
+        offsetY = clientY - rect.top - 12;
+
+        // Move to table wrapper for dragging
+        if (!ball.classList.contains('on-table')) {
+          const wrapperRect = tableWrapper.getBoundingClientRect();
+          ball.style.position = 'absolute';
+          ball.style.left = (rect.left - wrapperRect.left) + 'px';
+          ball.style.top = (rect.top - wrapperRect.top) + 'px';
+          tableWrapper.appendChild(ball);
+        }
+      }
+
+      // During drag
+      function doDrag(e) {
+        if (!draggedBall) return;
+        e.preventDefault();
+
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+        const wrapperRect = tableWrapper.getBoundingClientRect();
+        const newLeft = clientX - wrapperRect.left - offsetX - 12;
+        const newTop = clientY - wrapperRect.top - offsetY - 12;
+
+        draggedBall.style.left = newLeft + 'px';
+        draggedBall.style.top = newTop + 'px';
+      }
+
+      // End drag
+      function endDrag(e) {
+        if (!draggedBall) return;
+
+        draggedBall.classList.remove('dragging');
+
+        const ballId = draggedBall.dataset.ballId;
+        const rect = draggedBall.getBoundingClientRect();
+        const centerX = rect.left + 12;
+        const centerY = rect.top + 12;
+
+        const svgPos = pageToSvg(centerX, centerY);
+
+        if (isOnPlayingSurface(svgPos.x, svgPos.y)) {
+          // Place on table
+          ballPositions[ballId] = { x: svgPos.x, y: svgPos.y };
+          positionBallOnTable(draggedBall, svgPos.x, svgPos.y);
+          draggedBall.classList.add('on-table');
+
+          // Auto-select object balls when dropped (not cue or ghost)
+          if (ballId !== 'cue' && ballId !== 'ghost') {
+            selectBall(ballId);
+          }
+        } else {
+          // Return to rack
+          delete ballPositions[ballId];
+          draggedBall.style.position = '';
+          draggedBall.style.left = '';
+          draggedBall.style.top = '';
+          draggedBall.classList.remove('on-table');
+          ballRack.appendChild(draggedBall);
+
+          // Deselect if this ball was selected
+          if (selectedBallId === ballId) {
+            selectBall(null);
+          }
+        }
+
+        updateCueGhostLine();
+        draggedBall = null;
+      }
+
+      // Event listeners
+      document.addEventListener('mousedown', startDrag);
+      document.addEventListener('mousemove', doDrag);
+      document.addEventListener('mouseup', endDrag);
+
+      document.addEventListener('touchstart', startDrag, { passive: false });
+      document.addEventListener('touchmove', doDrag, { passive: false });
+      document.addEventListener('touchend', endDrag);
+
+      // Reposition on resize
+      window.addEventListener('resize', repositionAllBalls);
+
+      // Contact point drag handlers
+      function getContactDiagramCoords(e) {
+        const rect = contactDiagram.getBoundingClientRect();
+        const viewBox = contactDiagram.viewBox.baseVal;
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+        const scaleX = viewBox.width / rect.width;
+        const scaleY = viewBox.height / rect.height;
+
+        return {
+          x: (clientX - rect.left) * scaleX + viewBox.x,
+          y: (clientY - rect.top) * scaleY + viewBox.y
+        };
+      }
+
+      function startContactDrag(e) {
+        if (e.target === contactPoint) {
+          e.preventDefault();
+          isDraggingContact = true;
+        }
+      }
+
+      function doContactDrag(e) {
+        if (!isDraggingContact) return;
+        e.preventDefault();
+
+        const coords = getContactDiagramCoords(e);
+
+        // Limit to within ball radius (with some buffer for miscue zone)
+        const maxRadius = 0.56;  // Half ball radius = safe zone
+        const dist = Math.sqrt(coords.x * coords.x + coords.y * coords.y);
+
+        if (dist > maxRadius) {
+          // Clamp to max radius
+          coords.x = (coords.x / dist) * maxRadius;
+          coords.y = (coords.y / dist) * maxRadius;
+        }
+
+        contactOffset = { x: coords.x, y: coords.y };
+        contactPoint.setAttribute('cx', coords.x);
+        contactPoint.setAttribute('cy', coords.y);
+
+        // Update spin type display
+        spinTypeDisplay.textContent = getSpinType(contactOffset);
+
+        // Update shot geometry
+        updateShotGeometry();
+      }
+
+      function endContactDrag(e) {
+        isDraggingContact = false;
+      }
+
+      // Double-click to reset contact point to center
+      function resetContactPoint(e) {
+        if (e.target === contactPoint || e.target.closest('#contact-diagram')) {
+          contactOffset = { x: 0, y: 0 };
+          contactPoint.setAttribute('cx', 0);
+          contactPoint.setAttribute('cy', 0);
+          spinTypeDisplay.textContent = 'Center';
+          updateShotGeometry();
+        }
+      }
+
+      // Contact point event listeners
+      contactDiagram.addEventListener('mousedown', startContactDrag);
+      document.addEventListener('mousemove', doContactDrag);
+      document.addEventListener('mouseup', endContactDrag);
+      contactDiagram.addEventListener('touchstart', startContactDrag, { passive: false });
+      document.addEventListener('touchmove', doContactDrag, { passive: false });
+      document.addEventListener('touchend', endContactDrag);
+      contactDiagram.addEventListener('dblclick', resetContactPoint);
+
+      // Force slider handler
+      forceSlider.addEventListener('input', (e) => {
+        shotForce = parseFloat(e.target.value);
+        forceValueDisplay.textContent = shotForce;
+        updateShotGeometry();
+      });
+
+      // Set up a default demo shot - classic 45° cut to corner
+      // This helps verify the physics visually
+      function setupDemoShot() {
+        // Object ball at center-right area
+        const objBallX = 70;
+        const objBallY = 25;
+
+        // Target: bottom-right corner pocket
+        const pocketId = 'corner-br';
+        const pocket = pocketCenters[pocketId];
+
+        // Calculate ghost ball position (where CB must contact OB)
+        const objToPocket = vectorNormalize(vectorSubtract(pocket, { x: objBallX, y: objBallY }));
+        const ghostBallX = objBallX - objToPocket.x * (BALL_RADIUS * 2);
+        const ghostBallY = objBallY - objToPocket.y * (BALL_RADIUS * 2);
+
+        // Cue ball at head area, positioned for the cut shot
+        const cueBallX = 25;
+        const cueBallY = 20;
+
+        // Place the balls
+        const positions = {
+          'cue': { x: cueBallX, y: cueBallY },
+          'ghost': { x: ghostBallX, y: ghostBallY },
+          'gray': { x: objBallX, y: objBallY }
+        };
+
+        // Set positions and move balls to table
+        Object.keys(positions).forEach(ballId => {
+          ballPositions[ballId] = positions[ballId];
+          const ball = document.getElementById(`ball-${ballId}`);
+          if (ball) {
+            positionBallOnTable(ball, positions[ballId].x, positions[ballId].y);
+          }
+        });
+
+        // Select the gray ball and pocket
+        selectBall('gray');
+        selectPocket(pocketId);
+
+        // Update all visualizations
+        updateCueGhostLine();
+      }
+
+      // Initialize
+      createBalls();
+      setupPocketHandlers();
+
+      // Set up demo shot after a brief delay (to ensure DOM is ready)
+      setTimeout(setupDemoShot, 100);
+    })();
+  </script>
+</body>
+</html>

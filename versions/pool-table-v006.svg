@@ -1,0 +1,547 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ACE Shot Diagrams - Pool Table SVG Template v006
+  9-ft Regulation Table (100" x 50" playing surface)
+
+  ORIENTATION (Horizontal/Landscape):
+  - Long axis = X (100 units)
+  - Short axis = Y (50 units)
+  - HEAD rail = LEFT (x=0) - breaking end
+  - FOOT rail = RIGHT (x=100) - racking end
+  - LONG rails = TOP (y=0) and BOTTOM (y=50)
+  - Side pockets on LONG rails at x=50
+
+  POCKET CONSTRUCTION (v006):
+  - Layer 3: Dark pocket voids (drop holes)
+  - Layer 4: Slate with SCALLOPED CUTOUTS (boolean subtraction)
+  - Layer 5: Cushions frame pocket openings
+
+  Scale: 1 unit = 1 inch
+  viewBox includes 8-unit rail width on each side
+-->
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="-8 -8 116 66"
+  width="100%"
+  height="100%"
+  role="img"
+  aria-label="Pool table diagram for shot planning"
+>
+  <title>Pool Table - Top Down View</title>
+  <desc>A detailed SVG diagram of a 9-foot pool table. HEAD (breaking end) at left, FOOT (racking end) at right.</desc>
+
+  <!-- ============================================ -->
+  <!-- DEFINITIONS (Gradients, Patterns, Markers)  -->
+  <!-- ============================================ -->
+  <defs>
+    <!-- Wood grain pattern for rails -->
+    <pattern id="wood-grain" patternUnits="userSpaceOnUse" width="4" height="4">
+      <rect width="4" height="4" fill="#5a3825"/>
+      <path d="M0 2 Q1 1.5 2 2 T4 2" stroke="#4a2c2a" stroke-width="0.3" fill="none" opacity="0.5"/>
+      <path d="M0 3.5 Q1 3 2 3.5 T4 3.5" stroke="#6b4332" stroke-width="0.2" fill="none" opacity="0.3"/>
+    </pattern>
+
+    <!-- Cloth texture pattern -->
+    <pattern id="cloth-texture" patternUnits="userSpaceOnUse" width="2" height="2">
+      <rect width="2" height="2" fill="#0a7a45"/>
+      <circle cx="0.5" cy="0.5" r="0.1" fill="#0a8a4a" opacity="0.3"/>
+      <circle cx="1.5" cy="1.5" r="0.1" fill="#096a3a" opacity="0.3"/>
+    </pattern>
+
+    <!-- Arrow marker for shot paths -->
+    <marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L6,3 z" fill="#ffffff"/>
+    </marker>
+
+    <marker id="arrow-yellow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L6,3 z" fill="#ffd700"/>
+    </marker>
+
+    <!-- Pocket drop shadow -->
+    <filter id="pocket-shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="0.5" stdDeviation="0.5" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+
+    <!-- Ball shadow -->
+    <filter id="ball-shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0.2" dy="0.2" stdDeviation="0.3" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+
+    <!-- Ball gradient for 3D effect -->
+    <radialGradient id="ball-highlight" cx="35%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="white" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Spot glow -->
+    <filter id="spot-glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="0.3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- POCKET GRADIENTS - darker toward the drop, lighter toward table opening -->
+
+    <!-- Corner pocket gradients (hole in corner, opening faces table at 45°) -->
+    <!-- Top-left: opening faces toward (+x, +y), so gradient dark at top-left -->
+    <radialGradient id="pocket-gradient-tl" cx="20%" cy="20%" r="80%">
+      <stop offset="0%" stop-color="#000000"/>
+      <stop offset="60%" stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#1a1a1a"/>
+    </radialGradient>
+
+    <!-- Top-right: opening faces toward (-x, +y), so gradient dark at top-right -->
+    <radialGradient id="pocket-gradient-tr" cx="80%" cy="20%" r="80%">
+      <stop offset="0%" stop-color="#000000"/>
+      <stop offset="60%" stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#1a1a1a"/>
+    </radialGradient>
+
+    <!-- Bottom-left: opening faces toward (+x, -y), so gradient dark at bottom-left -->
+    <radialGradient id="pocket-gradient-bl" cx="20%" cy="80%" r="80%">
+      <stop offset="0%" stop-color="#000000"/>
+      <stop offset="60%" stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#1a1a1a"/>
+    </radialGradient>
+
+    <!-- Bottom-right: opening faces toward (-x, -y), so gradient dark at bottom-right -->
+    <radialGradient id="pocket-gradient-br" cx="80%" cy="80%" r="80%">
+      <stop offset="0%" stop-color="#000000"/>
+      <stop offset="60%" stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#1a1a1a"/>
+    </radialGradient>
+
+    <!-- Side pocket gradients (hole behind rail, opening faces into table) -->
+    <!-- Top side: opening faces down (+y), so gradient dark at top -->
+    <radialGradient id="pocket-gradient-side-top" cx="50%" cy="10%" r="90%">
+      <stop offset="0%" stop-color="#000000"/>
+      <stop offset="60%" stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#1a1a1a"/>
+    </radialGradient>
+
+    <!-- Bottom side: opening faces up (-y), so gradient dark at bottom -->
+    <radialGradient id="pocket-gradient-side-bottom" cx="50%" cy="90%" r="90%">
+      <stop offset="0%" stop-color="#000000"/>
+      <stop offset="60%" stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#1a1a1a"/>
+    </radialGradient>
+
+    <!-- Pocket liner/rim highlight -->
+    <filter id="pocket-inner-shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="0.5" result="blur"/>
+      <feOffset dx="0" dy="0" result="offsetblur"/>
+      <feFlood flood-color="#000000" flood-opacity="0.7"/>
+      <feComposite in2="offsetblur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Cue ball with crosshairs template -->
+    <g id="cueball-template">
+      <circle r="1.125" fill="#ffffff" filter="url(#ball-shadow)"/>
+      <circle r="1.125" fill="url(#ball-highlight)"/>
+      <line x1="-0.6" y1="0" x2="0.6" y2="0" stroke="#333" stroke-width="0.08"/>
+      <line x1="0" y1="-0.6" x2="0" y2="0.6" stroke="#333" stroke-width="0.08"/>
+      <circle r="0.15" fill="#ff0000" opacity="0.8"/>
+    </g>
+  </defs>
+
+  <!-- ============================================ -->
+  <!-- LAYER 1: OUTER FRAME / TABLE EDGE           -->
+  <!-- ============================================ -->
+  <g id="layer-outer-frame" class="table-frame">
+    <rect
+      x="-8" y="-8"
+      width="116" height="66"
+      rx="2" ry="2"
+      fill="#3d2317"
+      stroke="#2a1810"
+      stroke-width="0.5"
+    />
+  </g>
+
+  <!-- ============================================ -->
+  <!-- LAYER 2: RAILS (Wood surface)               -->
+  <!-- ============================================ -->
+  <g id="layer-rails" class="table-rails">
+    <!-- HEAD rail (LEFT - short rail) -->
+    <rect x="-6" y="-6" width="6" height="62" fill="url(#wood-grain)"/>
+    <!-- FOOT rail (RIGHT - short rail) -->
+    <rect x="100" y="-6" width="6" height="62" fill="url(#wood-grain)"/>
+    <!-- Top LONG rail -->
+    <rect x="0" y="-6" width="100" height="6" fill="url(#wood-grain)"/>
+    <!-- Bottom LONG rail -->
+    <rect x="0" y="50" width="100" height="6" fill="url(#wood-grain)"/>
+
+    <!-- Rail inner edge (decorative line) -->
+    <rect x="-2" y="-2" width="104" height="54" fill="none" stroke="#2a1810" stroke-width="0.3"/>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- LAYER 3: POCKET VOIDS (Dark background)     -->
+  <!-- ============================================ -->
+  <!--
+    This layer represents the dark void/abyss under the table
+    where balls fall into pockets. It shows through the
+    scalloped cutouts in the slate/cloth layer above.
+
+    Balls are 2.25" diameter - pocket openings should be
+    about 4.5-5" for corners, 5-5.5" for side pockets.
+  -->
+  <g id="layer-pocket-voids" class="pocket-voids">
+    <!--
+      Dark voids that show through the scalloped cutouts.
+      Sized to back the slate cutouts with slight margin.
+    -->
+    <!-- Corner pocket drop holes (r=4 to back r=3.5 cutout) -->
+    <circle cx="0" cy="0" r="4" fill="#050505"/>      <!-- Top-left -->
+    <circle cx="100" cy="0" r="4" fill="#050505"/>    <!-- Top-right -->
+    <circle cx="0" cy="50" r="4" fill="#050505"/>     <!-- Bottom-left -->
+    <circle cx="100" cy="50" r="4" fill="#050505"/>   <!-- Bottom-right -->
+    <!-- Side pocket drop holes - larger opening, extends into rail -->
+    <ellipse cx="50" cy="0" rx="4" ry="3" fill="#050505"/>   <!-- Top side -->
+    <ellipse cx="50" cy="50" rx="4" ry="3" fill="#050505"/>  <!-- Bottom side -->
+  </g>
+
+  <!-- ============================================ -->
+  <!-- LAYER 4: SLATE/CLOTH (with scalloped cutouts) -->
+  <!-- ============================================ -->
+  <!--
+    THE SLATE is the playing bed - a single piece (or 3 pieces)
+    with SCALLOPED CUTOUTS routed/cut for the 6 pockets.
+    The cloth covers the slate.
+
+    This is a BOOLEAN SUBTRACTION:
+    SLATE = RECTANGLE - 4_CORNER_SCALLOPS - 2_SIDE_SCALLOPS
+
+    The path traces the entire perimeter, curving OUTWARD
+    at each pocket location to create the scalloped edge.
+  -->
+  <g id="layer-slate-cloth" class="slate-cloth">
+    <!--
+      SLATE with SCALLOPED CUTOUTS at all 6 pocket locations.
+
+      The path traces the GREEN CLOTH boundary. Where the path
+      curves INWARD (toward pocket centers), the dark voids show through.
+
+      CORNER POCKETS: Quarter-circle cutouts (r=4) at each corner
+      - Top-left corner (0,0): path goes from (0,4) to (4,0)
+      - Path curves toward (0,0) revealing corner void
+
+      SIDE POCKETS: No slate scallop - void shows through rail gap
+      - Side pocket openings are in the RAIL, not cut into playing surface
+      - Void ellipses at (50,0) and (50,50) show between split cushions
+    -->
+    <path id="slate-surface"
+      d="
+        M 0,3.5
+        A 3.5,3.5 0 0,0 3.5,0
+        L 46,0
+        L 46,0.5
+        A 4,0.5 0 0,0 54,0.5
+        L 54,0
+        L 96.5,0
+        A 3.5,3.5 0 0,0 100,3.5
+        L 100,46.5
+        A 3.5,3.5 0 0,0 96.5,50
+        L 54,50
+        L 54,49.5
+        A 4,0.5 0 0,0 46,49.5
+        L 46,50
+        L 3.5,50
+        A 3.5,3.5 0 0,0 0,46.5
+        Z
+      "
+      fill="#0a7a45"
+    />
+    <!-- Subtle cloth texture overlay -->
+    <path
+      d="
+        M 0,3.5
+        A 3.5,3.5 0 0,0 3.5,0
+        L 46,0
+        L 46,0.5
+        A 4,0.5 0 0,0 54,0.5
+        L 54,0
+        L 96.5,0
+        A 3.5,3.5 0 0,0 100,3.5
+        L 100,46.5
+        A 3.5,3.5 0 0,0 96.5,50
+        L 54,50
+        L 54,49.5
+        A 4,0.5 0 0,0 46,49.5
+        L 46,50
+        L 3.5,50
+        A 3.5,3.5 0 0,0 0,46.5
+        Z
+      "
+      fill="url(#cloth-texture)"
+      opacity="0.1"
+    />
+  </g>
+
+  <!-- ============================================ -->
+  <!-- LAYER 5: CUSHIONS (Rubber on top of slate)  -->
+  <!-- ============================================ -->
+  <!--
+    Cushions sit ON TOP of the slate/cloth.
+    Their angled ends (JAWS) frame the pocket openings.
+    Corner jaws angle at 142°, side jaws at 103°.
+  -->
+  <g id="layer-cushions" class="table-cushions">
+    <!--
+      Cushions sit ON TOP of the slate. Their ends (jaws) frame
+      the pocket openings. Aligned to scallop geometry:
+      - Corner scallops: r=3.5, so cushions start 3.5 units from corners
+      - Side pockets: span x=47 to x=53
+    -->
+
+    <!-- HEAD cushion (LEFT - short rail) -->
+    <polygon points="0,3.5 0,46.5 2,44.5 2,5.5" fill="#0a7a45"/>
+
+    <!-- FOOT cushion (RIGHT - short rail) -->
+    <polygon points="100,3.5 100,46.5 98,44.5 98,5.5" fill="#0a7a45"/>
+
+    <!-- Top LONG rail cushions (split by side pocket at x=46 to 54) -->
+    <polygon points="3.5,0 46,0 44,2 5.5,2" fill="#0a7a45"/>
+    <polygon points="54,0 96.5,0 94.5,2 56,2" fill="#0a7a45"/>
+
+    <!-- Bottom LONG rail cushions -->
+    <polygon points="3.5,50 46,50 44,48 5.5,48" fill="#0a7a45"/>
+    <polygon points="54,50 96.5,50 94.5,48 56,48" fill="#0a7a45"/>
+
+    <!-- Cushion nose highlights -->
+    <line x1="2" y1="5.5" x2="2" y2="44.5" stroke="#0a9a55" stroke-width="0.2"/>
+    <line x1="98" y1="5.5" x2="98" y2="44.5" stroke="#0a9a55" stroke-width="0.2"/>
+    <line x1="5.5" y1="2" x2="44" y2="2" stroke="#0a9a55" stroke-width="0.2"/>
+    <line x1="56" y1="2" x2="94.5" y2="2" stroke="#0a9a55" stroke-width="0.2"/>
+    <line x1="5.5" y1="48" x2="44" y2="48" stroke="#0a9a55" stroke-width="0.2"/>
+    <line x1="56" y1="48" x2="94.5" y2="48" stroke="#0a9a55" stroke-width="0.2"/>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- LAYER 6: PLAYING SURFACE INNER BOUNDARY     -->
+  <!-- ============================================ -->
+  <!-- The actual playing area where balls travel (inside cushion noses) -->
+  <g id="layer-playing-area" class="playing-area" visibility="hidden">
+    <rect x="2" y="2" width="96" height="46" fill="none" stroke="#ffffff" stroke-width="0.1" opacity="0.3"/>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- LAYER 6: DIAMONDS / SIGHTS                  -->
+  <!-- ============================================ -->
+  <g id="layer-diamonds" class="table-diamonds">
+    <!--
+      Diamond positions (from cushion nose):
+      - Long rails (top/bottom): 7 diamonds at x = 12.5, 25, 37.5, 62.5, 75, 87.5
+        (skipping x=50 where side pocket is)
+      - Short rails (left/right): 3 diamonds at y = 12.5, 25, 37.5
+    -->
+
+    <!-- Top LONG rail diamonds (skip x=50 for side pocket) -->
+    <g id="diamonds-top">
+      <polygon points="12.5,-3 13,-3.5 13.5,-3 13,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+      <polygon points="25,-3 25.5,-3.5 26,-3 25.5,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+      <polygon points="37.5,-3 38,-3.5 38.5,-3 38,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+      <!-- x=50 skipped - side pocket -->
+      <polygon points="62.5,-3 63,-3.5 63.5,-3 63,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+      <polygon points="75,-3 75.5,-3.5 76,-3 75.5,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+      <polygon points="87.5,-3 88,-3.5 88.5,-3 88,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+    </g>
+
+    <!-- Bottom LONG rail diamonds -->
+    <g id="diamonds-bottom">
+      <polygon points="12.5,53 13,52.5 13.5,53 13,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+      <polygon points="25,53 25.5,52.5 26,53 25.5,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+      <polygon points="37.5,53 38,52.5 38.5,53 38,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+      <!-- x=50 skipped - side pocket -->
+      <polygon points="62.5,53 63,52.5 63.5,53 63,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+      <polygon points="75,53 75.5,52.5 76,53 75.5,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+      <polygon points="87.5,53 88,52.5 88.5,53 88,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+    </g>
+
+    <!-- HEAD (LEFT) short rail diamonds: y = 12.5, 25, 37.5 -->
+    <g id="diamonds-head">
+      <polygon points="-3,12.5 -3.5,13 -3,13.5 -2.5,13" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+      <polygon points="-3,25 -3.5,25.5 -3,26 -2.5,25.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+      <polygon points="-3,37.5 -3.5,38 -3,38.5 -2.5,38" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+    </g>
+
+    <!-- FOOT (RIGHT) short rail diamonds: y = 12.5, 25, 37.5 -->
+    <g id="diamonds-foot">
+      <polygon points="103,12.5 102.5,13 103,13.5 103.5,13" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+      <polygon points="103,25 102.5,25.5 103,26 103.5,25.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+      <polygon points="103,37.5 102.5,38 103,38.5 103.5,38" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+    </g>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- LAYER 7: STRINGS (Reference Lines)          -->
+  <!-- ============================================ -->
+  <g id="layer-strings" class="table-strings" opacity="0.4" visibility="visible">
+    <!--
+      CORRECTED STRING ORIENTATIONS:
+      - Head String: VERTICAL at x=25 (parallel to HEAD rail, 2 diamonds in)
+      - Foot String: VERTICAL at x=75 (parallel to FOOT rail, 2 diamonds in)
+      - Long String: HORIZONTAL at y=25 (runs length of table through all spots)
+      - Center String: VERTICAL at x=50 (connects side pockets)
+    -->
+
+    <!-- Head String - VERTICAL at x=25 (kitchen line) -->
+    <line
+      id="head-string"
+      x1="25" y1="2" x2="25" y2="48"
+      stroke="#ffffff"
+      stroke-width="0.2"
+      stroke-dasharray="1,1"
+    />
+
+    <!-- Foot String - VERTICAL at x=75 -->
+    <line
+      id="foot-string"
+      x1="75" y1="2" x2="75" y2="48"
+      stroke="#ffffff"
+      stroke-width="0.2"
+      stroke-dasharray="1,1"
+    />
+
+    <!-- Long String - HORIZONTAL at y=25 (center line running length of table) -->
+    <line
+      id="long-string"
+      x1="2" y1="25" x2="98" y2="25"
+      stroke="#ffffff"
+      stroke-width="0.2"
+      stroke-dasharray="1,1"
+    />
+
+    <!-- Center String - VERTICAL at x=50 (connects side pockets) -->
+    <line
+      id="center-string"
+      x1="50" y1="2" x2="50" y2="48"
+      stroke="#ffffff"
+      stroke-width="0.2"
+      stroke-dasharray="1,1"
+    />
+  </g>
+
+  <!-- ============================================ -->
+  <!-- LAYER 8: SPOTS                              -->
+  <!-- ============================================ -->
+  <g id="layer-spots" class="table-spots">
+    <!--
+      CORRECTED SPOT POSITIONS:
+      - Head Spot: x=25 (2 diamonds from HEAD), y=25 (center width)
+      - Foot Spot: x=75 (2 diamonds from FOOT), y=25 (center width)
+      - Center Spot: x=50, y=25 (exact center)
+    -->
+
+    <!-- Head Spot - at (25, 25) -->
+    <circle
+      id="head-spot"
+      cx="25" cy="25" r="0.4"
+      fill="#ffffff"
+      filter="url(#spot-glow)"
+    />
+
+    <!-- Foot Spot - at (75, 25) - WHERE BALLS ARE RACKED -->
+    <circle
+      id="foot-spot"
+      cx="75" cy="25" r="0.5"
+      fill="#ffffff"
+      filter="url(#spot-glow)"
+    />
+
+    <!-- Center Spot - at (50, 25) -->
+    <circle
+      id="center-spot"
+      cx="50" cy="25" r="0.3"
+      fill="#ffffff"
+      opacity="0.7"
+    />
+  </g>
+
+  <!-- ============================================ -->
+  <!-- LAYER 9: CHALK GRID (4x8 reference grid)    -->
+  <!-- ============================================ -->
+  <g id="layer-grid" class="table-grid" opacity="0.2" visibility="visible">
+    <!--
+      Grid aligned to diamond positions:
+      - VERTICAL lines at x = 12.5, 25, 37.5, 50, 62.5, 75, 87.5 (7 lines, 8 columns)
+      - HORIZONTAL lines at y = 12.5, 25, 37.5 (3 lines, 4 rows)
+    -->
+
+    <!-- Vertical grid lines (8 segments along length) -->
+    <line x1="12.5" y1="2" x2="12.5" y2="48" stroke="#ffffff" stroke-width="0.1"/>
+    <line x1="25" y1="2" x2="25" y2="48" stroke="#ffffff" stroke-width="0.15"/><!-- Head string -->
+    <line x1="37.5" y1="2" x2="37.5" y2="48" stroke="#ffffff" stroke-width="0.1"/>
+    <line x1="50" y1="2" x2="50" y2="48" stroke="#ffffff" stroke-width="0.15"/><!-- Center string -->
+    <line x1="62.5" y1="2" x2="62.5" y2="48" stroke="#ffffff" stroke-width="0.1"/>
+    <line x1="75" y1="2" x2="75" y2="48" stroke="#ffffff" stroke-width="0.15"/><!-- Foot string -->
+    <line x1="87.5" y1="2" x2="87.5" y2="48" stroke="#ffffff" stroke-width="0.1"/>
+
+    <!-- Horizontal grid lines (4 segments along width) -->
+    <line x1="2" y1="12.5" x2="98" y2="12.5" stroke="#ffffff" stroke-width="0.1"/>
+    <line x1="2" y1="25" x2="98" y2="25" stroke="#ffffff" stroke-width="0.15"/><!-- Long string / center -->
+    <line x1="2" y1="37.5" x2="98" y2="37.5" stroke="#ffffff" stroke-width="0.1"/>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- LAYER 10: RACK TRIANGLE OUTLINE             -->
+  <!-- (For straight pool - optional)              -->
+  <!-- ============================================ -->
+  <g id="layer-triangle" class="table-triangle" visibility="hidden">
+    <!--
+      Triangle for 15-ball rack:
+      - Apex at FOOT SPOT (75, 25)
+      - Opens toward FOOT rail (right)
+      - Standard triangle: ~11.5" per side for 2.25" balls
+    -->
+    <polygon
+      points="75,25 85,19.25 85,30.75"
+      fill="none"
+      stroke="#ffffff"
+      stroke-width="0.2"
+      opacity="0.5"
+    />
+    <!-- Line from foot spot to foot rail center -->
+    <line
+      x1="75" y1="25" x2="98" y2="25"
+      stroke="#ffffff"
+      stroke-width="0.15"
+      opacity="0.5"
+    />
+  </g>
+
+  <!-- ============================================ -->
+  <!-- LAYER 11: OBJECT BALLS                      -->
+  <!-- ============================================ -->
+  <g id="layer-balls-object" class="balls-object">
+    <!-- Balls positioned as needed for diagrams -->
+  </g>
+
+  <!-- ============================================ -->
+  <!-- LAYER 12: CUE BALL                          -->
+  <!-- ============================================ -->
+  <g id="layer-ball-cue" class="ball-cue">
+    <!-- Cue ball positioned as needed -->
+  </g>
+
+  <!-- ============================================ -->
+  <!-- LAYER 13: SHOT PATHS                        -->
+  <!-- ============================================ -->
+  <g id="layer-shot-paths" class="shot-paths">
+    <!-- Shot lines, arrows, paths -->
+  </g>
+
+  <!-- ============================================ -->
+  <!-- LAYER 14: ANNOTATIONS                       -->
+  <!-- ============================================ -->
+  <g id="layer-annotations" class="annotations">
+    <!-- Labels, measurements, notes -->
+  </g>
+
+</svg>
