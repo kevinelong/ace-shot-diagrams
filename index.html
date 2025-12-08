@@ -419,17 +419,17 @@
         <circle id="ghost-ball-indicator" cx="0" cy="0" r="1.125"
               fill="none" stroke="#ffd700" stroke-width="0.2" stroke-dasharray="0.5,0.5"
               visibility="hidden"/>
-        <!-- Cue ball final resting position indicator (circle with X) -->
+        <!-- Cue ball final resting position indicator (circle with X) - scaled to 1/3 ball size -->
         <g id="cb-final-position" visibility="hidden">
-          <circle cx="0" cy="0" r="1.125" fill="none" stroke="#00bfff" stroke-width="0.15"/>
-          <line x1="-0.7" y1="-0.7" x2="0.7" y2="0.7" stroke="#00bfff" stroke-width="0.15"/>
-          <line x1="0.7" y1="-0.7" x2="-0.7" y2="0.7" stroke="#00bfff" stroke-width="0.15"/>
+          <circle cx="0" cy="0" r="0.375" fill="none" stroke="#00bfff" stroke-width="0.08"/>
+          <line x1="-0.25" y1="-0.25" x2="0.25" y2="0.25" stroke="#00bfff" stroke-width="0.08"/>
+          <line x1="0.25" y1="-0.25" x2="-0.25" y2="0.25" stroke="#00bfff" stroke-width="0.08"/>
         </g>
-        <!-- Object ball final resting position indicator (circle with X) - orange to match OB path -->
+        <!-- Object ball final resting position indicator (circle with X) - scaled to 1/3 ball size -->
         <g id="ob-final-position" visibility="hidden">
-          <circle cx="0" cy="0" r="1.125" fill="none" stroke="#ff6b35" stroke-width="0.15"/>
-          <line x1="-0.7" y1="-0.7" x2="0.7" y2="0.7" stroke="#ff6b35" stroke-width="0.15"/>
-          <line x1="0.7" y1="-0.7" x2="-0.7" y2="0.7" stroke="#ff6b35" stroke-width="0.15"/>
+          <circle cx="0" cy="0" r="0.375" fill="none" stroke="#ff6b35" stroke-width="0.08"/>
+          <line x1="-0.25" y1="-0.25" x2="0.25" y2="0.25" stroke="#ff6b35" stroke-width="0.08"/>
+          <line x1="0.25" y1="-0.25" x2="-0.25" y2="0.25" stroke="#ff6b35" stroke-width="0.08"/>
         </g>
         <!-- Pocket click targets (invisible hit areas) -->
         <g id="pocket-targets">
@@ -709,7 +709,7 @@
         // Set CSS variables for ball size and related proportional elements
         document.documentElement.style.setProperty('--ball-size', ballSizePx + 'px');
         document.documentElement.style.setProperty('--ball-font-size', Math.max(8, Math.round(ballSizePx * 0.45)) + 'px');
-        document.documentElement.style.setProperty('--selection-ring', Math.max(1, Math.round(ballSizePx * 0.1)) + 'px');
+        document.documentElement.style.setProperty('--selection-ring', Math.max(1, Math.round(ballSizePx * 0.05)) + 'px');
       }
 
       // Selection state
