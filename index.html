@@ -390,6 +390,12 @@
         <circle id="ghost-ball-indicator" cx="0" cy="0" r="1.125"
               fill="none" stroke="#ffd700" stroke-width="0.2" stroke-dasharray="0.5,0.5"
               visibility="hidden"/>
+        <!-- Cue ball final resting position indicator (circle with X) -->
+        <g id="cb-final-position" visibility="hidden">
+          <circle cx="0" cy="0" r="1.125" fill="none" stroke="#00bfff" stroke-width="0.15"/>
+          <line x1="-0.7" y1="-0.7" x2="0.7" y2="0.7" stroke="#00bfff" stroke-width="0.15"/>
+          <line x1="0.7" y1="-0.7" x2="-0.7" y2="0.7" stroke="#00bfff" stroke-width="0.15"/>
+        </g>
         <!-- Pocket click targets (invisible hit areas) -->
         <g id="pocket-targets">
           <circle class="pocket-target" data-pocket="corner-tl" cx="1.5" cy="1.5" r="4"/>
@@ -626,6 +632,7 @@
       const overlapGhostLabel = document.getElementById('overlap-ghost-label');
       const overlapRegion = document.getElementById('overlap-region');
       const overlapPercentDisplay = document.getElementById('overlapPercent');
+      const cbFinalPosition = document.getElementById('cb-final-position');
 
       // Pocket mouth centers (narrowest entry point for aiming)
       const pocketCenters = {
@@ -750,9 +757,106 @@
         return Math.max(min, Math.min(max, val));
       }
 
-      // Calculate cue ball path after contact (tangent line + curve for spin)
-      // Physics: After collision, CB travels perpendicular to OB path (90° rule for stun)
-      // Follow (top spin) curves forward, Draw (back spin) curves backward
+      // Rail boundaries (cushion nose positions) - ball center can reach rail + BALL_RADIUS
+      const RAILS = {
+        top: { y: 2 + BALL_RADIUS, normal: { x: 0, y: 1 } },      // Ball bounces when center.y <= 3.125
+        bottom: { y: 48 - BALL_RADIUS, normal: { x: 0, y: -1 } }, // Ball bounces when center.y >= 46.875
+        left: { x: 2 + BALL_RADIUS, normal: { x: 1, y: 0 } },     // Ball bounces when center.x <= 3.125
+        right: { x: 98 - BALL_RADIUS, normal: { x: -1, y: 0 } }   // Ball bounces when center.x >= 96.875
+      };
+
+      // Find intersection of ray with rail, returns { point, rail, t } or null
+      function findRailIntersection(start, direction, maxDist) {
+        let closest = null;
+        let minT = maxDist;
+
+        // Check horizontal rails (top/bottom)
+        ['top', 'bottom'].forEach(railName => {
+          const rail = RAILS[railName];
+          if (Math.abs(direction.y) > 0.001) {
+            const t = (rail.y - start.y) / direction.y;
+            if (t > 0.1 && t < minT) {
+              const x = start.x + direction.x * t;
+              if (x >= RAILS.left.x && x <= RAILS.right.x) {
+                minT = t;
+                closest = { point: { x, y: rail.y }, rail: railName, normal: rail.normal, t };
+              }
+            }
+          }
+        });
+
+        // Check vertical rails (left/right)
+        ['left', 'right'].forEach(railName => {
+          const rail = RAILS[railName];
+          if (Math.abs(direction.x) > 0.001) {
+            const t = (rail.x - start.x) / direction.x;
+            if (t > 0.1 && t < minT) {
+              const y = start.y + direction.y * t;
+              if (y >= RAILS.top.y && y <= RAILS.bottom.y) {
+                minT = t;
+                closest = { point: { x: rail.x, y }, rail: railName, normal: rail.normal, t };
+              }
+            }
+          }
+        });
+
+        return closest;
+      }
+
+      // Reflect direction off rail with english effects
+      // Running english (spin with travel) widens angle, check english narrows it
+      function reflectOffRail(direction, railNormal, contactOff) {
+        // Basic reflection: r = d - 2(d·n)n
+        const dot = dotProduct(direction, railNormal);
+        let reflected = {
+          x: direction.x - 2 * dot * railNormal.x,
+          y: direction.y - 2 * dot * railNormal.y
+        };
+
+        // Apply sidespin (english) effect
+        // English is contactOff.x: positive = right spin, negative = left spin
+        const english = contactOff.x;
+
+        if (Math.abs(english) > 0.05) {
+          // Determine if this is running or check english
+          // Running english: spin direction matches the direction ball will travel along rail
+          // For horizontal rails (top/bottom): travel is in x direction after bounce
+          // For vertical rails (left/right): travel is in y direction after bounce
+
+          let isRunning = false;
+          if (railNormal.y !== 0) {
+            // Horizontal rail (top or bottom) - travel along x axis
+            // Running = english pushes ball in same direction as reflected.x
+            isRunning = (english > 0 && reflected.x > 0) || (english < 0 && reflected.x < 0);
+          } else {
+            // Vertical rail (left or right) - travel along y axis
+            // Running = english pushes ball in same direction as reflected.y
+            isRunning = (english > 0 && reflected.y < 0) || (english < 0 && reflected.y > 0);
+          }
+
+          // Modify angle: running widens (more parallel), check narrows (more perpendicular)
+          const englishEffect = Math.abs(english) * 0.4;  // Up to ~20% angle change
+
+          if (railNormal.y !== 0) {
+            // Horizontal rail - modify x component
+            const modifier = isRunning ? (1 + englishEffect) : (1 - englishEffect);
+            reflected.x *= modifier;
+          } else {
+            // Vertical rail - modify y component
+            const modifier = isRunning ? (1 + englishEffect) : (1 - englishEffect);
+            reflected.y *= modifier;
+          }
+
+          // Renormalize
+          reflected = vectorNormalize(reflected);
+        }
+
+        return reflected;
+      }
+
+      // Calculate cue ball path after contact with rail bounces
+      // Physics: CB travels perpendicular to OB path (90° rule for stun), then bounces off rails
+      // Follow/Draw affects initial curve, English affects bounce angles
       function calculateCueBallPath(ghostBallPos, objBallDirection, contactOff, force) {
         // Tangent line is perpendicular to object ball path
         const tangent1 = vectorPerpendicular(objBallDirection);
@@ -763,53 +867,62 @@
         if (!cuePos) return null;
 
         // The CB deflects in the direction of its velocity component perpendicular to the contact line
-        // This is the tangent that has a POSITIVE dot product with the incoming direction
         const cueToGhost = vectorSubtract(ghostBallPos, cuePos);
         const dot1 = dotProduct(tangent1, cueToGhost);
-        const tangent = dot1 > 0 ? tangent1 : tangent2;  // Choose tangent aligned with incoming perpendicular component
+        const tangent = dot1 > 0 ? tangent1 : tangent2;
 
-        // Base path length depends on force (longer for harder shots)
-        const baseLength = 5 + force * 3;  // 8 to 35 units
+        // Base path length depends on force
+        const totalLength = 10 + force * 5;  // 15 to 60 units total travel
 
-        // Contact diagram: y < 0 = Follow (top), y > 0 = Draw (bottom)
-        // Follow (top spin): CB curves FORWARD (same direction as OB went)
-        // Draw (back spin): CB curves BACKWARD (opposite to OB direction)
+        // Calculate initial direction with spin curve
+        // Follow (y < 0) curves forward, Draw (y > 0) curves backward
         const spinAmount = Math.abs(contactOff.y) * (force / 5);
-
-        // Calculate end point
-        // Start: ghost ball position (where cue ball will be after contact)
-        const start = ghostBallPos;
-
-        // For a stun shot, end is along tangent
-        const tangentEnd = vectorAdd(start, vectorScale(tangent, baseLength));
-
-        // Curve direction based on spin type
-        // contactOff.y < 0 = Follow = curve toward OB direction (forward)
-        // contactOff.y > 0 = Draw = curve opposite OB direction (backward)
         const curveDirection = contactOff.y > 0
-          ? vectorScale(objBallDirection, -1)  // Draw: curve back toward shooter
-          : objBallDirection;  // Follow: curve forward with OB
+          ? vectorScale(objBallDirection, -1)  // Draw: back
+          : objBallDirection;  // Follow: forward
 
-        // Increase curve amount for visibility (spin has major effect)
-        const curveAmount = spinAmount * 25;  // More pronounced curve
-        const curvedEnd = vectorAdd(tangentEnd, vectorScale(curveDirection, curveAmount));
+        // Initial direction combines tangent with spin curve
+        const curveInfluence = spinAmount * 0.5;
+        let direction = vectorNormalize(vectorAdd(
+          tangent,
+          vectorScale(curveDirection, curveInfluence)
+        ));
 
-        // For path visualization, use quadratic bezier for curved path
-        // Control point should also shift toward curve direction for natural arc
-        const controlDist = baseLength * 0.5;
-        const controlBase = vectorAdd(start, vectorScale(tangent, controlDist));
-        // Shift control point toward curve direction (half the end offset for smooth arc)
-        const controlCurveShift = vectorScale(curveDirection, curveAmount * 0.3);
-        const control = Math.abs(contactOff.y) > 0.05
-          ? vectorAdd(controlBase, controlCurveShift)
-          : controlBase;
+        // Build path segments with rail bounces
+        const segments = [];
+        let currentPos = { ...ghostBallPos };
+        let remainingLength = totalLength;
+        const maxBounces = 3;
+        let bounces = 0;
 
-        return {
-          start: start,
-          control: control,
-          end: Math.abs(contactOff.y) > 0.05 ? curvedEnd : tangentEnd,
-          isCurved: Math.abs(contactOff.y) > 0.05
-        };
+        while (remainingLength > 1 && bounces <= maxBounces) {
+          // Find rail intersection
+          const intersection = findRailIntersection(currentPos, direction, remainingLength);
+
+          if (intersection && intersection.t < remainingLength) {
+            // Path hits a rail
+            segments.push({
+              start: { ...currentPos },
+              end: { ...intersection.point }
+            });
+
+            // Reflect off rail with english effect
+            direction = reflectOffRail(direction, intersection.normal, contactOff);
+            currentPos = intersection.point;
+            remainingLength -= intersection.t;
+            bounces++;
+          } else {
+            // No rail hit - finish the path
+            const endPoint = vectorAdd(currentPos, vectorScale(direction, remainingLength));
+            segments.push({
+              start: { ...currentPos },
+              end: endPoint
+            });
+            break;
+          }
+        }
+
+        return { segments, isCurved: false };
       }
 
       // Ball definitions in order
@@ -944,27 +1057,29 @@
           objBallPath.setAttribute('y2', objPathEnd.y);
           objBallPath.setAttribute('visibility', 'visible');
 
-          // Cue ball path after contact
+          // Cue ball path after contact (with rail bounces)
           if (cuePos) {
             const cbPath = calculateCueBallPath(ghostBallPosition, objToPocket, contactOffset, shotForce);
-            if (cbPath) {
-              if (cbPath.isCurved) {
-                // Quadratic bezier curve for spin effects
-                cueBallPath.setAttribute('d',
-                  `M ${cbPath.start.x} ${cbPath.start.y} Q ${cbPath.control.x} ${cbPath.control.y} ${cbPath.end.x} ${cbPath.end.y}`
-                );
-              } else {
-                // Straight line for stun shot
-                cueBallPath.setAttribute('d',
-                  `M ${cbPath.start.x} ${cbPath.start.y} L ${cbPath.end.x} ${cbPath.end.y}`
-                );
-              }
+            if (cbPath && cbPath.segments && cbPath.segments.length > 0) {
+              // Build path string from segments
+              let pathD = `M ${cbPath.segments[0].start.x} ${cbPath.segments[0].start.y}`;
+              cbPath.segments.forEach(seg => {
+                pathD += ` L ${seg.end.x} ${seg.end.y}`;
+              });
+              cueBallPath.setAttribute('d', pathD);
               cueBallPath.setAttribute('visibility', 'visible');
+
+              // Position final resting indicator at end of last segment
+              const lastSeg = cbPath.segments[cbPath.segments.length - 1];
+              cbFinalPosition.setAttribute('transform', `translate(${lastSeg.end.x}, ${lastSeg.end.y})`);
+              cbFinalPosition.setAttribute('visibility', 'visible');
             } else {
               cueBallPath.setAttribute('visibility', 'hidden');
+              cbFinalPosition.setAttribute('visibility', 'hidden');
             }
           } else {
             cueBallPath.setAttribute('visibility', 'hidden');
+            cbFinalPosition.setAttribute('visibility', 'hidden');
           }
 
           // If we have cue and aim positions, calculate the cut angle
@@ -994,6 +1109,7 @@
           ghostBallIndicator.setAttribute('visibility', 'hidden');
           objBallPath.setAttribute('visibility', 'hidden');
           cueBallPath.setAttribute('visibility', 'hidden');
+          cbFinalPosition.setAttribute('visibility', 'hidden');
           cutAngleDisplay.textContent = '--';
           overlapDisplay.textContent = '--';
           updateOverlapDiagram(0.5);  // Default to half-ball view
