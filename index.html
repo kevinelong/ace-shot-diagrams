@@ -332,6 +332,138 @@
       font-weight: bold;
     }
 
+    /* Solver Options */
+    .solver-options {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 120px;
+    }
+
+    .solver-options .control-label {
+      margin-bottom: 4px;
+    }
+
+    .solver-radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .solver-radio-group label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #aaa;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .solver-radio-group label:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .solver-radio-group input[type="radio"] {
+      accent-color: #0fa;
+    }
+
+    .solver-radio-group input[type="radio"]:checked + span {
+      color: #0fa;
+      font-weight: bold;
+    }
+
+    .simple-view-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #3a4a5a;
+      font-size: 11px;
+      color: #888;
+      cursor: pointer;
+    }
+
+    .simple-view-toggle input[type="checkbox"] {
+      accent-color: #0fa;
+    }
+
+    .simple-view-toggle input[type="checkbox"]:checked + span {
+      color: #0fa;
+    }
+
+    /* Game Mode Selector */
+    .game-mode-section {
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #3a4a5a;
+    }
+
+    .game-mode-select {
+      width: 100%;
+      padding: 8px 12px;
+      background: #1a2a3a;
+      border: 1px solid #3a5a7a;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 13px;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+
+    .game-mode-select:hover {
+      border-color: #4a7a9a;
+    }
+
+    .game-mode-select:focus {
+      outline: none;
+      border-color: #0fa;
+    }
+
+    .game-mode-description {
+      font-size: 10px;
+      color: #668;
+      margin-top: 6px;
+      font-style: italic;
+    }
+
+    .suit-selector, .pocket-selector {
+      margin-top: 8px;
+      padding: 8px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 6px;
+    }
+
+    .suit-selector label, .pocket-selector label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 4px 0;
+      font-size: 11px;
+      color: #aaa;
+      cursor: pointer;
+    }
+
+    .suit-selector input[type="radio"], .pocket-selector input[type="radio"] {
+      accent-color: #0fa;
+    }
+
+    .suit-selector input[type="radio"]:checked + span,
+    .pocket-selector input[type="radio"]:checked + span {
+      color: #0fa;
+      font-weight: bold;
+    }
+
+    .pocket-label {
+      font-size: 10px;
+      color: #668;
+      display: block;
+      margin-bottom: 4px;
+    }
+
     /* Path Legend */
     .path-legend {
       display: flex;
@@ -370,6 +502,200 @@
       background: #00bfff;
     }
 
+    .legend-line.actual-path {
+      background: repeating-linear-gradient(90deg, #ff4444, #ff4444 4px, transparent 4px, transparent 8px);
+    }
+
+    .legend-line.combo-path {
+      background: linear-gradient(90deg, #ff9900, #ff6600, #ff3300);
+    }
+
+    /* Shot Instructions Panel - THE KEY ANSWER */
+    .shot-instructions {
+      background: linear-gradient(135deg, #1a2a3a 0%, #0d1a26 100%);
+      border: 2px solid #2a4a5a;
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-top: 12px;
+      min-width: 280px;
+    }
+
+    .shot-instructions-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #2a4a5a;
+    }
+
+    .shot-instructions-title {
+      font-size: 12px;
+      font-weight: bold;
+      color: #8af;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .shot-verdict {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .shot-verdict.makeable {
+      background: linear-gradient(135deg, #1a4a2a, #0d3a1a);
+      color: #4f8;
+      border: 1px solid #2a6a3a;
+    }
+
+    .shot-verdict.difficult {
+      background: linear-gradient(135deg, #4a3a1a, #3a2a0d);
+      color: #fa0;
+      border: 1px solid #6a4a2a;
+    }
+
+    .shot-verdict.very-hard {
+      background: linear-gradient(135deg, #4a1a1a, #3a0d0d);
+      color: #f66;
+      border: 1px solid #6a2a2a;
+    }
+
+    .shot-verdict.foul {
+      background: linear-gradient(135deg, #5a1a1a, #4a0d0d);
+      color: #ff4444;
+      border: 1px solid #8a2a2a;
+      animation: foul-pulse 1s ease-in-out infinite;
+    }
+
+    @keyframes foul-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .shot-verdict.setup-needed {
+      background: linear-gradient(135deg, #2a2a3a, #1a1a2a);
+      color: #888;
+      border: 1px solid #3a3a4a;
+    }
+
+    .instruction-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .instruction-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .step-number {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #2a4a5a;
+      color: #8af;
+      font-size: 11px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .step-content {
+      flex: 1;
+    }
+
+    .step-label {
+      font-size: 10px;
+      color: #668;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .step-value {
+      font-size: 13px;
+      color: #fff;
+      font-weight: 500;
+    }
+
+    .step-value.highlight {
+      color: #ffd700;
+    }
+
+    .step-hint {
+      font-size: 10px;
+      color: #668;
+      margin-top: 2px;
+    }
+
+    .power-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .power-status .enough {
+      color: #4f8;
+    }
+
+    .power-status .not-enough {
+      color: #f66;
+    }
+
+    .difficulty-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid #2a4a5a;
+    }
+
+    .difficulty-label {
+      font-size: 10px;
+      color: #668;
+      text-transform: uppercase;
+    }
+
+    .difficulty-meter {
+      flex: 1;
+      height: 6px;
+      background: #1a2a3a;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .difficulty-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s, background 0.3s;
+    }
+
+    .difficulty-fill.easy { background: linear-gradient(90deg, #4f8, #2a6); width: 25%; }
+    .difficulty-fill.medium { background: linear-gradient(90deg, #fa0, #c80); width: 50%; }
+    .difficulty-fill.hard { background: linear-gradient(90deg, #f80, #c40); width: 75%; }
+    .difficulty-fill.very-hard { background: linear-gradient(90deg, #f44, #c00); width: 100%; }
+    .difficulty-fill.foul { background: linear-gradient(90deg, #f44, #900); width: 100%; animation: foul-pulse 1s ease-in-out infinite; }
+
+    .difficulty-text {
+      font-size: 11px;
+      font-weight: bold;
+      min-width: 60px;
+      text-align: right;
+    }
+
+    .difficulty-text.easy { color: #4f8; }
+    .difficulty-text.medium { color: #fa0; }
+    .difficulty-text.hard { color: #f80; }
+    .difficulty-text.very-hard { color: #f44; }
+    .difficulty-text.foul { color: #ff4444; }
+
     /* Print styles - preserve ball positions */
     @media print {
       body { background: #fff; padding: 10px; }
@@ -399,26 +725,77 @@
     <div class="table-wrapper" id="tableWrapper">
       <!-- Connection line SVG overlay -->
       <svg id="connection-overlay" viewBox="-8 -8 116 66" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <!-- Cue stick gradient - maple wood shaft with darker butt -->
+          <linearGradient id="cue-shaft-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#f4e4c1"/>
+            <stop offset="70%" stop-color="#e8d4a8"/>
+            <stop offset="85%" stop-color="#8b4513"/>
+            <stop offset="100%" stop-color="#5d3a1a"/>
+          </linearGradient>
+          <!-- Ferrule (white part near tip) -->
+          <linearGradient id="cue-ferrule-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#4a90d9"/>
+            <stop offset="100%" stop-color="#f5f5f5"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Cue stick visualization (semi-transparent, behind other elements) -->
+        <g id="cue-stick" visibility="hidden" opacity="0.7">
+          <!-- Main shaft - tapered rectangle -->
+          <polygon id="cue-shaft" points="0,0 0,0 0,0 0,0" fill="url(#cue-shaft-gradient)"/>
+          <!-- Ferrule (white/ivory section near tip) -->
+          <polygon id="cue-ferrule" points="0,0 0,0 0,0 0,0" fill="url(#cue-ferrule-gradient)"/>
+          <!-- Tip (blue chalk) -->
+          <circle id="cue-tip" cx="0" cy="0" r="0.3" fill="#4a90d9"/>
+        </g>
+
         <!-- Cue to Ghost aiming line (path to support kick shots with bounces) -->
         <path id="cue-ghost-line" d=""
               stroke="#fff" stroke-width="0.3" stroke-dasharray="1,1"
               fill="none" visibility="hidden"/>
+        <!-- Actual kick path (where CB really goes with current english - differs from ideal) -->
+        <path id="actual-kick-path" d=""
+              stroke="#ff4444" stroke-width="0.25" stroke-dasharray="0.8,0.4"
+              fill="none" opacity="0.7" visibility="hidden"/>
         <!-- Object ball to Pocket target line -->
         <line id="target-line" x1="0" y1="0" x2="0" y2="0"
               stroke="#ffd700" stroke-width="0.25"
               visibility="hidden"/>
-        <!-- Object ball path (where OB actually travels based on aim) -->
-        <line id="obj-ball-path" x1="0" y1="0" x2="0" y2="0"
-              stroke="#ff6b35" stroke-width="0.3"
+        <!-- Object ball path (where OB actually travels - can be multi-segment for banks) -->
+        <path id="obj-ball-path" d=""
+              stroke="#ff6b35" stroke-width="0.3" fill="none"
               visibility="hidden"/>
+        <!-- Bank shot indicator (diamond on rail where OB bounces) -->
+        <g id="bank-point-indicator" visibility="hidden">
+          <polygon points="0,-0.7 0.7,0 0,0.7 -0.7,0" fill="#ff6b35" stroke="#cc4400" stroke-width="0.1"/>
+          <text id="bank-point-label" x="0" y="-1.3" text-anchor="middle" font-size="0.9" fill="#ff6b35">BANK</text>
+        </g>
         <!-- Cue ball deflection path (tangent line + curve for spin) -->
         <path id="cue-ball-path" d=""
               stroke="#00bfff" stroke-width="0.3" fill="none"
               visibility="hidden"/>
-        <!-- Ghost ball position indicator -->
-        <circle id="ghost-ball-indicator" cx="0" cy="0" r="1.125"
-              fill="none" stroke="#ffd700" stroke-width="0.2" stroke-dasharray="0.5,0.5"
-              visibility="hidden"/>
+        <!-- Ghost ball position indicator - THE AIM TARGET -->
+        <g id="ghost-ball-indicator" visibility="hidden">
+          <!-- Outer glow ring -->
+          <circle cx="0" cy="0" r="1.8" fill="none" stroke="rgba(255,215,0,0.3)" stroke-width="0.4"/>
+          <!-- Main target circle (ball size) -->
+          <circle cx="0" cy="0" r="1.125" fill="rgba(255,215,0,0.15)" stroke="#ffd700" stroke-width="0.2"/>
+          <!-- Crosshair lines -->
+          <line x1="-2.2" y1="0" x2="-1.4" y2="0" stroke="#ffd700" stroke-width="0.15"/>
+          <line x1="1.4" y1="0" x2="2.2" y2="0" stroke="#ffd700" stroke-width="0.15"/>
+          <line x1="0" y1="-2.2" x2="0" y2="-1.4" stroke="#ffd700" stroke-width="0.15"/>
+          <line x1="0" y1="1.4" x2="0" y2="2.2" stroke="#ffd700" stroke-width="0.15"/>
+          <!-- Center dot -->
+          <circle cx="0" cy="0" r="0.2" fill="#ffd700"/>
+          <!-- AIM label -->
+          <text x="0" y="-2.8" text-anchor="middle" font-size="1.2" font-weight="bold" fill="#ffd700">AIM</text>
+        </g>
+        <!-- Kick shot aim point indicator (diamond on rail) -->
+        <g id="kick-aim-indicator" visibility="hidden">
+          <polygon points="0,-0.8 0.8,0 0,0.8 -0.8,0" fill="#ff0" stroke="#cc0" stroke-width="0.1"/>
+          <text id="kick-aim-label" x="0" y="-1.5" text-anchor="middle" font-size="1" fill="#ff0">AIM</text>
+        </g>
         <!-- Cue ball final resting position indicator (circle with X) - scaled to 1/3 ball size -->
         <g id="cb-final-position" visibility="hidden">
           <circle cx="0" cy="0" r="0.375" fill="none" stroke="#00bfff" stroke-width="0.08"/>
@@ -430,6 +807,21 @@
           <circle cx="0" cy="0" r="0.375" fill="none" stroke="#ff6b35" stroke-width="0.08"/>
           <line x1="-0.25" y1="-0.25" x2="0.25" y2="0.25" stroke="#ff6b35" stroke-width="0.08"/>
           <line x1="0.25" y1="-0.25" x2="-0.25" y2="0.25" stroke="#ff6b35" stroke-width="0.08"/>
+        </g>
+        <!-- Combination shot indicator -->
+        <g id="combo-shot-indicator" visibility="hidden">
+          <!-- Path 1: Cue → Helper ball (dashed orange) -->
+          <path id="combo-path-1" d="" stroke="#ff9900" stroke-width="0.3" stroke-dasharray="0.8,0.4" fill="none" opacity="0.8"/>
+          <!-- Path 2: Helper → Target ball (solid orange) -->
+          <path id="combo-path-2" d="" stroke="#ff6600" stroke-width="0.35" fill="none"/>
+          <!-- Path 3: Target → Pocket (solid red-orange) -->
+          <path id="combo-path-3" d="" stroke="#ff3300" stroke-width="0.3" fill="none"/>
+          <!-- Helper ghost position indicator -->
+          <g id="combo-helper-ghost">
+            <circle r="1.125" fill="rgba(255,153,0,0.15)" stroke="#ff9900" stroke-width="0.15" stroke-dasharray="0.4,0.2"/>
+          </g>
+          <!-- COMBO label -->
+          <text id="combo-label" font-size="1.2" font-weight="bold" fill="#ff9900" text-anchor="middle">COMBO</text>
         </g>
         <!-- Pocket click targets (invisible hit areas) -->
         <g id="pocket-targets">
@@ -639,12 +1031,107 @@
         <div class="force-value"><span id="forceValue">5</span>/10</div>
       </div>
 
+      <!-- Game Mode Selector -->
+      <div class="game-mode-section">
+        <div class="control-label">Game</div>
+        <select id="gameModeSelect" class="game-mode-select">
+          <option value="9ball" selected>9-Ball</option>
+          <option value="8ball">8-Ball</option>
+          <option value="10ball">10-Ball</option>
+          <option value="14.1">Straight Pool</option>
+          <option value="1pocket">One Pocket</option>
+        </select>
+        <div class="game-mode-description" id="gameModeDescription">Hit lowest ball first. Pocket 9 to win.</div>
+        <!-- 8-Ball suit selector (hidden by default) -->
+        <div class="suit-selector" id="suitSelector" style="display: none;">
+          <label><input type="radio" name="player-suit" value="solids" checked><span>Solids (1-7)</span></label>
+          <label><input type="radio" name="player-suit" value="stripes"><span>Stripes (9-15)</span></label>
+        </div>
+        <!-- One Pocket pocket selector (hidden by default) -->
+        <div class="pocket-selector" id="pocketSelector" style="display: none;">
+          <span class="pocket-label">Your Pocket:</span>
+          <label><input type="radio" name="player-pocket" value="corner-bl" checked><span>Bottom Left</span></label>
+          <label><input type="radio" name="player-pocket" value="corner-br"><span>Bottom Right</span></label>
+        </div>
+      </div>
+
+      <!-- Solver Options -->
+      <div class="solver-options">
+        <div class="control-label">Shot Solver</div>
+        <div class="solver-radio-group">
+          <label>
+            <input type="radio" name="solver-mode" value="auto" checked>
+            <span>Auto (Best)</span>
+          </label>
+          <label>
+            <input type="radio" name="solver-mode" value="kick">
+            <span>Prefer Kick</span>
+          </label>
+          <label>
+            <input type="radio" name="solver-mode" value="bank">
+            <span>Prefer Bank</span>
+          </label>
+          <label>
+            <input type="radio" name="solver-mode" value="combo">
+            <span>Prefer Combo</span>
+          </label>
+        </div>
+        <label class="simple-view-toggle">
+          <input type="checkbox" id="simpleViewToggle">
+          <span>Simple View</span>
+        </label>
+      </div>
+
       <!-- Legend -->
       <div class="path-legend">
         <div class="legend-item"><span class="legend-line aim-line"></span> Aim Line</div>
         <div class="legend-item"><span class="legend-line target-line"></span> Target</div>
         <div class="legend-item"><span class="legend-line obj-path"></span> OB Path</div>
         <div class="legend-item"><span class="legend-line cb-path"></span> CB Path</div>
+        <div class="legend-item"><span class="legend-line actual-path"></span> Actual</div>
+        <div class="legend-item"><span class="legend-line combo-path"></span> Combo</div>
+      </div>
+
+      <!-- Shot Instructions Panel - THE KEY ANSWER -->
+      <div class="shot-instructions" id="shotInstructions">
+        <div class="shot-instructions-header">
+          <span class="shot-instructions-title">Shot Instructions</span>
+          <span class="shot-verdict setup-needed" id="shotVerdict">Setup Needed</span>
+        </div>
+        <div class="instruction-steps" id="instructionSteps">
+          <div class="instruction-step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <div class="step-label">Aim</div>
+              <div class="step-value" id="aimInstruction">Place cue ball and select pocket</div>
+            </div>
+          </div>
+          <div class="instruction-step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <div class="step-label">English</div>
+              <div class="step-value" id="englishInstruction">--</div>
+              <div class="step-hint" id="englishHint"></div>
+            </div>
+          </div>
+          <div class="instruction-step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <div class="step-label">Power</div>
+              <div class="step-value power-status" id="powerInstruction">
+                <span id="powerNeeded">--</span>
+                <span id="powerStatus"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="difficulty-bar">
+          <span class="difficulty-label">Difficulty</span>
+          <div class="difficulty-meter">
+            <div class="difficulty-fill" id="difficultyFill"></div>
+          </div>
+          <span class="difficulty-text" id="difficultyText">--</span>
+        </div>
       </div>
     </div>
   </div>
@@ -655,8 +1142,18 @@
       const tableWrapper = document.getElementById('tableWrapper');
       const ballRack = document.getElementById('ballRack');
       const cueGhostLine = document.getElementById('cue-ghost-line');
+      const actualKickPath = document.getElementById('actual-kick-path');
       const targetLine = document.getElementById('target-line');
       const ghostBallIndicator = document.getElementById('ghost-ball-indicator');
+      const kickAimIndicator = document.getElementById('kick-aim-indicator');
+      const kickAimLabel = document.getElementById('kick-aim-label');
+      const cueStick = document.getElementById('cue-stick');
+      const cueShaft = document.getElementById('cue-shaft');
+      const cueFerule = document.getElementById('cue-ferrule');
+      const cueTip = document.getElementById('cue-tip');
+      const bankPointIndicator = document.getElementById('bank-point-indicator');
+      const bankPointLabel = document.getElementById('bank-point-label');
+      const solverRadios = document.querySelectorAll('input[name="solver-mode"]');
       const tableSvg = document.getElementById('pool-table-svg');
       const cutAngleDisplay = document.getElementById('cutAngleDisplay');
       const overlapDisplay = document.getElementById('overlapDisplay');
@@ -675,6 +1172,148 @@
       const overlapSlashDisplay = document.getElementById('overlapSlash');
       const cbFinalPosition = document.getElementById('cb-final-position');
       const obFinalPosition = document.getElementById('ob-final-position');
+
+      // Combination shot elements
+      const comboShotIndicator = document.getElementById('combo-shot-indicator');
+      const comboPath1 = document.getElementById('combo-path-1');
+      const comboPath2 = document.getElementById('combo-path-2');
+      const comboPath3 = document.getElementById('combo-path-3');
+      const comboHelperGhost = document.getElementById('combo-helper-ghost');
+      const comboLabel = document.getElementById('combo-label');
+
+      // Shot Instructions Panel elements
+      const shotVerdict = document.getElementById('shotVerdict');
+      const aimInstruction = document.getElementById('aimInstruction');
+      const englishInstruction = document.getElementById('englishInstruction');
+      const englishHint = document.getElementById('englishHint');
+      const powerNeeded = document.getElementById('powerNeeded');
+      const powerStatus = document.getElementById('powerStatus');
+      const difficultyFill = document.getElementById('difficultyFill');
+      const difficultyText = document.getElementById('difficultyText');
+      const simpleViewToggle = document.getElementById('simpleViewToggle');
+      const gameModeSelect = document.getElementById('gameModeSelect');
+      const gameModeDescription = document.getElementById('gameModeDescription');
+      const suitSelector = document.getElementById('suitSelector');
+      const pocketSelector = document.getElementById('pocketSelector');
+      const suitRadios = document.querySelectorAll('input[name="player-suit"]');
+      const pocketRadios = document.querySelectorAll('input[name="player-pocket"]');
+
+      // Simple view state
+      let isSimpleView = false;
+
+      // ========== GAME MODE SYSTEM ==========
+      // Defines rules for different pool/billiards games
+
+      const GAME_MODES = {
+        NINE_BALL: {
+          id: '9ball',
+          name: '9-Ball',
+          balls: 9,
+          ballIds: ['1','2','3','4','5','6','7','8','9'],
+          targetRule: 'rotation',   // Must hit lowest ball first
+          callPocket: false,        // Slop counts
+          comboAllowed: true,
+          comboMustHitLowestFirst: true,
+          description: 'Hit lowest ball first. Pocket 9 to win.'
+        },
+        EIGHT_BALL: {
+          id: '8ball',
+          name: '8-Ball',
+          balls: 15,
+          ballIds: ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'],
+          targetRule: 'suit',       // Must hit your suit first
+          suitGroups: {
+            solids: ['1','2','3','4','5','6','7'],
+            stripes: ['9','10','11','12','13','14','15'],
+            eight: ['8']
+          },
+          callPocket: true,
+          comboAllowed: true,
+          comboMustHitSuitFirst: true,
+          description: 'Hit your suit (solids/stripes) first.'
+        },
+        TEN_BALL: {
+          id: '10ball',
+          name: '10-Ball',
+          balls: 10,
+          ballIds: ['1','2','3','4','5','6','7','8','9','10'],
+          targetRule: 'rotation',
+          callPocket: true,
+          comboAllowed: true,
+          comboMustHitLowestFirst: true,
+          description: 'Hit lowest ball first. Call pocket.'
+        },
+        STRAIGHT_POOL: {
+          id: '14.1',
+          name: 'Straight Pool',
+          balls: 15,
+          ballIds: ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'],
+          targetRule: 'any',        // Any ball is legal
+          callPocket: true,
+          comboAllowed: true,
+          comboAnyBall: true,
+          description: 'Any ball, call pocket. First to target score wins.'
+        },
+        ONE_POCKET: {
+          id: '1pocket',
+          name: 'One Pocket',
+          balls: 15,
+          ballIds: ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'],
+          targetRule: 'any',
+          callPocket: false,
+          pocketRestriction: true,  // Only your designated pocket scores
+          scoringPockets: ['corner-bl', 'corner-br'],  // Foot rail corners only
+          comboAllowed: true,
+          comboAnyBall: true,
+          description: 'Any ball into YOUR pocket only. First to 8 wins.'
+        }
+      };
+
+      // Current game state
+      let currentGameMode = GAME_MODES.NINE_BALL;  // Default to 9-ball
+      let playerSuit = 'solids';                    // For 8-ball: 'solids' or 'stripes'
+      let playerPocket = 'corner-bl';               // For One Pocket: player's scoring pocket
+
+      // Find lowest numbered ball currently on table
+      function findLowestBallOnTable() {
+        const numbered = Object.keys(ballPositions)
+          .filter(id => !isNaN(parseInt(id)) && ballPositions[id])
+          .map(id => parseInt(id))
+          .sort((a, b) => a - b);
+        return numbered.length > 0 ? String(numbered[0]) : null;
+      }
+
+      // Get array of ball IDs that are legal to hit first based on game rules
+      function getLegalTargetBalls() {
+        const ballsOnTable = Object.keys(ballPositions).filter(id =>
+          id !== 'cue' && id !== 'ghost' && ballPositions[id]
+        );
+
+        switch (currentGameMode.targetRule) {
+          case 'rotation':
+            // Only the lowest ball is legal
+            const lowest = findLowestBallOnTable();
+            return lowest ? [lowest] : [];
+
+          case 'suit':
+            // Return all balls of player's suit (8-ball)
+            if (!currentGameMode.suitGroups[playerSuit]) return ballsOnTable;
+            return ballsOnTable.filter(b =>
+              currentGameMode.suitGroups[playerSuit].includes(b)
+            );
+
+          case 'any':
+          default:
+            // All balls are legal targets
+            return ballsOnTable;
+        }
+      }
+
+      // Check if a specific ball is a legal first-contact target
+      function isBallLegalTarget(ballId) {
+        const legalBalls = getLegalTargetBalls();
+        return legalBalls.includes(ballId);
+      }
 
       // Pocket mouth centers (narrowest entry point for aiming)
       const pocketCenters = {
@@ -777,6 +1416,44 @@
         return false;
       }
 
+      // Check if a path is blocked by ANY ball on the table
+      // excludeBallIds: array of ball IDs to ignore (e.g., ['cue', 'ghost', selectedBallId])
+      // Returns: { blocked: boolean, blockingBalls: array of ball IDs that block }
+      function isPathBlockedByAnyBall(start, end, excludeBallIds = []) {
+        const blockingBalls = [];
+        const blockRadius = BALL_RADIUS * 2.1;  // Slightly larger for safety margin
+
+        for (const ballId in ballPositions) {
+          // Skip excluded balls
+          if (excludeBallIds.includes(ballId)) continue;
+          // Skip the ghost ball (it's a target, not a physical ball)
+          if (ballId === 'ghost') continue;
+
+          const ballPos = ballPositions[ballId];
+          if (ballPos && isPathBlockedByBall(start, end, ballPos, blockRadius)) {
+            blockingBalls.push(ballId);
+          }
+        }
+
+        return {
+          blocked: blockingBalls.length > 0,
+          blockingBalls: blockingBalls
+        };
+      }
+
+      // Check if direct shot to ghost ball is blocked by any obstacle
+      // Returns true if the path is clear, false if blocked
+      function isDirectPathClear(cuePos, ghostPos, targetBallId) {
+        const excludeIds = ['cue', 'ghost', targetBallId];
+        const result = isPathBlockedByAnyBall(cuePos, ghostPos, excludeIds);
+        return !result.blocked;
+      }
+
+      // Get list of all blocking balls for a path
+      function getBlockingBalls(start, end, excludeBallIds = []) {
+        return isPathBlockedByAnyBall(start, end, excludeBallIds).blockingBalls;
+      }
+
       // Mirror a point across a rail for kick shot calculation
       function mirrorAcrossRail(point, railName) {
         const rail = RAILS[railName];
@@ -813,15 +1490,359 @@
         }
       }
 
-      // Find a kick shot path that avoids the object ball
-      // Returns { bouncePoints: [{x,y}], rails: [railName] } or null if no path found
-      function findKickPath(cuePos, ghostPos, objBallPos, english) {
-        const blockRadius = BALL_RADIUS * 2.5; // Clearance needed
+      // Maximum angle change from english (in degrees)
+      // Full english (~0.7 ball radius offset) can change angle by ~15 degrees
+      const MAX_ENGLISH_ANGLE = 15;
 
-        // Check if direct path is blocked
-        if (!isPathBlockedByBall(cuePos, ghostPos, objBallPos, blockRadius)) {
+      // ========== PHYSICS CONSTANTS FOR REALISTIC KICK SHOTS ==========
+
+      // Table dimensions (our SVG uses 100x50 units, representing ~9ft x 4.5ft table)
+      // 1 SVG unit ≈ 1.08 inches on a 9ft table
+      const SVG_UNITS_PER_FOOT = 100 / 9;  // ~11.1 units per foot
+
+      // Rolling friction coefficient on cloth
+      // Ball loses this fraction of speed per unit distance traveled
+      // Typical pool cloth: ball rolling at 10 ft/s stops in ~15-20 feet
+      // Deceleration ≈ 0.2 ft/s² → friction_per_unit = decel / (units_per_foot)
+      const ROLLING_FRICTION_DECAY = 0.008;  // Speed multiplier lost per SVG unit (0.8% per unit)
+
+      // Coefficient of restitution for rail bounces
+      // Good rails: 0.85-0.95, worn rails: 0.75-0.85
+      const RAIL_COR = 0.88;  // Each bounce retains 88% of speed
+
+      // Minimum speed (as fraction of initial) needed to pocket a ball
+      // Below this, ball won't have enough momentum to reach pocket reliably
+      const MIN_POCKETING_SPEED = 0.15;  // 15% of initial speed minimum
+
+      // Shot force to initial speed mapping (our force is 1-10)
+      // Force 1 = soft, barely reaches other end (~50 units travel)
+      // Force 5 = medium (~100 units travel with margin)
+      // Force 10 = hard break shot (~200+ units travel)
+      const FORCE_TO_INITIAL_SPEED = (force) => 0.5 + force * 0.25;  // Range: 0.75 to 3.0
+
+      // Energy transfer based on cut angle
+      // Physics: transferred = cos²(cutAngle)
+      // Full ball (0°): 100%, Half (30°): 75%, Quarter (45°): 50%, Thin (60°): 25%
+      function getEnergyTransferFraction(cutAngleDegrees) {
+        const cutRad = cutAngleDegrees * Math.PI / 180;
+        return Math.cos(cutRad) * Math.cos(cutRad);  // cos²(θ)
+      }
+
+      // Calculate speed remaining after traveling a distance with friction
+      function speedAfterDistance(initialSpeed, distance) {
+        // Exponential decay model: speed = initial * e^(-friction * distance)
+        // Or simpler linear model: speed = initial * (1 - friction * distance)
+        // Using linear with floor at 0
+        const remaining = initialSpeed * Math.pow(1 - ROLLING_FRICTION_DECAY, distance);
+        return Math.max(0, remaining);
+      }
+
+      // Calculate speed after a rail bounce
+      function speedAfterRail(speed) {
+        return speed * RAIL_COR;
+      }
+
+      // Calculate cue ball speed when it reaches the ghost ball position
+      // Given a kick path with bouncePoints and total rail bounces
+      function calculateCBSpeedAtImpact(kickPath, shotForce) {
+        const initialSpeed = FORCE_TO_INITIAL_SPEED(shotForce);
+        let speed = initialSpeed;
+
+        // Travel through each segment, applying friction and rail losses
+        let lastPoint = null;
+        for (let i = 0; i < kickPath.bouncePoints.length; i++) {
+          const point = kickPath.bouncePoints[i];
+          if (i === 0 && kickPath.cuePos) {
+            // First segment: cue to first bounce
+            const dist = vectorLength(vectorSubtract(point, kickPath.cuePos));
+            speed = speedAfterDistance(speed, dist);
+          } else if (lastPoint) {
+            // Subsequent segments
+            const dist = vectorLength(vectorSubtract(point, lastPoint));
+            speed = speedAfterDistance(speed, dist);
+          }
+          // Apply rail COR after each bounce
+          speed = speedAfterRail(speed);
+          lastPoint = point;
+        }
+
+        // Final segment: last bounce to ghost ball
+        if (lastPoint && kickPath.ghostPos) {
+          const dist = vectorLength(vectorSubtract(kickPath.ghostPos, lastPoint));
+          speed = speedAfterDistance(speed, dist);
+        }
+
+        return speed;
+      }
+
+      // Calculate if object ball can reach the pocket with remaining energy
+      function canOBReachPocket(cbSpeedAtImpact, cutAngleDegrees, obToPacketDist) {
+        // Energy transferred to OB
+        const energyFraction = getEnergyTransferFraction(cutAngleDegrees);
+        const obInitialSpeed = cbSpeedAtImpact * Math.sqrt(energyFraction);  // sqrt because KE ∝ v²
+
+        // OB speed after traveling to pocket
+        const obFinalSpeed = speedAfterDistance(obInitialSpeed, obToPacketDist);
+
+        return {
+          obInitialSpeed,
+          obFinalSpeed,
+          canReach: obFinalSpeed > MIN_POCKETING_SPEED * 0.5,  // Some margin
+          margin: obFinalSpeed / MIN_POCKETING_SPEED  // >1 means comfortable, <1 means risky
+        };
+      }
+
+      // Score a kick path based on viability (higher = better)
+      // Returns 0 if path is not viable, 1-100 for viable paths
+      function scoreKickPath(kickPath, shotForce, cutAngleDegrees, obToPocketDist) {
+        // Add position info for calculation
+        const enrichedPath = {
+          ...kickPath,
+          cuePos: kickPath.cuePos,
+          ghostPos: kickPath.ghostPos
+        };
+
+        const cbSpeed = calculateCBSpeedAtImpact(enrichedPath, shotForce);
+        const pocketCheck = canOBReachPocket(cbSpeed, cutAngleDegrees, obToPocketDist);
+
+        if (!pocketCheck.canReach) {
+          return { score: 0, viable: false, reason: 'Not enough power to pocket', ...pocketCheck, cbSpeed };
+        }
+
+        // Score based on margin (how comfortably the ball reaches the pocket)
+        let score = Math.min(100, pocketCheck.margin * 50);
+
+        // Bonus for fewer rails (simpler shot)
+        score += (3 - kickPath.rails.length) * 10;
+
+        // Penalty for scratches
+        if (kickPath.scratches) {
+          score -= 30;
+        }
+
+        // Penalty for extreme english
+        const englishPenalty = Math.abs(kickPath.requiredEnglish || 0) * 10;
+        score -= englishPenalty;
+
+        return {
+          score: Math.max(0, score),
+          viable: true,
+          ...pocketCheck,
+          cbSpeed,
+          difficulty: score > 70 ? 'Easy' : score > 40 ? 'Medium' : 'Hard'
+        };
+      }
+
+      // Pocket zones for scratch detection (center and radius/size)
+      const POCKET_ZONES = {
+        'corner-tl': { x: 1.5, y: 1.5, r: 3.5 },
+        'corner-tr': { x: 98.5, y: 1.5, r: 3.5 },
+        'corner-bl': { x: 1.5, y: 48.5, r: 3.5 },
+        'corner-br': { x: 98.5, y: 48.5, r: 3.5 },
+        'side-top': { x: 50, y: 1, r: 2.5 },
+        'side-bottom': { x: 50, y: 49, r: 2.5 }
+      };
+
+      // Check if a point is inside a pocket zone
+      function isInPocketZone(point) {
+        for (const [name, pocket] of Object.entries(POCKET_ZONES)) {
+          const dx = point.x - pocket.x;
+          const dy = point.y - pocket.y;
+          if (dx * dx + dy * dy < pocket.r * pocket.r) {
+            return name;
+          }
+        }
+        return null;
+      }
+
+      // Check if a line segment passes through any pocket
+      function pathCrossesPocket(start, end) {
+        // Check multiple points along the path
+        const steps = 20;
+        for (let i = 1; i < steps; i++) {
+          const t = i / steps;
+          const point = {
+            x: start.x + (end.x - start.x) * t,
+            y: start.y + (end.y - start.y) * t
+          };
+          const pocket = isInPocketZone(point);
+          if (pocket) return pocket;
+        }
+        return null;
+      }
+
+      // Calculate the natural reflection angle off a rail (no english)
+      // Returns angle in degrees from rail direction (0 = parallel to rail)
+      function calculateReflectionAngle(incomingDir, railName) {
+        const rail = RAILS[railName];
+        // Angle of incoming direction relative to rail normal
+        const dotNormal = dotProduct(incomingDir, rail.normal);
+        return Math.acos(Math.abs(dotNormal)) * (180 / Math.PI);
+      }
+
+      // Calculate required english to achieve a specific exit angle
+      // Returns english value from -1 (full left) to +1 (full right)
+      // Returns null if the angle adjustment is impossible
+      function calculateRequiredEnglish(cuePos, aimPoint, targetPos, railName) {
+        // Calculate incoming direction
+        const incomingDir = vectorNormalize(vectorSubtract(aimPoint, cuePos));
+
+        // Calculate needed outgoing direction
+        const neededDir = vectorNormalize(vectorSubtract(targetPos, aimPoint));
+
+        // Get rail normal
+        const rail = RAILS[railName];
+
+        // Calculate incoming angle (from rail normal)
+        const inAngle = Math.acos(Math.abs(dotProduct(incomingDir, rail.normal))) * (180 / Math.PI);
+
+        // Calculate required outgoing angle (from rail normal)
+        const outAngle = Math.acos(Math.abs(dotProduct(neededDir, rail.normal))) * (180 / Math.PI);
+
+        // Natural reflection would give outAngle = inAngle
+        // Angle difference needed
+        const angleDiff = outAngle - inAngle;
+
+        // Check if achievable with english
+        if (Math.abs(angleDiff) > MAX_ENGLISH_ANGLE) {
+          return null; // Can't achieve this angle with english alone
+        }
+
+        // Convert angle difference to english amount
+        // Positive angleDiff = need wider angle = running english
+        // Determine which direction is "running" based on rail and direction
+        let english = angleDiff / MAX_ENGLISH_ANGLE;
+
+        // Determine running vs check english direction based on geometry
+        // Running english is in the direction the ball is moving along the rail
+        if (railName === 'top' || railName === 'bottom') {
+          // Horizontal rail - english affects left/right
+          const movingRight = neededDir.x > 0;
+          const isTopRail = railName === 'top';
+          // Running english: same direction as ball movement along rail
+          if (isTopRail) {
+            english = movingRight ? angleDiff / MAX_ENGLISH_ANGLE : -angleDiff / MAX_ENGLISH_ANGLE;
+          } else {
+            english = movingRight ? -angleDiff / MAX_ENGLISH_ANGLE : angleDiff / MAX_ENGLISH_ANGLE;
+          }
+        } else {
+          // Vertical rail
+          const movingDown = neededDir.y > 0;
+          const isLeftRail = railName === 'left';
+          if (isLeftRail) {
+            english = movingDown ? -angleDiff / MAX_ENGLISH_ANGLE : angleDiff / MAX_ENGLISH_ANGLE;
+          } else {
+            english = movingDown ? angleDiff / MAX_ENGLISH_ANGLE : -angleDiff / MAX_ENGLISH_ANGLE;
+          }
+        }
+
+        // Clamp to valid range
+        return Math.max(-1, Math.min(1, english));
+      }
+
+      // Calculate where the ball will actually go given incoming direction, rail, and english
+      function calculateExitDirection(incomingDir, railName, english) {
+        const rail = RAILS[railName];
+
+        // Reflect incoming direction across rail normal
+        const dotNormal = dotProduct(incomingDir, rail.normal);
+        const reflected = {
+          x: incomingDir.x - 2 * dotNormal * rail.normal.x,
+          y: incomingDir.y - 2 * dotNormal * rail.normal.y
+        };
+
+        // Apply english effect (rotate the exit direction)
+        const angleAdjust = english * MAX_ENGLISH_ANGLE * (Math.PI / 180);
+        const cos = Math.cos(angleAdjust);
+        const sin = Math.sin(angleAdjust);
+
+        return vectorNormalize({
+          x: reflected.x * cos - reflected.y * sin,
+          y: reflected.x * sin + reflected.y * cos
+        });
+      }
+
+      // Calculate actual kick path endpoint given user's english
+      // Returns where the CB will actually end up after bouncing off the rail
+      function calculateActualKickDestination(cuePos, aimPoint, railName, userEnglish) {
+        // Direction from cue to aim point
+        const incomingDir = vectorNormalize(vectorSubtract(aimPoint, cuePos));
+
+        // Calculate exit direction with user's english
+        const exitDir = calculateExitDirection(incomingDir, railName, userEnglish);
+
+        // Project the exit direction to find where it would go
+        // (extend to a reasonable distance)
+        const projectionDist = 100;  // Project far enough to cross the table
+        return vectorAdd(aimPoint, vectorScale(exitDir, projectionDist));
+      }
+
+      // Calculate how far off-target the user's english will be for a kick shot
+      // Returns { actualEndpoint, error, errorAngle }
+      function calculateKickEnglishError(cuePos, aimPoint, ghostPos, railName, userEnglish, requiredEnglish) {
+        // Get direction from cue to aim point
+        const incomingDir = vectorNormalize(vectorSubtract(aimPoint, cuePos));
+
+        // Calculate where CB would go with user's english
+        const actualExitDir = calculateExitDirection(incomingDir, railName, userEnglish);
+
+        // Calculate where CB should go (with required english)
+        const idealExitDir = calculateExitDirection(incomingDir, railName, requiredEnglish);
+
+        // Actual destination (project to same distance as ghost ball)
+        const distToGhost = vectorLength(vectorSubtract(ghostPos, aimPoint));
+        const actualEndpoint = vectorAdd(aimPoint, vectorScale(actualExitDir, distToGhost));
+
+        // Error distance (how far from ghost ball)
+        const error = vectorLength(vectorSubtract(actualEndpoint, ghostPos));
+
+        // Error angle (difference between actual and required exit directions)
+        const errorAngle = Math.acos(Math.min(1, Math.abs(dotProduct(actualExitDir, idealExitDir)))) * (180 / Math.PI);
+
+        return {
+          actualEndpoint,
+          error,
+          errorAngle,
+          actualExitDir,
+          idealExitDir
+        };
+      }
+
+      // "Throw" calculation for bank shots
+      // When CB hits OB with side spin, some spin transfers and affects OB's path off the rail
+      // Throw amount depends on: cut angle, CB speed, side spin amount
+      const THROW_FACTOR = 0.3;  // Maximum throw angle in degrees per unit of english at full cut
+
+      function calculateBankThrow(cutAngleDeg, english) {
+        // Throw is maximized at ~30-45 degree cuts, minimal at full ball or thin cuts
+        // sin(2*cutAngle) peaks at 45 degrees
+        const cutRad = cutAngleDeg * Math.PI / 180;
+        const cutFactor = Math.sin(2 * cutRad);  // 0 at 0°, 1 at 45°, 0 at 90°
+
+        // Throw angle in degrees
+        return english * THROW_FACTOR * cutFactor * 15;  // Up to ~4.5 degrees at max
+      }
+
+      // Find a kick shot path that avoids ALL obstacles on the table
+      // Returns { bouncePoints, rails, aimPoint, requiredEnglish, scratches, viability } or null
+      function findKickPath(cuePos, ghostPos, objBallPos, currentEnglish, shotForce, pocketPos, targetBallId = null) {
+        const blockRadius = BALL_RADIUS * 2.5; // Clearance needed
+        const excludeIds = ['cue', 'ghost', targetBallId].filter(Boolean);
+
+        // Check if direct path is blocked by ANY ball (not just the object ball)
+        const directPathCheck = isPathBlockedByAnyBall(cuePos, ghostPos, excludeIds);
+        if (!directPathCheck.blocked) {
           return null; // Direct shot is fine, no kick needed
         }
+
+        // Calculate the cut angle for this shot (needed for energy transfer calculation)
+        // Cut angle is the angle between cue-to-ghost line and ghost-to-objBall line
+        const cueToGhost = vectorNormalize(vectorSubtract(ghostPos, cuePos));
+        const ghostToObj = vectorNormalize(vectorSubtract(objBallPos, ghostPos));
+        const cutAngleDegrees = Math.acos(Math.abs(dotProduct(cueToGhost, ghostToObj))) * (180 / Math.PI);
+
+        // Distance from object ball to pocket
+        const obToPocketDist = pocketPos ? vectorLength(vectorSubtract(pocketPos, objBallPos)) : 50;
 
         // Try one-rail kicks
         const railNames = ['top', 'bottom', 'left', 'right'];
@@ -832,28 +1853,64 @@
           const mirroredGhost = mirrorAcrossRail(ghostPos, railName);
 
           // Find where line from cue to mirrored ghost crosses the rail
-          const bouncePoint = lineRailIntersection(cuePos, mirroredGhost, railName);
+          // This is our aim point!
+          const aimPoint = lineRailIntersection(cuePos, mirroredGhost, railName);
 
-          if (bouncePoint) {
-            // Check if both segments of the kick path avoid the object ball
-            const segment1Clear = !isPathBlockedByBall(cuePos, bouncePoint, objBallPos, blockRadius);
-            const segment2Clear = !isPathBlockedByBall(bouncePoint, ghostPos, objBallPos, blockRadius);
+          if (aimPoint) {
+            // Check if both segments of the kick path avoid ALL balls on table
+            const segment1Check = isPathBlockedByAnyBall(cuePos, aimPoint, excludeIds);
+            const segment2Check = isPathBlockedByAnyBall(aimPoint, ghostPos, excludeIds);
 
-            if (segment1Clear && segment2Clear) {
+            if (!segment1Check.blocked && !segment2Check.blocked) {
+              // Calculate required english for this kick
+              const requiredEnglish = calculateRequiredEnglish(cuePos, aimPoint, ghostPos, railName);
+
+              // Check for pocket scratches on both segments
+              const scratch1 = pathCrossesPocket(cuePos, aimPoint);
+              const scratch2 = pathCrossesPocket(aimPoint, ghostPos);
+              const scratches = scratch1 || scratch2;
+
               // Valid kick path found
-              const dist1 = vectorLength(vectorSubtract(bouncePoint, cuePos));
-              const dist2 = vectorLength(vectorSubtract(ghostPos, bouncePoint));
-              validKicks.push({
+              const dist1 = vectorLength(vectorSubtract(aimPoint, cuePos));
+              const dist2 = vectorLength(vectorSubtract(ghostPos, aimPoint));
+
+              // Calculate english error (difference between user's english and required)
+              const reqEng = requiredEnglish !== null ? requiredEnglish : 0;
+              const englishError = calculateKickEnglishError(cuePos, aimPoint, ghostPos, railName, currentEnglish, reqEng);
+
+              // Calculate actual bounce point with user's current english
+              const actualExitDir = calculateExitDirection(
+                vectorNormalize(vectorSubtract(aimPoint, cuePos)),
+                railName,
+                currentEnglish
+              );
+              const actualDestination = vectorAdd(aimPoint, vectorScale(actualExitDir, dist2));
+
+              const kickPath = {
                 rails: [railName],
-                bouncePoints: [bouncePoint],
+                bouncePoints: [aimPoint],
+                aimPoint: aimPoint,
+                cuePos: cuePos,
+                ghostPos: ghostPos,
+                requiredEnglish: reqEng,
+                currentEnglish: currentEnglish,
+                englishPossible: requiredEnglish !== null,
+                englishError: englishError.error,
+                englishErrorAngle: englishError.errorAngle,
+                actualDestination: actualDestination,  // Where CB actually goes with user's english
+                scratches: scratches,
                 totalLength: dist1 + dist2
-              });
+              };
+
+              // Score this path for viability
+              kickPath.viability = scoreKickPath(kickPath, shotForce || 5, cutAngleDegrees, obToPocketDist);
+              validKicks.push(kickPath);
             }
           }
         }
 
-        // If no one-rail kick works, try two-rail kicks
-        if (validKicks.length === 0) {
+        // If no one-rail kick works OR we want to compare with two-rail options, try two-rail kicks
+        if (validKicks.length === 0 || validKicks.every(k => !k.viability.viable)) {
           for (const rail1 of railNames) {
             for (const rail2 of railNames) {
               if (rail1 === rail2) continue;
@@ -867,40 +1924,496 @@
               const mirror1 = mirrorAcrossRail(ghostPos, rail2);
               const mirror2 = mirrorAcrossRail(mirror1, rail1);
 
-              // Find first bounce point
-              const bounce1 = lineRailIntersection(cuePos, mirror2, rail1);
-              if (!bounce1) continue;
+              // Find first bounce point (this is our aim point for 2-rail kicks)
+              const aimPoint = lineRailIntersection(cuePos, mirror2, rail1);
+              if (!aimPoint) continue;
 
               // Find second bounce point
-              const bounce2 = lineRailIntersection(bounce1, ghostPos, rail2);
+              const bounce2 = lineRailIntersection(aimPoint, ghostPos, rail2);
               if (!bounce2) continue;
 
-              // Check all three segments
-              const seg1Clear = !isPathBlockedByBall(cuePos, bounce1, objBallPos, blockRadius);
-              const seg2Clear = !isPathBlockedByBall(bounce1, bounce2, objBallPos, blockRadius);
-              const seg3Clear = !isPathBlockedByBall(bounce2, ghostPos, objBallPos, blockRadius);
+              // Check all three segments for ALL ball collisions
+              const seg1Check = isPathBlockedByAnyBall(cuePos, aimPoint, excludeIds);
+              const seg2Check = isPathBlockedByAnyBall(aimPoint, bounce2, excludeIds);
+              const seg3Check = isPathBlockedByAnyBall(bounce2, ghostPos, excludeIds);
 
-              if (seg1Clear && seg2Clear && seg3Clear) {
-                const d1 = vectorLength(vectorSubtract(bounce1, cuePos));
-                const d2 = vectorLength(vectorSubtract(bounce2, bounce1));
+              if (!seg1Check.blocked && !seg2Check.blocked && !seg3Check.blocked) {
+                // Calculate required english for first rail
+                const requiredEnglish = calculateRequiredEnglish(cuePos, aimPoint, bounce2, rail1);
+
+                // Check for pocket scratches
+                const scratch1 = pathCrossesPocket(cuePos, aimPoint);
+                const scratch2 = pathCrossesPocket(aimPoint, bounce2);
+                const scratch3 = pathCrossesPocket(bounce2, ghostPos);
+                const scratches = scratch1 || scratch2 || scratch3;
+
+                const d1 = vectorLength(vectorSubtract(aimPoint, cuePos));
+                const d2 = vectorLength(vectorSubtract(bounce2, aimPoint));
                 const d3 = vectorLength(vectorSubtract(ghostPos, bounce2));
-                validKicks.push({
+
+                // Calculate english error for 2-rail kicks (just for first rail impact)
+                const reqEng = requiredEnglish !== null ? requiredEnglish : 0;
+                const englishError = calculateKickEnglishError(cuePos, aimPoint, bounce2, rail1, currentEnglish, reqEng);
+
+                const kickPath = {
                   rails: [rail1, rail2],
-                  bouncePoints: [bounce1, bounce2],
+                  bouncePoints: [aimPoint, bounce2],
+                  aimPoint: aimPoint,
+                  cuePos: cuePos,
+                  ghostPos: ghostPos,
+                  requiredEnglish: reqEng,
+                  currentEnglish: currentEnglish,
+                  englishPossible: requiredEnglish !== null,
+                  englishError: englishError.error,
+                  englishErrorAngle: englishError.errorAngle,
+                  scratches: scratches,
                   totalLength: d1 + d2 + d3
-                });
+                };
+
+                // Score this path for viability
+                kickPath.viability = scoreKickPath(kickPath, shotForce || 5, cutAngleDegrees, obToPocketDist);
+                validKicks.push(kickPath);
               }
             }
           }
         }
 
-        // Return shortest valid kick path
+        // Sort kicks: prefer viable paths with high scores
         if (validKicks.length > 0) {
-          validKicks.sort((a, b) => a.totalLength - b.totalLength);
+          validKicks.sort((a, b) => {
+            // First priority: viable paths over non-viable
+            if (a.viability.viable && !b.viability.viable) return -1;
+            if (!a.viability.viable && b.viability.viable) return 1;
+
+            // Second priority: higher viability score (includes scratch penalty, english, etc.)
+            if (Math.abs(a.viability.score - b.viability.score) > 5) {
+              return b.viability.score - a.viability.score;  // Higher score first
+            }
+
+            // Third priority: avoid scratches
+            if (!a.scratches && b.scratches) return -1;
+            if (a.scratches && !b.scratches) return 1;
+
+            // Fourth priority: fewer rails (simpler shot)
+            if (a.rails.length !== b.rails.length) {
+              return a.rails.length - b.rails.length;
+            }
+
+            // Fifth priority: shorter path
+            return a.totalLength - b.totalLength;
+          });
+
+          // Return best viable path, or best non-viable if none are viable
           return validKicks[0];
         }
 
         return null; // No valid kick path found
+      }
+
+      // ========== BANK SHOT CALCULATIONS ==========
+      // Bank shot: Object ball bounces off rail before going into pocket
+
+      // Find bank shot paths for a given object ball and pocket
+      // Returns array of { bankPoint, bankRail, ghostPos, cutAngle, viability, throwAngle, requiredEnglish }
+      function findBankShots(cuePos, objBallPos, pocketPos, shotForce, currentEnglish = 0, targetBallId = null) {
+        const railNames = ['top', 'bottom', 'left', 'right'];
+        const validBanks = [];
+        const excludeIds = ['cue', 'ghost', targetBallId].filter(Boolean);
+
+        for (const railName of railNames) {
+          // Mirror pocket across the rail
+          const mirroredPocket = mirrorAcrossRail(pocketPos, railName);
+
+          // Line from OB to mirrored pocket
+          const bankPoint = lineRailIntersection(objBallPos, mirroredPocket, railName);
+
+          if (bankPoint) {
+            // Check if bank point is valid (not too close to pocket openings)
+            const tooCloseToCorner = (
+              (bankPoint.x < 6 || bankPoint.x > 94) && (bankPoint.y < 6 || bankPoint.y > 44)
+            );
+            if (tooCloseToCorner) continue;
+
+            // Calculate ghost ball position for this bank shot
+            // Ghost ball is positioned so OB travels from OB pos toward bank point
+            const obToBankDir = vectorNormalize(vectorSubtract(bankPoint, objBallPos));
+            const ghostPos = {
+              x: objBallPos.x - obToBankDir.x * GHOST_BALL_OFFSET,
+              y: objBallPos.y - obToBankDir.y * GHOST_BALL_OFFSET
+            };
+
+            // Check if ghost ball is on the table
+            if (!isOnPlayingSurface(ghostPos.x, ghostPos.y)) continue;
+
+            // Check if cue ball can reach ghost ball (not blocked by ANY ball)
+            const cueToGhostCheck = isPathBlockedByAnyBall(cuePos, ghostPos, excludeIds);
+            if (cueToGhostCheck.blocked) continue;
+
+            // Check if OB can reach bank point (not blocked by other balls)
+            const obToBankCheck = isPathBlockedByAnyBall(objBallPos, bankPoint, excludeIds);
+            if (obToBankCheck.blocked) continue;
+
+            // Check if path from bank point to pocket is clear
+            const bankToPocketCheck = isPathBlockedByAnyBall(bankPoint, pocketPos, excludeIds);
+            if (bankToPocketCheck.blocked) continue;
+
+            // Calculate cut angle for this shot
+            const cueToGhost = vectorNormalize(vectorSubtract(ghostPos, cuePos));
+            const obToBankNorm = obToBankDir;
+            const dotProd = Math.abs(dotProduct(cueToGhost, obToBankNorm));
+            const cutAngleDeg = Math.acos(Math.min(1, dotProd)) * (180 / Math.PI);
+
+            // Calculate distances
+            const obToBankDist = vectorLength(vectorSubtract(bankPoint, objBallPos));
+            const bankToPocketDist = vectorLength(vectorSubtract(pocketPos, bankPoint));
+            const cueToGhostDist = vectorLength(vectorSubtract(ghostPos, cuePos));
+
+            // Calculate throw from CB spin transfer to OB
+            // Throw depends on cut angle and side english amount
+            // Positive english (right) throws OB left, negative throws right
+            const throwAngle = calculateBankThrow(cutAngleDeg, currentEnglish);
+
+            // Determine if this is a cut to the left or right relative to the bank direction
+            // Cross product to determine cut direction (positive = cutting left, negative = cutting right)
+            const crossZ = cueToGhost.x * obToBankNorm.y - cueToGhost.y * obToBankNorm.x;
+            const cutDirection = crossZ > 0 ? 1 : -1;  // 1 = cutting left, -1 = cutting right
+
+            // Calculate how throw affects the bank
+            // Throw is perpendicular to OB's travel direction
+            const throwRad = throwAngle * Math.PI / 180;
+            const throwOffset = Math.tan(throwRad) * obToBankDist;  // How far off the bank point will be
+
+            // Actual bank point with throw considered
+            // Get perpendicular to OB travel direction
+            const perpToBank = { x: -obToBankDir.y, y: obToBankDir.x };
+            const actualBankPoint = {
+              x: bankPoint.x + perpToBank.x * throwOffset * cutDirection,
+              y: bankPoint.y + perpToBank.y * throwOffset * cutDirection
+            };
+
+            // Calculate english needed to compensate for natural throw
+            // To cancel throw, apply opposite english
+            const compensatingEnglish = -currentEnglish;  // Info: apply opposite to cancel throw
+
+            // Score this bank shot
+            const viability = scoreBankShot(
+              cueToGhostDist,
+              cutAngleDeg,
+              obToBankDist,
+              bankToPocketDist,
+              shotForce
+            );
+
+            validBanks.push({
+              bankPoint,
+              actualBankPoint,  // Where OB actually hits rail with current throw
+              bankRail: railName,
+              ghostPos,
+              cutAngle: cutAngleDeg,
+              cutDirection,
+              throwAngle,
+              currentEnglish,
+              obToBankDist,
+              bankToPocketDist,
+              totalOBDist: obToBankDist + bankToPocketDist,
+              viability
+            });
+          }
+        }
+
+        // Sort by viability score
+        validBanks.sort((a, b) => b.viability.score - a.viability.score);
+        return validBanks;
+      }
+
+      // Score a bank shot based on physics viability
+      function scoreBankShot(cueToGhostDist, cutAngleDeg, obToBankDist, bankToPocketDist, shotForce) {
+        const initialSpeed = FORCE_TO_INITIAL_SPEED(shotForce);
+
+        // CB speed at impact (after traveling to ghost ball)
+        const cbSpeedAtImpact = speedAfterDistance(initialSpeed, cueToGhostDist);
+
+        // Energy transfer to OB based on cut angle
+        const energyFraction = getEnergyTransferFraction(cutAngleDeg);
+        const obInitialSpeed = cbSpeedAtImpact * Math.sqrt(energyFraction);
+
+        // OB speed after reaching the bank point
+        const obSpeedAtBank = speedAfterDistance(obInitialSpeed, obToBankDist);
+
+        // Speed after rail bounce
+        const obSpeedAfterRail = speedAfterRail(obSpeedAtBank);
+
+        // OB speed when reaching pocket
+        const obFinalSpeed = speedAfterDistance(obSpeedAfterRail, bankToPocketDist);
+
+        const canReach = obFinalSpeed > MIN_POCKETING_SPEED * 0.5;
+        const margin = obFinalSpeed / MIN_POCKETING_SPEED;
+
+        if (!canReach) {
+          return { score: 0, viable: false, reason: 'Not enough power', obFinalSpeed, margin };
+        }
+
+        // Score based on margin and shot difficulty
+        let score = Math.min(100, margin * 40);
+
+        // Penalty for steep cut angles (harder to control)
+        if (cutAngleDeg > 45) score -= (cutAngleDeg - 45) * 0.5;
+
+        // Penalty for long bank distances (more error accumulation)
+        const totalDist = obToBankDist + bankToPocketDist;
+        if (totalDist > 60) score -= (totalDist - 60) * 0.3;
+
+        const difficulty = score > 60 ? 'Easy' : score > 35 ? 'Medium' : 'Hard';
+
+        return {
+          score: Math.max(0, score),
+          viable: true,
+          obFinalSpeed,
+          margin,
+          difficulty
+        };
+      }
+
+      // ==================== COMBINATION SHOT DETECTION ====================
+
+      // Find combination shots: hit helper ball (OB1) into target ball (OB2) to pocket OB2
+      function findCombinationShots(cuePos, targetBallId, pocketId) {
+        const combos = [];
+        const targetPos = ballPositions[targetBallId];
+        const pocketPos = pocketCenters[pocketId];
+
+        if (!targetPos || !pocketPos) return combos;
+
+        // Get all potential helper balls
+        const helperBalls = Object.keys(ballPositions).filter(id =>
+          id !== 'cue' && id !== 'ghost' && id !== targetBallId && ballPositions[id]
+        );
+
+        for (const helperBallId of helperBalls) {
+          const helperPos = ballPositions[helperBallId];
+          if (!helperPos) continue;
+
+          // Calculate where helper needs to hit target to send it toward pocket
+          // Ghost ball position for helper → target collision
+          const targetToPocket = normalize({
+            x: pocketPos.x - targetPos.x,
+            y: pocketPos.y - targetPos.y
+          });
+
+          // Target ghost position (where helper should contact target)
+          const targetGhostPos = {
+            x: targetPos.x - targetToPocket.x * BALL_RADIUS * 2,
+            y: targetPos.y - targetToPocket.y * BALL_RADIUS * 2
+          };
+
+          // Calculate where cue needs to hit helper to send it toward target ghost
+          const helperToTargetGhost = normalize({
+            x: targetGhostPos.x - helperPos.x,
+            y: targetGhostPos.y - helperPos.y
+          });
+
+          // Helper ghost position (where cue should contact helper)
+          const helperGhostPos = {
+            x: helperPos.x - helperToTargetGhost.x * BALL_RADIUS * 2,
+            y: helperPos.y - helperToTargetGhost.y * BALL_RADIUS * 2
+          };
+
+          // Check alignment: does helper → target direction align with target → pocket?
+          const helperToTarget = normalize({
+            x: targetPos.x - helperPos.x,
+            y: targetPos.y - helperPos.y
+          });
+
+          const alignment = helperToTarget.x * targetToPocket.x + helperToTarget.y * targetToPocket.y;
+
+          // Need good alignment (helper pushes target toward pocket)
+          if (alignment < 0.3) continue;
+
+          // Calculate cut angles
+          const cueToHelperGhost = normalize({
+            x: helperGhostPos.x - cuePos.x,
+            y: helperGhostPos.y - cuePos.y
+          });
+
+          // Cut angle 1: cue → helper
+          const cutAngle1Rad = Math.acos(Math.max(-1, Math.min(1,
+            cueToHelperGhost.x * helperToTargetGhost.x + cueToHelperGhost.y * helperToTargetGhost.y
+          )));
+          const cutAngle1 = cutAngle1Rad * 180 / Math.PI;
+
+          // Cut angle 2: helper → target → pocket
+          const cutAngle2Rad = Math.acos(Math.max(-1, Math.min(1, alignment)));
+          const cutAngle2 = cutAngle2Rad * 180 / Math.PI;
+
+          // Skip if cut angles are too steep (very low probability shots)
+          if (cutAngle1 > 70 || cutAngle2 > 70) continue;
+
+          // Check paths are clear
+          // Path 1: Cue → Helper ghost
+          const path1Check = isPathBlockedByAnyBall(cuePos, helperGhostPos, ['cue', helperBallId]);
+          if (path1Check.blocked) continue;
+
+          // Path 2: Helper → Target ghost
+          const path2Check = isPathBlockedByAnyBall(helperPos, targetGhostPos, [helperBallId, targetBallId]);
+          if (path2Check.blocked) continue;
+
+          // Path 3: Target → Pocket
+          const path3Check = isPathBlockedByAnyBall(targetPos, pocketPos, [targetBallId]);
+          if (path3Check.blocked) continue;
+
+          // Calculate distances
+          const dist1 = Math.hypot(helperGhostPos.x - cuePos.x, helperGhostPos.y - cuePos.y);
+          const dist2 = Math.hypot(targetGhostPos.x - helperPos.x, targetGhostPos.y - helperPos.y);
+          const dist3 = Math.hypot(pocketPos.x - targetPos.x, pocketPos.y - targetPos.y);
+
+          // Score the combination shot
+          const comboScore = scoreComboShot(alignment, cutAngle1, cutAngle2, dist1, dist2, dist3);
+
+          combos.push({
+            helperBallId,
+            targetBallId,
+            pocketId,
+            helperPos,
+            targetPos,
+            pocketPos,
+            helperGhostPos,
+            targetGhostPos,
+            alignment,
+            cutAngle1,
+            cutAngle2,
+            dist1,
+            dist2,
+            dist3,
+            score: comboScore.score,
+            viable: comboScore.viable,
+            difficulty: comboScore.difficulty,
+            reason: comboScore.reason
+          });
+        }
+
+        // Sort by score (best first)
+        return combos.sort((a, b) => b.score - a.score);
+      }
+
+      // Score a combination shot based on alignment, cut angles, and distances
+      function scoreComboShot(alignment, cutAngle1, cutAngle2, dist1, dist2, dist3) {
+        // Base score from alignment (0.3 to 1.0 maps to 0 to 50)
+        let score = (alignment - 0.3) / 0.7 * 50;
+
+        // Penalty for cut angles (compound difficulty)
+        const totalCutAngle = cutAngle1 + cutAngle2;
+        if (totalCutAngle > 30) score -= (totalCutAngle - 30) * 0.8;
+        if (totalCutAngle > 60) score -= (totalCutAngle - 60) * 1.0; // Extra penalty
+
+        // Penalty for long distances (more error accumulation)
+        const totalDist = dist1 + dist2 + dist3;
+        if (totalDist > 80) score -= (totalDist - 80) * 0.3;
+
+        // Bonus for short, aligned combos
+        if (dist2 < 15 && alignment > 0.8) score += 20;
+
+        const viable = score > 10;
+        const difficulty = score > 50 ? 'Easy' : score > 30 ? 'Medium' : 'Hard';
+
+        return {
+          score: Math.max(0, Math.min(100, score)),
+          viable,
+          difficulty,
+          reason: viable ? null : 'Poor alignment or difficult angles'
+        };
+      }
+
+      // Check if a combination shot is legal for the current game mode
+      function isComboLegalForGameMode(combo) {
+        // In rotation games (9-ball, 10-ball), must hit lowest ball first
+        if (currentGameMode.comboMustHitLowestFirst) {
+          const lowest = findLowestBallOnTable();
+          if (combo.helperBallId !== lowest) {
+            return { legal: false, reason: `Must hit ${lowest}-ball first` };
+          }
+        }
+
+        // In 8-ball, must hit your suit first
+        if (currentGameMode.comboMustHitSuitFirst) {
+          const suitBalls = currentGameMode.suitGroups[playerSuit];
+          if (suitBalls && !suitBalls.includes(combo.helperBallId)) {
+            return { legal: false, reason: `Must hit ${playerSuit} first` };
+          }
+        }
+
+        return { legal: true, reason: null };
+      }
+
+      // Find all legal combination shots for current game state
+      function findLegalCombinationShots(cuePos, pocketId) {
+        const allCombos = [];
+
+        // Get balls that could be pocketed
+        const ballsOnTable = Object.keys(ballPositions).filter(id =>
+          id !== 'cue' && id !== 'ghost' && ballPositions[id]
+        );
+
+        for (const targetBallId of ballsOnTable) {
+          const combos = findCombinationShots(cuePos, targetBallId, pocketId);
+
+          for (const combo of combos) {
+            const legality = isComboLegalForGameMode(combo);
+            if (legality.legal) {
+              allCombos.push(combo);
+            }
+          }
+        }
+
+        // Sort by score
+        return allCombos.sort((a, b) => b.score - a.score);
+      }
+
+      // Solver preference enum
+      const SOLVER_MODE = {
+        AUTO: 'auto',
+        PREFER_KICK: 'kick',
+        PREFER_BANK: 'bank',
+        PREFER_COMBO: 'combo'
+      };
+
+      let currentSolverMode = SOLVER_MODE.AUTO;
+      let currentComboShot = null; // Track active combo shot for display
+
+      // Draw combination shot visualization
+      function drawComboShot(combo) {
+        if (!combo) {
+          hideComboShot();
+          return;
+        }
+
+        const cuePos = ballPositions['cue'];
+        if (!cuePos) return;
+
+        // Path 1: Cue → Helper ghost (dashed)
+        comboPath1.setAttribute('d', `M ${cuePos.x} ${cuePos.y} L ${combo.helperGhostPos.x} ${combo.helperGhostPos.y}`);
+
+        // Path 2: Helper → Target
+        comboPath2.setAttribute('d', `M ${combo.helperPos.x} ${combo.helperPos.y} L ${combo.targetPos.x} ${combo.targetPos.y}`);
+
+        // Path 3: Target → Pocket
+        comboPath3.setAttribute('d', `M ${combo.targetPos.x} ${combo.targetPos.y} L ${combo.pocketPos.x} ${combo.pocketPos.y}`);
+
+        // Position helper ghost indicator
+        comboHelperGhost.setAttribute('transform', `translate(${combo.helperGhostPos.x}, ${combo.helperGhostPos.y})`);
+
+        // Position COMBO label near the helper ball
+        comboLabel.setAttribute('x', combo.helperPos.x);
+        comboLabel.setAttribute('y', combo.helperPos.y - 2.5);
+
+        // Show the indicator
+        comboShotIndicator.setAttribute('visibility', 'visible');
+        currentComboShot = combo;
+      }
+
+      // Hide combination shot visualization
+      function hideComboShot() {
+        comboShotIndicator.setAttribute('visibility', 'hidden');
+        currentComboShot = null;
       }
 
       // Get ball hit fraction name from cut angle
@@ -963,6 +2476,186 @@
         overlapPercentDisplay.textContent = Math.round(overlapFraction * 100) + '%';
         overlapEnglishDisplay.textContent = fraction.english;
         overlapSlashDisplay.textContent = fraction.slash;
+      }
+
+      // Update Shot Instructions Panel - THE KEY ANSWER to the user's question
+      function updateShotInstructions(shotData) {
+        if (!shotData || !shotData.isReady) {
+          // Not enough info to provide instructions
+          shotVerdict.textContent = 'Setup Needed';
+          shotVerdict.className = 'shot-verdict setup-needed';
+          aimInstruction.textContent = 'Place balls and select pocket';
+          aimInstruction.classList.remove('highlight');
+          englishInstruction.textContent = '--';
+          englishHint.textContent = '';
+          powerNeeded.textContent = '--';
+          powerStatus.textContent = '';
+          powerStatus.className = '';
+          difficultyFill.className = 'difficulty-fill';
+          difficultyText.textContent = '--';
+          difficultyText.className = 'difficulty-text';
+          return;
+        }
+
+        // Check if selected ball is a legal target for current game mode
+        let illegalBallWarning = '';
+        if (shotData.selectedBallId && !shotData.isLegalTarget && shotData.targetRule !== 'any') {
+          // Build warning message based on game mode
+          if (shotData.targetRule === 'rotation') {
+            const lowestBall = shotData.legalTargetBalls[0];
+            illegalBallWarning = `Must hit ${lowestBall}-ball first!`;
+          } else if (shotData.targetRule === 'suit') {
+            illegalBallWarning = `Must hit your suit first!`;
+          }
+        }
+
+        // Determine shot type and aim point description
+        let aimText = '';
+        let englishText = 'Center';
+        let englishHintText = '';
+
+        if (shotData.isKickShot) {
+          const railName = shotData.kickRail.charAt(0).toUpperCase() + shotData.kickRail.slice(1);
+          aimText = `${railName} rail kick point`;
+          aimInstruction.classList.add('highlight');
+
+          // English for kick
+          if (shotData.requiredEnglish !== undefined) {
+            const eng = shotData.requiredEnglish;
+            if (Math.abs(eng) < 0.15) {
+              englishText = 'Center';
+            } else if (eng > 0) {
+              englishText = eng > 0.5 ? 'Strong Right' : 'Slight Right';
+              englishHintText = 'Running english (widens angle)';
+            } else {
+              englishText = eng < -0.5 ? 'Strong Left' : 'Slight Left';
+              englishHintText = 'Check english (tightens angle)';
+            }
+          }
+        } else if (shotData.isBankShot) {
+          const railName = shotData.bankRail.charAt(0).toUpperCase() + shotData.bankRail.slice(1);
+          aimText = `Ghost ball (bank off ${railName})`;
+          aimInstruction.classList.add('highlight');
+          englishHintText = shotData.throwInfo || '';
+        } else if (shotData.isComboShot) {
+          // Combination shot
+          aimText = `Hit ${shotData.comboHelperBall}-ball into ${shotData.comboTargetBall}-ball`;
+          aimInstruction.classList.add('highlight');
+          englishHintText = `Combo (${shotData.comboDifficulty || 'Hard'})`;
+        } else {
+          // Direct shot
+          aimText = `Ghost ball (${shotData.ballHitFraction})`;
+          aimInstruction.classList.add('highlight');
+        }
+
+        // English from contact offset
+        const engX = shotData.contactX || 0;
+        const engY = shotData.contactY || 0;
+        if (!shotData.isKickShot) {
+          const parts = [];
+          if (engY < -0.15) parts.push('Follow');
+          else if (engY > 0.15) parts.push('Draw');
+          if (engX < -0.15) parts.push('Left');
+          else if (engX > 0.15) parts.push('Right');
+          if (parts.length > 0) {
+            englishText = parts.join(' + ');
+          }
+          englishHintText = engY < -0.15 ? 'CB follows through' : engY > 0.15 ? 'CB pulls back' : '';
+        }
+
+        // Power assessment
+        const currentPower = shotData.power || 5;
+        const minPower = shotData.minPowerNeeded || 3;
+        const powerEnough = currentPower >= minPower;
+
+        powerNeeded.textContent = `${currentPower}/10`;
+        if (powerEnough) {
+          powerStatus.textContent = '(enough)';
+          powerStatus.className = 'enough';
+        } else {
+          powerStatus.textContent = `(need ${minPower}+)`;
+          powerStatus.className = 'not-enough';
+        }
+
+        // Calculate difficulty based on multiple factors
+        let difficultyScore = 0;
+        const cutAngle = shotData.cutAngle || 0;
+        const distance = shotData.totalDistance || 50;
+
+        // Cut angle difficulty (0-30 easy, 30-50 medium, 50+ hard)
+        if (cutAngle > 60) difficultyScore += 40;
+        else if (cutAngle > 45) difficultyScore += 25;
+        else if (cutAngle > 30) difficultyScore += 15;
+        else difficultyScore += 5;
+
+        // Distance difficulty
+        if (distance > 80) difficultyScore += 25;
+        else if (distance > 50) difficultyScore += 15;
+        else difficultyScore += 5;
+
+        // Kick/bank/combo adds difficulty
+        if (shotData.isKickShot) difficultyScore += 20;
+        if (shotData.isBankShot) difficultyScore += 15;
+        if (shotData.isComboShot) {
+          // Combo shots have compound cut angle difficulty
+          difficultyScore += 25;
+          if (shotData.comboCutAngle1 > 40 || shotData.comboCutAngle2 > 40) {
+            difficultyScore += 15;
+          }
+        }
+
+        // English requirement adds difficulty
+        if (Math.abs(engX) > 0.5 || Math.abs(engY) > 0.5) difficultyScore += 10;
+
+        // Power issues
+        if (!powerEnough) difficultyScore += 20;
+
+        // Determine verdict and difficulty level
+        let verdict, verdictClass, diffLevel, diffClass;
+
+        // Override verdict if illegal ball is selected
+        if (illegalBallWarning) {
+          verdict = 'FOUL';
+          verdictClass = 'foul';
+          diffLevel = 'Illegal';
+          diffClass = 'foul';
+        } else if (difficultyScore <= 25) {
+          verdict = 'Makeable';
+          verdictClass = 'makeable';
+          diffLevel = 'Easy';
+          diffClass = 'easy';
+        } else if (difficultyScore <= 45) {
+          verdict = 'Makeable';
+          verdictClass = 'makeable';
+          diffLevel = 'Medium';
+          diffClass = 'medium';
+        } else if (difficultyScore <= 70) {
+          verdict = 'Difficult';
+          verdictClass = 'difficult';
+          diffLevel = 'Hard';
+          diffClass = 'hard';
+        } else {
+          verdict = 'Very Hard';
+          verdictClass = 'very-hard';
+          diffLevel = 'Very Hard';
+          diffClass = 'very-hard';
+        }
+
+        // Update UI
+        shotVerdict.textContent = verdict;
+        shotVerdict.className = 'shot-verdict ' + verdictClass;
+        aimInstruction.textContent = aimText;
+        englishInstruction.textContent = englishText;
+        // Show illegal ball warning in english hint if applicable
+        englishHint.textContent = illegalBallWarning || englishHintText;
+        if (illegalBallWarning) {
+          englishHint.style.color = '#ff4444';
+        } else {
+          englishHint.style.color = '';
+        }
+        difficultyFill.className = 'difficulty-fill ' + diffClass;
+        difficultyText.textContent = diffLevel;
+        difficultyText.className = 'difficulty-text ' + diffClass;
       }
 
       // Calculate overlap fraction (1 = full ball, 0 = no overlap)
@@ -1373,6 +3066,75 @@
         return svgX >= 2 && svgX <= 98 && svgY >= 2 && svgY <= 48;
       }
 
+      // Update the cue stick visualization
+      // Shows a semi-realistic cue stick extending from behind cue ball toward the aim point
+      function updateCueStick(cuePos, aimTarget) {
+        if (!cuePos || !aimTarget) {
+          cueStick.setAttribute('visibility', 'hidden');
+          return;
+        }
+
+        // Calculate direction from cue ball to aim target
+        const direction = vectorNormalize(vectorSubtract(aimTarget, cuePos));
+
+        // Cue stick dimensions (in SVG units)
+        const CUE_LENGTH = 45;        // Total length of visible cue
+        const TIP_WIDTH = 0.5;        // Width at tip (narrow)
+        const BUTT_WIDTH = 1.2;       // Width at butt end (wide)
+        const FERRULE_LENGTH = 1.5;   // Length of ferrule (white part)
+        const TIP_OFFSET = 0.8;       // How far tip is from cue ball center
+
+        // Calculate perpendicular vector for width
+        const perp = { x: -direction.y, y: direction.x };
+
+        // Tip position (slightly away from cue ball center toward aim)
+        const tipPos = {
+          x: cuePos.x - direction.x * TIP_OFFSET,
+          y: cuePos.y - direction.y * TIP_OFFSET
+        };
+
+        // Butt position (far behind cue ball)
+        const buttPos = {
+          x: tipPos.x - direction.x * CUE_LENGTH,
+          y: tipPos.y - direction.y * CUE_LENGTH
+        };
+
+        // Ferrule end position
+        const ferruleEnd = {
+          x: tipPos.x - direction.x * FERRULE_LENGTH,
+          y: tipPos.y - direction.y * FERRULE_LENGTH
+        };
+
+        // Calculate taper - width increases linearly from tip to butt
+        const ferruleWidth = TIP_WIDTH + (BUTT_WIDTH - TIP_WIDTH) * (FERRULE_LENGTH / CUE_LENGTH);
+
+        // Build shaft polygon (ferrule end to butt)
+        // Four corners: ferrule-left, ferrule-right, butt-right, butt-left
+        const shaftPoints = [
+          ferruleEnd.x + perp.x * ferruleWidth / 2, ferruleEnd.y + perp.y * ferruleWidth / 2,
+          ferruleEnd.x - perp.x * ferruleWidth / 2, ferruleEnd.y - perp.y * ferruleWidth / 2,
+          buttPos.x - perp.x * BUTT_WIDTH / 2, buttPos.y - perp.y * BUTT_WIDTH / 2,
+          buttPos.x + perp.x * BUTT_WIDTH / 2, buttPos.y + perp.y * BUTT_WIDTH / 2
+        ].join(' ');
+        cueShaft.setAttribute('points', shaftPoints);
+
+        // Build ferrule polygon (tip to ferrule end)
+        const ferrulePoints = [
+          tipPos.x + perp.x * TIP_WIDTH / 2, tipPos.y + perp.y * TIP_WIDTH / 2,
+          tipPos.x - perp.x * TIP_WIDTH / 2, tipPos.y - perp.y * TIP_WIDTH / 2,
+          ferruleEnd.x - perp.x * ferruleWidth / 2, ferruleEnd.y - perp.y * ferruleWidth / 2,
+          ferruleEnd.x + perp.x * ferruleWidth / 2, ferruleEnd.y + perp.y * ferruleWidth / 2
+        ].join(' ');
+        cueFerule.setAttribute('points', ferrulePoints);
+
+        // Position tip circle
+        cueTip.setAttribute('cx', tipPos.x);
+        cueTip.setAttribute('cy', tipPos.y);
+        cueTip.setAttribute('r', TIP_WIDTH / 2);
+
+        cueStick.setAttribute('visibility', 'visible');
+      }
+
       // Update the cue-ghost connection line
       // Store current kick path info for display
       let currentKickPath = null;
@@ -1381,6 +3143,11 @@
         const cuePos = ballPositions['cue'];
         const ghostPos = ballPositions['ghost'];
         const objBallPos = selectedBallId ? ballPositions[selectedBallId] : null;
+        const pocketPos = selectedPocket ? pocketCenters[selectedPocket] : null;
+
+        // Hide kick aim indicator and actual path by default
+        kickAimIndicator.setAttribute('visibility', 'hidden');
+        actualKickPath.setAttribute('visibility', 'hidden');
 
         if (cuePos && ghostPos) {
           // Check if we need a kick shot (object ball blocking direct path)
@@ -1388,7 +3155,9 @@
           currentKickPath = null;
 
           if (objBallPos) {
-            const kickPath = findKickPath(cuePos, ghostPos, objBallPos, contactOffset.x);
+            // Pass shotForce, pocketPos, and targetBallId for physics-based path evaluation
+            // This checks ALL balls on table as obstacles, not just the object ball
+            const kickPath = findKickPath(cuePos, ghostPos, objBallPos, contactOffset.x, shotForce, pocketPos, selectedBallId);
 
             if (kickPath) {
               // Draw kick shot path with bounce points
@@ -1398,6 +3167,70 @@
                 pathD += ` L ${point.x} ${point.y}`;
               }
               pathD += ` L ${ghostPos.x} ${ghostPos.y}`;
+
+              // Show kick aim indicator at the first rail contact point
+              const aimPoint = kickPath.aimPoint;
+              kickAimIndicator.setAttribute('transform', `translate(${aimPoint.x}, ${aimPoint.y})`);
+
+              // Position label based on which rail we're aiming at
+              const railName = kickPath.rails[0];
+              let labelY = -1.5;
+              if (railName === 'bottom') labelY = 1.8;
+              kickAimLabel.setAttribute('y', labelY);
+
+              // Show rail name with viability info
+              const railLabel = railName.charAt(0).toUpperCase() + railName.slice(1);
+              let labelText = railLabel;
+
+              // Add difficulty indicator based on viability
+              if (kickPath.viability) {
+                if (!kickPath.viability.viable) {
+                  labelText += ' ✗';  // Not viable - won't reach pocket
+                } else if (kickPath.viability.difficulty === 'Hard') {
+                  labelText += ' ●';  // Hard shot
+                } else if (kickPath.viability.difficulty === 'Medium') {
+                  labelText += ' ◐';  // Medium difficulty
+                }
+                // Easy shots get no extra indicator
+              }
+
+              if (kickPath.scratches) {
+                labelText += ' ⚠';  // Warning for scratch risk
+              }
+              kickAimLabel.textContent = labelText;
+
+              // Color the aim indicator based on viability
+              const aimDiamond = kickAimIndicator.querySelector('polygon');
+              if (aimDiamond) {
+                if (!kickPath.viability || !kickPath.viability.viable) {
+                  aimDiamond.setAttribute('fill', '#ff4444');  // Red = not viable
+                } else if (kickPath.viability.difficulty === 'Hard') {
+                  aimDiamond.setAttribute('fill', '#ff8800');  // Orange = hard
+                } else if (kickPath.viability.difficulty === 'Medium') {
+                  aimDiamond.setAttribute('fill', '#ffcc00');  // Yellow = medium
+                } else {
+                  aimDiamond.setAttribute('fill', '#44ff44');  // Green = easy
+                }
+              }
+
+              kickAimIndicator.setAttribute('visibility', 'visible');
+
+              // Show actual kick path if user's english differs from required
+              // This helps users see the effect of their english choice
+              const englishDiff = Math.abs(kickPath.currentEnglish - kickPath.requiredEnglish);
+              const hasSignificantEnglishError = englishDiff > 0.15 && kickPath.actualDestination;
+
+              if (hasSignificantEnglishError) {
+                // Draw red dashed line showing where CB actually goes with current english
+                let actualPathD = `M ${cuePos.x} ${cuePos.y} L ${kickPath.aimPoint.x} ${kickPath.aimPoint.y}`;
+                actualPathD += ` L ${kickPath.actualDestination.x} ${kickPath.actualDestination.y}`;
+                actualKickPath.setAttribute('d', actualPathD);
+                actualKickPath.setAttribute('visibility', 'visible');
+
+                // Update label to show english is off
+                const engDir = kickPath.requiredEnglish > kickPath.currentEnglish ? '→' : '←';
+                kickAimLabel.textContent = labelText + ` ${engDir}`;  // Arrow shows which way to adjust
+              }
             }
           }
 
@@ -1408,8 +3241,13 @@
 
           cueGhostLine.setAttribute('d', pathD);
           cueGhostLine.setAttribute('visibility', 'visible');
+
+          // Update cue stick - aim at kick point if kick shot, otherwise at ghost ball
+          const aimTarget = currentKickPath ? currentKickPath.aimPoint : ghostPos;
+          updateCueStick(cuePos, aimTarget);
         } else {
           cueGhostLine.setAttribute('visibility', 'hidden');
+          cueStick.setAttribute('visibility', 'hidden');
           currentKickPath = null;
         }
 
@@ -1439,8 +3277,7 @@
           const ghostBallY = objBallPos.y - objToPocket.y * GHOST_BALL_OFFSET;
           const ghostBallPosition = { x: ghostBallX, y: ghostBallY };
 
-          ghostBallIndicator.setAttribute('cx', ghostBallX);
-          ghostBallIndicator.setAttribute('cy', ghostBallY);
+          ghostBallIndicator.setAttribute('transform', `translate(${ghostBallX}, ${ghostBallY})`);
           ghostBallIndicator.setAttribute('visibility', 'visible');
 
           // Calculate cut angle FIRST so we can use it for path calculations
@@ -1471,12 +3308,160 @@
             obMadeIt = true;
           }
 
-          const objPathEnd = vectorAdd(objBallPos, vectorScale(objToPocket, objPathLength));
-          objBallPath.setAttribute('x1', objBallPos.x);
-          objBallPath.setAttribute('y1', objBallPos.y);
-          objBallPath.setAttribute('x2', objPathEnd.x);
-          objBallPath.setAttribute('y2', objPathEnd.y);
-          objBallPath.setAttribute('visibility', 'visible');
+          // Check if we should show a bank shot instead of direct shot
+          let currentBankShot = null;
+          let showingBank = false;
+
+          if (cuePos && (currentSolverMode === 'bank' || currentSolverMode === 'auto')) {
+            // Check all balls on table as obstacles when finding bank shots
+            const bankShots = findBankShots(cuePos, objBallPos, pocketPos, shotForce, contactOffset.x, selectedBallId);
+            if (bankShots.length > 0) {
+              const bestBank = bankShots[0];
+              // In bank mode, always show bank. In auto mode, show bank if viable and easier than direct
+              if (currentSolverMode === 'bank' || (bestBank.viability.viable && bestBank.viability.score > 50)) {
+                currentBankShot = bestBank;
+                showingBank = true;
+              }
+            }
+          }
+
+          // Hide bank indicator by default
+          bankPointIndicator.setAttribute('visibility', 'hidden');
+
+          // Check if we should show a combo shot
+          let currentCombo = null;
+          let showingCombo = false;
+
+          if (cuePos && selectedPocket && (currentSolverMode === 'combo' || currentSolverMode === 'auto')) {
+            // Find combo shots that can pocket the target ball
+            const combos = findCombinationShots(cuePos, selectedBallId, selectedPocket);
+            if (combos.length > 0) {
+              const bestCombo = combos[0];
+              // In combo mode, always show combo if viable.
+              // In auto mode, show combo only if kick and direct are blocked and combo is viable
+              const directBlocked = currentKickPath !== null; // Kick path exists = direct is blocked
+              const kickNotViable = currentKickPath && (!currentKickPath.viability || !currentKickPath.viability.viable);
+              const shouldShowCombo = currentSolverMode === 'combo' ||
+                (bestCombo.viable && directBlocked && kickNotViable);
+
+              if (shouldShowCombo) {
+                currentCombo = bestCombo;
+                showingCombo = true;
+              }
+            }
+          }
+
+          // Hide combo indicator by default
+          hideComboShot();
+
+          let objPathEnd;
+          if (showingCombo && currentCombo) {
+            // Combination shot path visualization
+            drawComboShot(currentCombo);
+
+            // For combo shots, the OB path is from target ball to pocket
+            const targetBallPos = currentCombo.targetPos;
+            const comboPocketPos = currentCombo.pocketPos;
+            objPathEnd = comboPocketPos;
+
+            // Draw the target ball path (separate from combo indicator paths)
+            const obPathD = `M ${targetBallPos.x} ${targetBallPos.y} L ${comboPocketPos.x} ${comboPocketPos.y}`;
+            objBallPath.setAttribute('d', obPathD);
+            objBallPath.setAttribute('visibility', 'visible');
+
+            // Update ghost ball to helper ghost position for aiming
+            ghostBallIndicator.setAttribute('transform', `translate(${currentCombo.helperGhostPos.x}, ${currentCombo.helperGhostPos.y})`);
+            ballPositions['ghost'] = currentCombo.helperGhostPos;
+
+            // Combo shot - check if target would reach pocket
+            obMadeIt = currentCombo.viable;
+
+          } else if (showingBank && currentBankShot) {
+            // Bank shot path: OB → bank point → pocket
+            const idealBankPoint = currentBankShot.bankPoint;
+            const actualBankPoint = currentBankShot.actualBankPoint || idealBankPoint;
+
+            // Update ghost ball position for bank shot
+            const bankGhostPos = currentBankShot.ghostPos;
+            ghostBallIndicator.setAttribute('transform', `translate(${bankGhostPos.x}, ${bankGhostPos.y})`);
+            ballPositions['ghost'] = bankGhostPos;  // Update stored position for cue line
+
+            // Check if throw significantly affects the shot
+            const throwError = vectorLength(vectorSubtract(actualBankPoint, idealBankPoint));
+            const hasSignificantThrow = throwError > 0.3;  // ~0.3 SVG units threshold
+
+            // Calculate where OB actually ends up after bank with throw
+            // After hitting the actual bank point, OB reflects toward the pocket
+            // but ends up slightly off due to the altered angle
+            let actualPocketEndpoint = pocketPos;
+            if (hasSignificantThrow) {
+              // Calculate the reflected direction from actual bank point
+              const obToActualBank = vectorNormalize(vectorSubtract(actualBankPoint, objBallPos));
+              const railName = currentBankShot.bankRail;
+
+              // Simple reflection off the rail at the actual bank point
+              let reflectedDir;
+              if (railName === 'top' || railName === 'bottom') {
+                reflectedDir = { x: obToActualBank.x, y: -obToActualBank.y };
+              } else {
+                reflectedDir = { x: -obToActualBank.x, y: obToActualBank.y };
+              }
+
+              // Project to find where OB actually goes (same distance as ideal would travel)
+              const idealBankToPocketDist = currentBankShot.bankToPocketDist;
+              actualPocketEndpoint = vectorAdd(actualBankPoint, vectorScale(reflectedDir, idealBankToPocketDist));
+            }
+
+            // Draw OB path with bank bounce - show actual path with throw
+            const obPathD = `M ${objBallPos.x} ${objBallPos.y} L ${actualBankPoint.x} ${actualBankPoint.y} L ${actualPocketEndpoint.x} ${actualPocketEndpoint.y}`;
+            objBallPath.setAttribute('d', obPathD);
+            objBallPath.setAttribute('visibility', 'visible');
+            objPathEnd = actualPocketEndpoint;
+
+            // Check if the actual path still reaches the pocket (within tolerance)
+            const pocketMissDistance = vectorLength(vectorSubtract(actualPocketEndpoint, pocketPos));
+            const pocketOpeningRadius = 2.5;
+            obMadeIt = currentBankShot.viability.viable && pocketMissDistance < pocketOpeningRadius;
+
+            // Show bank point indicator at the IDEAL point (where player should aim)
+            bankPointIndicator.setAttribute('transform', `translate(${idealBankPoint.x}, ${idealBankPoint.y})`);
+
+            // Position label based on rail
+            const railName = currentBankShot.bankRail;
+            let labelY = -1.3;
+            if (railName === 'bottom') labelY = 1.6;
+            bankPointLabel.setAttribute('y', labelY);
+
+            // Update label to show throw info if significant
+            let labelText = 'BANK';
+            if (hasSignificantThrow && Math.abs(currentBankShot.throwAngle) > 0.5) {
+              const throwDir = currentBankShot.throwAngle > 0 ? '←' : '→';
+              labelText += ` ${throwDir}`;  // Show throw direction
+            }
+            bankPointLabel.textContent = labelText;
+
+            // Color based on viability (factoring in throw-induced miss)
+            const bankDiamond = bankPointIndicator.querySelector('polygon');
+            if (bankDiamond) {
+              if (!obMadeIt) {
+                bankDiamond.setAttribute('fill', '#ff4444');  // Red = miss (throw or power)
+              } else if (currentBankShot.viability.difficulty === 'Hard') {
+                bankDiamond.setAttribute('fill', '#ff8800');
+              } else if (currentBankShot.viability.difficulty === 'Medium') {
+                bankDiamond.setAttribute('fill', '#ffcc00');
+              } else {
+                bankDiamond.setAttribute('fill', '#44ff44');
+              }
+            }
+            bankPointIndicator.setAttribute('visibility', 'visible');
+
+          } else {
+            // Direct shot path: OB → pocket
+            objPathEnd = vectorAdd(objBallPos, vectorScale(objToPocket, objPathLength));
+            const obPathD = `M ${objBallPos.x} ${objBallPos.y} L ${objPathEnd.x} ${objPathEnd.y}`;
+            objBallPath.setAttribute('d', obPathD);
+            objBallPath.setAttribute('visibility', 'visible');
+          }
 
           // Show OB final position indicator
           if (obMadeIt) {
@@ -1538,6 +3523,47 @@
 
           // Update shooter's eye view overlap diagram
           updateOverlapDiagram(overlap);
+
+          // Calculate minimum power needed based on distances
+          const cueToGhostDist = cuePos ? vectorLength(vectorSubtract(ghostBallPosition, cuePos)) : 30;
+          const obToPocketDist = vectorLength(vectorSubtract(pocketPos, objBallPos));
+          const totalDist = cueToGhostDist + obToPocketDist;
+          // Rough estimate: need ~1 power unit per 10 SVG units at 45° cut
+          const cutFactor = Math.cos(cutAngle * Math.PI / 180);
+          const minPowerNeeded = Math.ceil(Math.max(2, totalDist / (15 * cutFactor)));
+
+          // Build shot data for instructions panel
+          const shotData = {
+            isReady: true,
+            cutAngle: cutAngle,
+            ballHitFraction: hitName,
+            totalDistance: totalDist,
+            contactX: contactOffset.x,
+            contactY: contactOffset.y,
+            power: shotForce,
+            minPowerNeeded: Math.min(10, minPowerNeeded),
+            isKickShot: !!currentKickPath,
+            isBankShot: showingBank,
+            isComboShot: showingCombo,
+            kickRail: currentKickPath ? currentKickPath.rails[0] : null,
+            bankRail: currentBankShot ? currentBankShot.bankRail : null,
+            requiredEnglish: currentKickPath ? currentKickPath.requiredEnglish : 0,
+            throwInfo: currentBankShot && Math.abs(currentBankShot.throwAngle || 0) > 0.5
+              ? `Throw: ${currentBankShot.throwAngle > 0 ? 'left' : 'right'}` : '',
+            // Combo shot info
+            comboHelperBall: currentCombo ? currentCombo.helperBallId : null,
+            comboTargetBall: currentCombo ? currentCombo.targetBallId : null,
+            comboDifficulty: currentCombo ? currentCombo.difficulty : null,
+            comboCutAngle1: currentCombo ? currentCombo.cutAngle1 : null,
+            comboCutAngle2: currentCombo ? currentCombo.cutAngle2 : null,
+            // Legal target ball info for game mode warnings
+            selectedBallId: selectedBallId,
+            isLegalTarget: isBallLegalTarget(selectedBallId),
+            legalTargetBalls: getLegalTargetBalls(),
+            gameModeName: currentGameMode.name,
+            targetRule: currentGameMode.targetRule
+          };
+          updateShotInstructions(shotData);
         } else {
           targetLine.setAttribute('visibility', 'hidden');
           ghostBallIndicator.setAttribute('visibility', 'hidden');
@@ -1548,6 +3574,7 @@
           cutAngleDisplay.textContent = '--';
           overlapDisplay.textContent = '--';
           updateOverlapDiagram(0.5);  // Default to half-ball view
+          updateShotInstructions(null);  // Clear instructions
         }
       }
 
@@ -1858,8 +3885,120 @@
         updateShotGeometry();
       });
 
-      // Set up a default demo shot - shows follow curve clearly
-      // Max follow + max force to demonstrate the curved cue ball path
+      // Solver mode change handler
+      solverRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          currentSolverMode = e.target.value;
+          updateCueGhostLine();  // Re-evaluate shot with new solver mode
+        });
+      });
+
+      // Simple view toggle handler - hides CB path and other complexity
+      simpleViewToggle.addEventListener('change', (e) => {
+        isSimpleView = e.target.checked;
+        // Update visibility of complex elements
+        cueBallPath.style.opacity = isSimpleView ? '0' : '1';
+        cbFinalPosition.style.opacity = isSimpleView ? '0' : '1';
+        obFinalPosition.style.opacity = isSimpleView ? '0' : '1';
+        actualKickPath.style.opacity = isSimpleView ? '0' : '1';
+        // Make aim line more prominent in simple view
+        cueGhostLine.setAttribute('stroke-width', isSimpleView ? '0.5' : '0.3');
+        // Update target line opacity
+        targetLine.style.opacity = isSimpleView ? '0.5' : '1';
+      });
+
+      // Game mode change handler
+      gameModeSelect.addEventListener('change', (e) => {
+        const modeId = e.target.value;
+        // Find the matching game mode
+        for (const key in GAME_MODES) {
+          if (GAME_MODES[key].id === modeId) {
+            currentGameMode = GAME_MODES[key];
+            break;
+          }
+        }
+
+        // Update description
+        gameModeDescription.textContent = currentGameMode.description;
+
+        // Show/hide suit selector for 8-ball
+        suitSelector.style.display = currentGameMode.targetRule === 'suit' ? 'block' : 'none';
+
+        // Show/hide pocket selector for One Pocket
+        pocketSelector.style.display = currentGameMode.pocketRestriction ? 'block' : 'none';
+
+        // Update visualizations
+        updateCueGhostLine();
+        highlightLegalBalls();
+
+        // Highlight scoring pockets for One Pocket mode
+        if (currentGameMode.pocketRestriction) {
+          highlightScoringPockets();
+        } else {
+          // Reset pocket styles to default
+          document.querySelectorAll('.pocket-target').forEach(pocket => {
+            pocket.style.stroke = '';
+            pocket.style.strokeWidth = '';
+          });
+        }
+      });
+
+      // Suit selector handler (for 8-ball)
+      suitRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          playerSuit = e.target.value;
+          updateCueGhostLine();
+          highlightLegalBalls();
+        });
+      });
+
+      // Pocket selector handler (for One Pocket)
+      pocketRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          playerPocket = e.target.value;
+          updateCueGhostLine();
+          highlightScoringPockets();
+        });
+      });
+
+      // Highlight legal target balls based on game rules
+      function highlightLegalBalls() {
+        const legalBalls = getLegalTargetBalls();
+
+        // Update visual state of all balls on table
+        for (const ballId in ballPositions) {
+          if (ballId === 'cue' || ballId === 'ghost') continue;
+
+          const ballElement = document.getElementById(`ball-${ballId}`);
+          if (ballElement) {
+            const isLegal = legalBalls.includes(ballId);
+            ballElement.style.opacity = isLegal ? '1' : '0.5';
+            ballElement.style.filter = isLegal ? 'none' : 'grayscale(50%)';
+          }
+        }
+      }
+
+      // Highlight scoring pockets for One Pocket
+      function highlightScoringPockets() {
+        if (!currentGameMode.pocketRestriction) return;
+
+        document.querySelectorAll('.pocket-target').forEach(pocket => {
+          const pocketId = pocket.id.replace('pocket-', '');
+          if (pocketId === playerPocket) {
+            pocket.style.stroke = '#0fa';  // Player's pocket - green
+            pocket.style.strokeWidth = '0.5';
+          } else if (currentGameMode.scoringPockets.includes(pocketId)) {
+            pocket.style.stroke = '#f44';  // Opponent's pocket - red
+            pocket.style.strokeWidth = '0.5';
+          } else {
+            pocket.style.stroke = '#666';  // Neutral pockets - gray
+            pocket.style.strokeWidth = '0.3';
+          }
+        });
+      }
+
+      // Set up a default demo shot with BLOCKING BALLS to demonstrate obstacle detection
+      // Shows how the solver finds kick/bank shots when direct path is blocked
       function setupDemoShot() {
         // Object ball at center-right area
         const objBallX = 70;
@@ -1878,11 +4017,29 @@
         const cueBallX = 25;
         const cueBallY = 20;
 
-        // Place the balls
+        // BLOCKING BALLS - positioned to block the direct path from cue to ghost
+        // This forces the solver to find a kick shot or combo
+        // Ball 1: In the middle of the direct line from cue to ghost (blocks direct)
+        const blocker1X = 45;
+        const blocker1Y = 22;
+
+        // Ball 2: Another ball positioned as a potential combo helper
+        // It's in a good position to combo the gray ball into the pocket
+        const blocker2X = 60;
+        const blocker2Y = 32;
+
+        // Ball 3: Add another ball to make combo scenarios more interesting
+        const ball3X = 35;
+        const ball3Y = 38;
+
+        // Place the balls including blockers
         const positions = {
           'cue': { x: cueBallX, y: cueBallY },
           'ghost': { x: ghostBallX, y: ghostBallY },
-          'gray': { x: objBallX, y: objBallY }
+          'gray': { x: objBallX, y: objBallY },
+          '1': { x: blocker1X, y: blocker1Y },  // Blocker 1 (blocks direct path)
+          '2': { x: blocker2X, y: blocker2Y },  // Blocker 2 (potential combo helper)
+          '3': { x: ball3X, y: ball3Y }         // Additional ball for combo testing
         };
 
         // Set positions and move balls to table
@@ -1912,6 +4069,9 @@
 
         // Update all visualizations
         updateCueGhostLine();
+
+        // Highlight legal balls based on game mode
+        highlightLegalBalls();
       }
 
       // Initialize
