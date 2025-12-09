@@ -1,13 +1,14 @@
 # ACE Shot Diagrams
 
-Pool table SVG template for creating shot diagrams.
+Pool table SVG template for creating interactive shot diagrams with physics-based shot solving.
 
 ## Project Structure
 
+- `index.html` - Main interactive shot diagram application
 - `pool-table-template.svg` - Main SVG template (v008)
 - `pool-table-labeled.svg` - Labeled version for reference
-- `preview.html` - Interactive preview with draggable balls
 - `versions/` - Version history (v001-v008)
+- `GAME_MODE_PLAN.md` - Implementation plan for game modes & combos
 
 ## Pool Table SVG Layers
 
@@ -33,25 +34,87 @@ Pool table SVG template for creating shot diagrams.
 - Scale: 1 unit = 1 inch
 - Ball diameter: 2.25"
 - Diamond spacing: 12.5"
+- Ghost ball offset: 2.25 units (two ball radii)
 
-## preview.html Features (2024-12-07)
+## index.html Features (2024-12-08)
 
+### Interactive Elements
 - Draggable balls: CUE, GHOST (aim), 1-15, generic gray
 - Ball rack below table, centered
-- Drag onto playing surface to place
-- Drag off table to return to rack
-- Dotted line between cue and ghost balls when both placed
-- Print-friendly: ball positions preserved, rack hidden
-- Touch support for mobile
-- Responsive: repositions on resize
+- Cue ball contact point selector (english/spin)
+- Power slider (1-10)
+- Clickable pocket selection
+
+### Shot Types
+1. **Direct Shot** - Clear path from cue to ghost ball
+2. **Kick Shot** - Bounces off rail(s) when direct blocked
+3. **Bank Shot** - Object ball bounces off rail to pocket
+4. **Combination Shot** - Hit helper ball into target ball
+
+### Game Modes
+- **9-Ball**: Rotation (must hit lowest ball first)
+- **8-Ball**: Suit-based (hit your solids/stripes first)
+- **10-Ball**: Rotation with call pocket
+- **Straight Pool**: Any ball, call pocket
+- **One Pocket**: Any ball, designated pocket only scores
+
+### Shot Solver
+- Auto mode: Finds best available shot type
+- Prefer Kick: Prioritizes kick shots
+- Prefer Bank: Prioritizes bank shots
+- Prefer Combo: Shows combination shots
+
+### Visual Feedback
+- Ghost ball indicator with crosshair and "AIM" label
+- Kick shot diamond marker on rail aim point
+- Bank shot diamond marker on rail contact point
+- Combo shot paths: cyan→magenta→yellow-green
+- Legal/illegal ball highlighting per game rules
+- FOUL warning banner for illegal ball selection
+- One Pocket scoring pocket glow (green=yours, red=opponent)
+
+### Physics
+- Cut angle calculation using dot product
+- Energy transfer with coefficient of restitution (0.95)
+- Ball friction: 0.2, Rail bounce: 0.85
+- Throw calculation for spin transfer
+- Cue ball path with draw/follow curve effect
 
 ## Usage
 
-Open `preview.html` in browser. Drag balls from rack onto table to create shot diagrams. Print (Ctrl+P) to save diagram with ball positions.
+Open `index.html` in browser. Drag balls onto table, select pocket, adjust english and power. Shot Instructions panel shows aim point, difficulty, and warnings.
+
+## Development Notes
+
+### Critical Bug Fixed
+- Pocket elements use `data-pocket` attribute, NOT `id`
+- Must use `pocket.dataset.pocket` not `pocket.id`
+
+### Color Accessibility
+- Dark backgrounds (#1a1a2e) require light text (#9ab minimum)
+- Similar-hue gradients hard to distinguish - use distinct hues
+- Combo paths: cyan (#00ddff), magenta (#ff44ff), yellow-green (#aaff00)
+
+### Code Patterns
+```javascript
+// Ball positions
+ballPositions = { 'cue': {x, y}, 'ghost': {x, y}, '1': {x, y}, ... };
+
+// Path blocking
+isPathBlockedByAnyBall(start, end, excludeBallIds) // returns {blocked, blockingBalls}
+
+// Game mode structure
+GAME_MODES.NINE_BALL = {
+  id: '9ball',
+  targetRule: 'rotation',  // 'rotation' | 'suit' | 'any'
+  comboMustHitLowestFirst: true
+};
+```
 
 ## TODO
 
-- [ ] Add shot path drawing tools
+- [ ] Improve legal ball highlighting (more contrast)
+- [ ] Add mobile responsiveness (@media queries)
+- [ ] Add ARIA labels for accessibility
 - [ ] Save/load diagram configurations
 - [ ] Export as PNG/PDF
-- [ ] Multiple ball instances for position sequences

@@ -425,7 +425,7 @@
 
     .game-mode-description {
       font-size: 10px;
-      color: #668;
+      color: #9ab;
       margin-top: 6px;
       font-style: italic;
     }
@@ -459,7 +459,7 @@
 
     .pocket-label {
       font-size: 10px;
-      color: #668;
+      color: #9ab;
       display: block;
       margin-bottom: 4px;
     }
@@ -507,7 +507,7 @@
     }
 
     .legend-line.combo-path {
-      background: linear-gradient(90deg, #ff9900, #ff6600, #ff3300);
+      background: linear-gradient(90deg, #00ddff, #ff44ff, #aaff00);
     }
 
     /* Shot Instructions Panel - THE KEY ANSWER */
@@ -573,6 +573,35 @@
     @keyframes foul-pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.7; }
+    }
+
+    /* Foul warning banner - prominent alert at top of instructions */
+    .foul-warning-banner {
+      background: linear-gradient(135deg, #5a1a1a, #3a0d0d);
+      border: 2px solid #ff4444;
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: foul-banner-pulse 0.8s ease-in-out infinite;
+    }
+
+    @keyframes foul-banner-pulse {
+      0%, 100% { transform: scale(1); border-color: #ff4444; }
+      50% { transform: scale(1.02); border-color: #ff6666; }
+    }
+
+    .foul-icon {
+      font-size: 18px;
+      color: #ff4444;
+    }
+
+    .foul-message {
+      font-size: 13px;
+      font-weight: bold;
+      color: #ff6666;
     }
 
     .shot-verdict.setup-needed {
@@ -810,18 +839,18 @@
         </g>
         <!-- Combination shot indicator -->
         <g id="combo-shot-indicator" visibility="hidden">
-          <!-- Path 1: Cue → Helper ball (dashed orange) -->
-          <path id="combo-path-1" d="" stroke="#ff9900" stroke-width="0.3" stroke-dasharray="0.8,0.4" fill="none" opacity="0.8"/>
-          <!-- Path 2: Helper → Target ball (solid orange) -->
-          <path id="combo-path-2" d="" stroke="#ff6600" stroke-width="0.35" fill="none"/>
-          <!-- Path 3: Target → Pocket (solid red-orange) -->
-          <path id="combo-path-3" d="" stroke="#ff3300" stroke-width="0.3" fill="none"/>
+          <!-- Path 1: Cue → Helper ball (dashed cyan - distinct from other paths) -->
+          <path id="combo-path-1" d="" stroke="#00ddff" stroke-width="0.35" stroke-dasharray="0.8,0.4" fill="none"/>
+          <!-- Path 2: Helper → Target ball (solid magenta - very distinct) -->
+          <path id="combo-path-2" d="" stroke="#ff44ff" stroke-width="0.4" fill="none"/>
+          <!-- Path 3: Target → Pocket (solid yellow-green) -->
+          <path id="combo-path-3" d="" stroke="#aaff00" stroke-width="0.35" fill="none"/>
           <!-- Helper ghost position indicator -->
           <g id="combo-helper-ghost">
-            <circle r="1.125" fill="rgba(255,153,0,0.15)" stroke="#ff9900" stroke-width="0.15" stroke-dasharray="0.4,0.2"/>
+            <circle r="1.125" fill="rgba(0,221,255,0.25)" stroke="#00ddff" stroke-width="0.2" stroke-dasharray="0.4,0.2"/>
           </g>
           <!-- COMBO label -->
-          <text id="combo-label" font-size="1.2" font-weight="bold" fill="#ff9900" text-anchor="middle">COMBO</text>
+          <text id="combo-label" font-size="1.4" font-weight="bold" fill="#ff44ff" text-anchor="middle">COMBO</text>
         </g>
         <!-- Pocket click targets (invisible hit areas) -->
         <g id="pocket-targets">
@@ -1094,6 +1123,11 @@
 
       <!-- Shot Instructions Panel - THE KEY ANSWER -->
       <div class="shot-instructions" id="shotInstructions">
+        <!-- Foul warning banner (hidden by default) -->
+        <div class="foul-warning-banner" id="foulWarningBanner" style="display: none;">
+          <span class="foul-icon">⚠</span>
+          <span class="foul-message" id="foulMessage">Must hit legal ball first!</span>
+        </div>
         <div class="shot-instructions-header">
           <span class="shot-instructions-title">Shot Instructions</span>
           <span class="shot-verdict setup-needed" id="shotVerdict">Setup Needed</span>
@@ -1190,6 +1224,8 @@
       const powerStatus = document.getElementById('powerStatus');
       const difficultyFill = document.getElementById('difficultyFill');
       const difficultyText = document.getElementById('difficultyText');
+      const foulWarningBanner = document.getElementById('foulWarningBanner');
+      const foulMessage = document.getElementById('foulMessage');
       const simpleViewToggle = document.getElementById('simpleViewToggle');
       const gameModeSelect = document.getElementById('gameModeSelect');
       const gameModeDescription = document.getElementById('gameModeDescription');
@@ -2646,13 +2682,16 @@
         shotVerdict.className = 'shot-verdict ' + verdictClass;
         aimInstruction.textContent = aimText;
         englishInstruction.textContent = englishText;
-        // Show illegal ball warning in english hint if applicable
-        englishHint.textContent = illegalBallWarning || englishHintText;
+        englishHint.textContent = englishHintText;
+
+        // Show/hide foul warning banner
         if (illegalBallWarning) {
-          englishHint.style.color = '#ff4444';
+          foulWarningBanner.style.display = 'flex';
+          foulMessage.textContent = illegalBallWarning;
         } else {
-          englishHint.style.color = '';
+          foulWarningBanner.style.display = 'none';
         }
+
         difficultyFill.className = 'difficulty-fill ' + diffClass;
         difficultyText.textContent = diffLevel;
         difficultyText.className = 'difficulty-text ' + diffClass;
@@ -3983,16 +4022,20 @@
         if (!currentGameMode.pocketRestriction) return;
 
         document.querySelectorAll('.pocket-target').forEach(pocket => {
-          const pocketId = pocket.id.replace('pocket-', '');
+          // Use data-pocket attribute, not id (pocket elements use data-pocket)
+          const pocketId = pocket.dataset.pocket;
           if (pocketId === playerPocket) {
             pocket.style.stroke = '#0fa';  // Player's pocket - green
-            pocket.style.strokeWidth = '0.5';
+            pocket.style.strokeWidth = '0.8';
+            pocket.style.filter = 'drop-shadow(0 0 3px #0fa)';
           } else if (currentGameMode.scoringPockets.includes(pocketId)) {
             pocket.style.stroke = '#f44';  // Opponent's pocket - red
-            pocket.style.strokeWidth = '0.5';
+            pocket.style.strokeWidth = '0.8';
+            pocket.style.filter = 'drop-shadow(0 0 3px #f44)';
           } else {
             pocket.style.stroke = '#666';  // Neutral pockets - gray
             pocket.style.strokeWidth = '0.3';
+            pocket.style.filter = 'none';
           }
         });
       }
