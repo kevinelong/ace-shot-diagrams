@@ -8,60 +8,828 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #1a1a2e;
+      background: #0d0d1a;
       color: #eee;
       min-height: 100vh;
-      padding: 20px;
+      overflow: hidden;
     }
-    h1 { text-align: center; margin-bottom: 10px; color: #0fa; }
-    .version-info { text-align: center; color: #888; margin-bottom: 20px; font-size: 14px; }
 
+    /* Hidden header in fullscreen mode */
+    h1, .version-info { display: none; }
+
+    /* Full-screen table container */
     .diagram-container {
-      max-width: 1000px;
-      margin: 0 auto;
-      position: relative;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .table-wrapper {
       position: relative;
-      background: #222;
-      border-radius: 8px;
-      padding: 10px;
+      width: 95vw;
+      max-width: 1400px;
     }
 
-    .table-wrapper svg { display: block; width: 100%; height: auto; }
+    .table-wrapper svg#pool-table-svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
 
-    /* Cue-ghost connection line overlay */
-    #connection-overlay {
+    /* Connection overlay must match table size */
+    .table-wrapper #connection-overlay {
       position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       pointer-events: none;
       z-index: 50;
     }
+
+    /* ============================================
+       FLOATING TOOL PALETTES - Glassmorphism Style
+       ============================================ */
+    .tool-palette {
+      position: fixed;
+      background: rgba(26, 26, 46, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      z-index: 1000;
+      transition: opacity 0.3s, transform 0.2s, box-shadow 0.2s;
+      user-select: none;
+    }
+
+    .tool-palette:hover {
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Palette header - draggable area */
+    .palette-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      cursor: grab;
+      border-radius: 12px 12px 0 0;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .palette-header:active {
+      cursor: grabbing;
+    }
+
+    .palette-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #8af;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .palette-title-icon {
+      font-size: 14px;
+    }
+
+    .palette-controls {
+      display: flex;
+      gap: 6px;
+    }
+
+    .palette-btn {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      border: none;
+      background: rgba(255, 255, 255, 0.1);
+      color: #888;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .palette-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    .palette-btn.close:hover {
+      background: rgba(255, 80, 80, 0.3);
+      color: #f66;
+    }
+
+    /* Palette body */
+    .palette-body {
+      padding: 12px 14px;
+    }
+
+    /* Minimized state */
+    .tool-palette.minimized .palette-body {
+      display: none;
+    }
+
+    .tool-palette.minimized {
+      border-radius: 8px;
+    }
+
+    .tool-palette.minimized .palette-header {
+      border-bottom: none;
+      border-radius: 8px;
+    }
+
+    /* Hidden state */
+    .tool-palette.hidden {
+      display: none;
+    }
+
+    /* Palette anchor positions */
+    #palette-balls { top: 20px; left: 20px; }
+    #palette-cue { bottom: 20px; left: 20px; }
+    #palette-game { top: 20px; right: 20px; }
+    #palette-shot { bottom: 20px; right: 20px; }
+
+    /* Dragging state */
+    .tool-palette.dragging {
+      opacity: 0.9;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+      z-index: 1001;
+    }
+
+    /* Idle state - slightly dimmed */
+    body:not(.has-shot) .tool-palette {
+      opacity: 0.75;
+    }
+
+    body:not(.has-shot) .tool-palette:hover {
+      opacity: 1;
+    }
+
+    /* ============================================
+       PALETTE-SPECIFIC STYLES
+       ============================================ */
+
+    /* Ball Rack Palette */
+    #palette-balls .ball-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 4px;
+    }
+
+    #palette-balls .ball-row-special {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      justify-content: center;
+    }
+
+    /* Cue Controls Palette */
+    #palette-cue .cue-controls-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    #palette-cue .control-row {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    /* Game/Solver Palette */
+    #palette-game .game-content {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 160px;
+    }
+
+    /* Shot Info Palette */
+    #palette-shot {
+      min-width: 280px;
+      max-width: 320px;
+    }
+
+    /* Share/Export Palette */
+    #palette-share {
+      min-width: 200px;
+    }
+
+    #palette-share .share-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #palette-share .share-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: #ddd;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    #palette-share .share-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    #palette-share .share-btn:active {
+      transform: scale(0.98);
+    }
+
+    #palette-share .share-btn .btn-icon {
+      font-size: 16px;
+      width: 20px;
+      text-align: center;
+    }
+
+    #palette-share .share-btn.primary {
+      background: rgba(0, 255, 136, 0.15);
+      border-color: rgba(0, 255, 136, 0.3);
+      color: #0f8;
+    }
+
+    #palette-share .share-btn.primary:hover {
+      background: rgba(0, 255, 136, 0.25);
+      border-color: rgba(0, 255, 136, 0.5);
+    }
+
+    /* Toast notification */
+    .toast-notification {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(0, 255, 136, 0.9);
+      color: #000;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 9999;
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .toast-notification.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Position aids toggle section */
+    #palette-share .position-aids {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    #palette-share .position-aids .section-label {
+      font-size: 10px;
+      color: #8af;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    #palette-share .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      font-size: 12px;
+      color: #aaa;
+      cursor: pointer;
+    }
+
+    #palette-share .toggle-row:hover {
+      color: #fff;
+    }
+
+    #palette-share .toggle-row input[type="checkbox"] {
+      accent-color: #0fa;
+    }
+
+    #palette-share .toggle-row input[type="checkbox"]:checked + span {
+      color: #0fa;
+    }
+
+    /* Saved Diagrams Section */
+    #palette-share .saved-diagrams {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    #palette-share .save-input-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    #palette-share .save-input-row input {
+      flex: 1;
+      padding: 8px 10px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+      color: #fff;
+      font-size: 12px;
+    }
+
+    #palette-share .save-input-row input::placeholder {
+      color: #666;
+    }
+
+    #palette-share .save-input-row input:focus {
+      outline: none;
+      border-color: #0fa;
+    }
+
+    #palette-share .save-input-row button {
+      padding: 8px 12px;
+      background: rgba(0, 255, 136, 0.2);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      border-radius: 6px;
+      color: #0fa;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    #palette-share .save-input-row button:hover {
+      background: rgba(0, 255, 136, 0.3);
+    }
+
+    #palette-share .saved-list {
+      max-height: 150px;
+      overflow-y: auto;
+      margin-top: 8px;
+    }
+
+    #palette-share .saved-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #palette-share .saved-list::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 3px;
+    }
+
+    #palette-share .saved-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+
+    #palette-share .saved-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 6px;
+      margin-bottom: 4px;
+      transition: all 0.2s;
+    }
+
+    #palette-share .saved-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    #palette-share .saved-item-info {
+      flex: 1;
+      min-width: 0;
+      cursor: pointer;
+    }
+
+    #palette-share .saved-item-name {
+      font-size: 12px;
+      color: #ddd;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #palette-share .saved-item-date {
+      font-size: 10px;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    #palette-share .saved-item-actions {
+      display: flex;
+      gap: 4px;
+      margin-left: 8px;
+    }
+
+    #palette-share .saved-item-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      border: none;
+      background: rgba(255, 255, 255, 0.1);
+      color: #888;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    #palette-share .saved-item-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    #palette-share .saved-item-btn.delete:hover {
+      background: rgba(255, 80, 80, 0.3);
+      color: #f66;
+    }
+
+    #palette-share .no-saved {
+      text-align: center;
+      color: #555;
+      font-size: 11px;
+      padding: 12px;
+    }
+
+    /* ============================================
+       FIRST-TIME USER TOUR SYSTEM
+       ============================================ */
+
+    /* Tour overlay - dims everything except highlighted element */
+    .tour-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 9000;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .tour-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Tour spotlight - hole in overlay to show target element */
+    .tour-spotlight {
+      position: fixed;
+      border-radius: 8px;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75);
+      z-index: 9001;
+      pointer-events: none;
+      transition: all 0.4s ease;
+    }
+
+    .tour-spotlight.pulse {
+      animation: tour-pulse 2s infinite;
+    }
+
+    @keyframes tour-pulse {
+      0%, 100% { box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75), 0 0 0 0 rgba(0, 255, 136, 0.4); }
+      50% { box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75), 0 0 0 8px rgba(0, 255, 136, 0.2); }
+    }
+
+    /* Tour tooltip */
+    .tour-tooltip {
+      position: fixed;
+      max-width: 360px;
+      background: linear-gradient(135deg, #1a2a3a 0%, #0d1a26 100%);
+      border: 2px solid #0fa;
+      border-radius: 12px;
+      padding: 0;
+      z-index: 9002;
+      box-shadow: 0 8px 32px rgba(0, 255, 136, 0.2);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .tour-tooltip.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .tour-tooltip-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: rgba(0, 255, 136, 0.1);
+      border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+      border-radius: 10px 10px 0 0;
+    }
+
+    .tour-tooltip-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #0fa;
+      margin: 0;
+    }
+
+    .tour-tooltip-step {
+      font-size: 11px;
+      color: #8af;
+      background: rgba(138, 170, 255, 0.1);
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    .tour-tooltip-body {
+      padding: 16px;
+    }
+
+    .tour-tooltip-content {
+      font-size: 13px;
+      line-height: 1.6;
+      color: #ccc;
+      margin-bottom: 12px;
+    }
+
+    .tour-tooltip-content strong {
+      color: #fff;
+    }
+
+    .tour-tooltip-content .highlight {
+      color: #0fa;
+      font-weight: 600;
+    }
+
+    .tour-tooltip-task {
+      background: rgba(0, 255, 136, 0.08);
+      border-left: 3px solid #0fa;
+      padding: 10px 12px;
+      margin: 12px 0;
+      font-size: 12px;
+      color: #8f8;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .tour-tooltip-task::before {
+      content: '👆 ';
+    }
+
+    .tour-tooltip-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 0 0 10px 10px;
+    }
+
+    .tour-btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .tour-btn-skip {
+      background: transparent;
+      color: #888;
+    }
+
+    .tour-btn-skip:hover {
+      color: #fff;
+    }
+
+    .tour-btn-back {
+      background: rgba(255, 255, 255, 0.1);
+      color: #aaa;
+      margin-right: 8px;
+    }
+
+    .tour-btn-back:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+
+    .tour-btn-next {
+      background: linear-gradient(135deg, #0fa, #0a8);
+      color: #000;
+    }
+
+    .tour-btn-next:hover {
+      background: linear-gradient(135deg, #2fc, #0ca);
+      transform: translateY(-1px);
+    }
+
+    .tour-btn-next:disabled {
+      background: #444;
+      color: #888;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .tour-progress {
+      display: flex;
+      gap: 4px;
+      margin-top: 12px;
+    }
+
+    .tour-progress-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      transition: all 0.2s;
+    }
+
+    .tour-progress-dot.completed {
+      background: #0fa;
+    }
+
+    .tour-progress-dot.current {
+      background: #0fa;
+      transform: scale(1.3);
+    }
+
+    /* Arrow pointer for tooltip */
+    .tour-tooltip-arrow {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: linear-gradient(135deg, #1a2a3a 0%, #0d1a26 100%);
+      border: 2px solid #0fa;
+      transform: rotate(45deg);
+    }
+
+    .tour-tooltip-arrow.top {
+      top: -7px;
+      border-right: none;
+      border-bottom: none;
+    }
+
+    .tour-tooltip-arrow.bottom {
+      bottom: -7px;
+      border-left: none;
+      border-top: none;
+    }
+
+    .tour-tooltip-arrow.left {
+      left: -7px;
+      border-right: none;
+      border-top: none;
+    }
+
+    .tour-tooltip-arrow.right {
+      right: -7px;
+      border-left: none;
+      border-bottom: none;
+    }
+
+    /* Welcome modal (first step) */
+    .tour-welcome {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      max-width: 480px;
+      text-align: center;
+    }
+
+    .tour-welcome .tour-tooltip-body {
+      padding: 24px;
+    }
+
+    .tour-welcome-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .tour-welcome h2 {
+      font-size: 22px;
+      color: #fff;
+      margin: 0 0 12px 0;
+    }
+
+    /* Tour trigger button in Share palette */
+    .tour-start-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 8px 12px;
+      margin-top: 8px;
+      background: rgba(138, 170, 255, 0.1);
+      border: 1px dashed rgba(138, 170, 255, 0.3);
+      border-radius: 6px;
+      color: #8af;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tour-start-btn:hover {
+      background: rgba(138, 170, 255, 0.2);
+      border-color: rgba(138, 170, 255, 0.5);
+      color: #adf;
+    }
+
+    /* Highlighted element during tour */
+    .tour-highlight {
+      position: relative;
+      z-index: 9001 !important;
+      pointer-events: auto !important;
+    }
+
+    /* Palette toggle buttons (when palette is hidden) */
+    .palette-restore-btn {
+      position: fixed;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(26, 26, 46, 0.9);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #8af;
+      font-size: 16px;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .palette-restore-btn:hover {
+      background: rgba(40, 40, 70, 0.95);
+      transform: scale(1.1);
+    }
+
+    .palette-restore-btn.visible {
+      display: flex;
+    }
+
+    #restore-balls { top: 20px; left: 20px; }
+    #restore-cue { bottom: 20px; left: 20px; }
+    #restore-game { top: 20px; right: 20px; }
+    #restore-shot { bottom: 20px; right: 20px; }
+
     /* Allow pocket targets to receive clicks */
     #pocket-targets {
       pointer-events: all;
     }
 
-    /* Ball rack below table */
+    /* Original ball rack - hidden, balls moved to palette */
     .ball-rack {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 6px;
-      margin-top: 20px;
-      padding: 12px 20px;
-      background: #2a2a4a;
-      border-radius: 8px;
-      flex-wrap: wrap;
+      display: none !important;
     }
     .rack-label {
-      width: 100%;
-      text-align: center;
-      font-size: 12px;
-      color: #888;
-      margin-bottom: 8px;
+      display: none;
+    }
+
+    /* Balls in palette grid */
+    #paletteBallGrid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 4px;
+    }
+
+    #paletteBallSpecial {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      justify-content: center;
     }
 
     /* Ball styling - size set dynamically via JS to match SVG scale */
@@ -143,25 +911,15 @@
     }
 
     .instructions {
-      text-align: center;
-      margin-top: 15px;
-      color: #666;
-      font-size: 13px;
+      display: none; /* Hidden in fullscreen mode */
     }
 
-    /* Shot info panel */
+    /* Shot info panel - now inside palette */
     .shot-info {
-      display: flex;
-      justify-content: center;
-      gap: 30px;
-      margin-top: 15px;
-      padding: 10px 20px;
-      background: #2a2a4a;
-      border-radius: 8px;
-      font-size: 14px;
+      display: none; /* Hidden - info now in palette */
     }
     .info-row { display: flex; gap: 8px; }
-    .info-label { color: #888; }
+    .info-label { color: #888; font-size: 11px; }
     .info-row span:last-child { color: #0fa; font-weight: bold; }
 
     /* Pocket targets */
@@ -177,17 +935,9 @@
     /* Selected ball highlight - uses CSS variable for responsive sizing */
     .ball.selected { box-shadow: 0 0 0 var(--selection-ring, 2px) #0fa, 2px 2px 4px rgba(0,0,0,0.5); }
 
-    /* Cue Controls Panel */
+    /* Cue Controls Panel - now inside palette */
     .cue-controls-panel {
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 30px;
-      margin-top: 15px;
-      padding: 15px 20px;
-      background: #2a2a4a;
-      border-radius: 8px;
-      flex-wrap: wrap;
+      display: none; /* Hidden - controls now in palettes */
     }
 
     .control-label {
@@ -727,12 +1477,21 @@
 
     /* Print styles - preserve ball positions */
     @media print {
-      body { background: #fff; padding: 10px; }
+      body { background: #fff; padding: 10px; overflow: visible; }
       h1, .version-info, .instructions { display: none; }
-      .ball-rack { display: none; }
-      .cue-controls-panel { display: none; }
-      .diagram-container { max-width: 100%; }
-      .table-wrapper { background: none; padding: 0; }
+      .tool-palette { display: none !important; }
+      .palette-restore-btn { display: none !important; }
+      .diagram-container {
+        position: static;
+        width: 100%;
+        height: auto;
+      }
+      .table-wrapper {
+        background: none;
+        padding: 0;
+        max-width: 100%;
+        max-height: none;
+      }
       .ball {
         print-color-adjust: exact;
         -webkit-print-color-adjust: exact;
@@ -804,6 +1563,39 @@
         <path id="cue-ball-path" d=""
               stroke="#00bfff" stroke-width="0.3" fill="none"
               visibility="hidden"/>
+
+        <!-- Tangent line - shows where CB goes with stop shot (90° from contact) -->
+        <g id="tangent-line-group" visibility="hidden">
+          <line id="tangent-line" x1="0" y1="0" x2="0" y2="0"
+                stroke="#00ffff" stroke-width="0.25" stroke-dasharray="0.8,0.4"
+                opacity="0.7"/>
+          <text id="tangent-label" x="0" y="0" text-anchor="middle" font-size="1" fill="#00ffff" opacity="0.8">STOP</text>
+        </g>
+
+        <!-- Follow line - shows where CB goes with follow/top english -->
+        <g id="follow-line-group" visibility="hidden">
+          <line id="follow-line" x1="0" y1="0" x2="0" y2="0"
+                stroke="#00ff00" stroke-width="0.25" stroke-dasharray="0.8,0.4"
+                opacity="0.6"/>
+          <text id="follow-label" x="0" y="0" text-anchor="middle" font-size="1" fill="#00ff00" opacity="0.8">FOLLOW</text>
+        </g>
+
+        <!-- Draw line - shows where CB goes with draw/bottom english -->
+        <g id="draw-line-group" visibility="hidden">
+          <line id="draw-line" x1="0" y1="0" x2="0" y2="0"
+                stroke="#ff6600" stroke-width="0.25" stroke-dasharray="0.8,0.4"
+                opacity="0.6"/>
+          <text id="draw-label" x="0" y="0" text-anchor="middle" font-size="1" fill="#ff6600" opacity="0.8">DRAW</text>
+        </g>
+
+        <!-- Shape zone - triangular area showing where CB can be for next shot -->
+        <g id="shape-zone-group" visibility="hidden">
+          <path id="shape-zone-path" d=""
+                fill="#00ff88" fill-opacity="0.12"
+                stroke="#00ff88" stroke-width="0.2" stroke-opacity="0.4"/>
+          <text id="shape-zone-label" x="0" y="0" text-anchor="middle" font-size="1.2" fill="#00ff88" opacity="0.6">SHAPE ZONE</text>
+        </g>
+
         <!-- Ghost ball position indicator - THE AIM TARGET -->
         <g id="ghost-ball-indicator" visibility="hidden">
           <!-- Outer glow ring -->
@@ -824,6 +1616,34 @@
         <g id="kick-aim-indicator" visibility="hidden">
           <polygon points="0,-0.8 0.8,0 0,0.8 -0.8,0" fill="#ff0" stroke="#cc0" stroke-width="0.1"/>
           <text id="kick-aim-label" x="0" y="-1.5" text-anchor="middle" font-size="1" fill="#ff0">AIM</text>
+        </g>
+        <!-- Mirror system visualization for kick shots -->
+        <g id="mirror-system-overlay" visibility="hidden">
+          <!-- Mirror ghost ball (ghost mirrored across the kick rail) -->
+          <g id="mirror-ghost">
+            <circle cx="0" cy="0" r="1.125" fill="none" stroke="#ff00ff" stroke-width="0.15" stroke-dasharray="0.4,0.2" opacity="0.7"/>
+            <line x1="-0.8" y1="0" x2="0.8" y2="0" stroke="#ff00ff" stroke-width="0.1" opacity="0.7"/>
+            <line x1="0" y1="-0.8" x2="0" y2="0.8" stroke="#ff00ff" stroke-width="0.1" opacity="0.7"/>
+            <text x="0" y="-1.8" text-anchor="middle" font-size="0.9" fill="#ff00ff" opacity="0.8">MIRROR</text>
+          </g>
+          <!-- Aim line from CB through mirror ghost (shows true aim direction) -->
+          <line id="mirror-aim-line" x1="0" y1="0" x2="0" y2="0" stroke="#ff00ff" stroke-width="0.12" stroke-dasharray="0.6,0.3" opacity="0.5"/>
+          <!-- Midpoint marker (for equal-distance visualization) -->
+          <g id="midpoint-marker">
+            <circle cx="0" cy="0" r="0.4" fill="#00ffff" opacity="0.6"/>
+            <text x="0" y="-0.8" text-anchor="middle" font-size="0.7" fill="#00ffff" opacity="0.8">MID</text>
+          </g>
+          <!-- Incoming angle arc (CB to rail) -->
+          <path id="incoming-angle-arc" d="" fill="none" stroke="#00ff00" stroke-width="0.12" opacity="0.7"/>
+          <text id="incoming-angle-text" x="0" y="0" font-size="0.8" fill="#00ff00" opacity="0.9"></text>
+          <!-- Outgoing angle arc (rail to ghost) -->
+          <path id="outgoing-angle-arc" d="" fill="none" stroke="#ffaa00" stroke-width="0.12" opacity="0.7"/>
+          <text id="outgoing-angle-text" x="0" y="0" font-size="0.8" fill="#ffaa00" opacity="0.9"></text>
+          <!-- English effect indicator (shows angle adjustment from spin) -->
+          <g id="english-effect-indicator" visibility="hidden">
+            <path id="english-effect-arc" d="" fill="none" stroke="#ff4444" stroke-width="0.15" opacity="0.8"/>
+            <text id="english-effect-text" x="0" y="0" font-size="0.7" fill="#ff4444" opacity="0.9"></text>
+          </g>
         </g>
         <!-- Cue ball final resting position indicator (circle with X) - scaled to 1/3 ball size -->
         <g id="cb-final-position" visibility="hidden">
@@ -1170,6 +1990,270 @@
     </div>
   </div>
 
+  <!-- ============================================
+       FLOATING TOOL PALETTES
+       ============================================ -->
+
+  <!-- Palette: Ball Rack (Top-Left) -->
+  <div class="tool-palette" id="palette-balls">
+    <div class="palette-header">
+      <span class="palette-title"><span class="palette-title-icon">🎱</span> Balls</span>
+      <div class="palette-controls">
+        <button class="palette-btn minimize" title="Minimize">−</button>
+        <button class="palette-btn close" title="Hide">×</button>
+      </div>
+    </div>
+    <div class="palette-body">
+      <div class="ball-grid" id="paletteBallGrid">
+        <!-- Balls will be created here by JS -->
+      </div>
+      <div class="ball-row-special" id="paletteBallSpecial">
+        <!-- Cue and Ghost balls -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Palette: Cue Controls (Bottom-Left) -->
+  <div class="tool-palette" id="palette-cue">
+    <div class="palette-header">
+      <span class="palette-title"><span class="palette-title-icon">🎯</span> Cue Control</span>
+      <div class="palette-controls">
+        <button class="palette-btn minimize" title="Minimize">−</button>
+        <button class="palette-btn close" title="Hide">×</button>
+      </div>
+    </div>
+    <div class="palette-body">
+      <div class="cue-controls-grid">
+        <div class="control-row">
+          <!-- Contact Diagram -->
+          <div class="contact-diagram-container">
+            <div class="control-label">English</div>
+            <svg id="contact-diagram-palette" viewBox="-1.5 -1.5 3 3" width="80" height="80">
+              <circle cx="0" cy="0" r="1.125" fill="#e8e8e8" stroke="#999" stroke-width="0.05"/>
+              <circle cx="0" cy="0" r="1.125" fill="none" stroke="#ff4444" stroke-width="0.1" stroke-dasharray="0.15,0.1" opacity="0.3"/>
+              <circle cx="0" cy="0" r="0.56" fill="none" stroke="#4a4a4a" stroke-width="0.02" stroke-dasharray="0.1,0.05"/>
+              <line x1="-0.8" y1="0" x2="0.8" y2="0" stroke="#ccc" stroke-width="0.03"/>
+              <line x1="0" y1="-0.8" x2="0" y2="0.8" stroke="#ccc" stroke-width="0.03"/>
+              <circle id="contact-point-palette" cx="0" cy="0" r="0.15" fill="#0066cc" stroke="#003366" stroke-width="0.03" cursor="move"/>
+            </svg>
+            <div class="spin-display"><span id="spinType-palette">Center</span></div>
+          </div>
+          <!-- Power Slider -->
+          <div class="force-container">
+            <div class="control-label">Power</div>
+            <div class="force-slider-wrapper">
+              <input type="range" id="forceSlider-palette" min="1" max="10" value="5" step="0.5"/>
+            </div>
+            <div class="force-value"><span id="forceValue-palette">5</span>/10</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Palette: Game & Solver (Top-Right) -->
+  <div class="tool-palette" id="palette-game">
+    <div class="palette-header">
+      <span class="palette-title"><span class="palette-title-icon">🎮</span> Game</span>
+      <div class="palette-controls">
+        <button class="palette-btn minimize" title="Minimize">−</button>
+        <button class="palette-btn close" title="Hide">×</button>
+      </div>
+    </div>
+    <div class="palette-body">
+      <div class="game-content">
+        <!-- Game Mode -->
+        <div class="game-mode-section" style="margin:0;padding:0;border:0;">
+          <select id="gameModeSelect-palette" class="game-mode-select">
+            <option value="9ball" selected>9-Ball</option>
+            <option value="8ball">8-Ball</option>
+            <option value="10ball">10-Ball</option>
+            <option value="14.1">Straight Pool</option>
+            <option value="1pocket">One Pocket</option>
+          </select>
+          <div class="game-mode-description" id="gameModeDescription-palette">Hit lowest ball first</div>
+          <div class="suit-selector" id="suitSelector-palette" style="display: none;">
+            <label><input type="radio" name="player-suit-palette" value="solids" checked><span>Solids</span></label>
+            <label><input type="radio" name="player-suit-palette" value="stripes"><span>Stripes</span></label>
+          </div>
+          <div class="pocket-selector" id="pocketSelector-palette" style="display: none;">
+            <span class="pocket-label">Your Pocket:</span>
+            <label><input type="radio" name="player-pocket-palette" value="corner-bl" checked><span>BL</span></label>
+            <label><input type="radio" name="player-pocket-palette" value="corner-br"><span>BR</span></label>
+          </div>
+        </div>
+        <!-- Solver Options -->
+        <div class="solver-options" style="min-width:0;">
+          <div class="control-label">Shot Solver</div>
+          <div class="solver-radio-group">
+            <label><input type="radio" name="solver-mode-palette" value="auto" checked><span>Auto</span></label>
+            <label><input type="radio" name="solver-mode-palette" value="kick"><span>Kick</span></label>
+            <label><input type="radio" name="solver-mode-palette" value="bank"><span>Bank</span></label>
+            <label><input type="radio" name="solver-mode-palette" value="combo"><span>Combo</span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Palette: Shot Info (Bottom-Right) -->
+  <div class="tool-palette" id="palette-shot">
+    <div class="palette-header">
+      <span class="palette-title"><span class="palette-title-icon">📊</span> Shot Info</span>
+      <div class="palette-controls">
+        <button class="palette-btn minimize" title="Minimize">−</button>
+        <button class="palette-btn close" title="Hide">×</button>
+      </div>
+    </div>
+    <div class="palette-body">
+      <!-- Shooter's View Diagram -->
+      <div class="overlap-diagram-container" style="margin-bottom:12px;">
+        <div class="overlap-diagram-wrapper">
+          <svg id="overlap-diagram-palette" viewBox="-3 -1.5 6 3" width="160" height="80">
+            <rect x="-3" y="-1.5" width="6" height="3" fill="#1a1a2e"/>
+            <circle id="overlap-obj-ball-palette" cx="0.5" cy="0" r="1" fill="none" stroke="#ff6b35" stroke-width="0.06"/>
+            <text x="0.5" y="0.05" text-anchor="middle" font-size="0.28" fill="#ff6b35">OB</text>
+            <circle id="overlap-ghost-ball-palette" cx="-0.5" cy="0" r="1" fill="rgba(255,215,0,0.15)" stroke="#ffd700" stroke-width="0.06" stroke-dasharray="0.12,0.08"/>
+            <text id="overlap-ghost-label-palette" x="-0.5" y="0.05" text-anchor="middle" font-size="0.28" fill="#ffd700">GB</text>
+            <clipPath id="clip-obj-ball-palette">
+              <circle cx="0.5" cy="0" r="1"/>
+            </clipPath>
+            <circle id="overlap-region-palette" cx="-0.5" cy="0" r="1" fill="rgba(0,255,170,0.25)" clip-path="url(#clip-obj-ball-palette)"/>
+            <line x1="-3" y1="0" x2="3" y2="0" stroke="#333" stroke-width="0.02" stroke-dasharray="0.08,0.08"/>
+          </svg>
+        </div>
+        <div class="overlap-info">
+          <div class="overlap-fraction-english" id="overlapEnglish-palette">Half ball</div>
+          <div class="overlap-fraction-slash" id="overlapSlash-palette">1/2</div>
+        </div>
+      </div>
+      <!-- Shot Stats -->
+      <div class="shot-stats" style="display:flex;flex-direction:column;gap:6px;font-size:12px;">
+        <div class="info-row"><span class="info-label">Cut Angle:</span> <span id="cutAngleDisplay-palette">--</span></div>
+        <div class="info-row"><span class="info-label">Shot Type:</span> <span id="shotTypeDisplay-palette">--</span></div>
+        <div class="info-row"><span class="info-label">Make %:</span> <span id="makeProbabilityDisplay" style="font-weight:bold;color:#0f8;">--</span></div>
+      </div>
+      <!-- Difficulty Bar -->
+      <div class="difficulty-bar" style="margin-top:12px;padding-top:10px;">
+        <span class="difficulty-label">Difficulty</span>
+        <div class="difficulty-meter">
+          <div class="difficulty-fill" id="difficultyFill-palette"></div>
+        </div>
+        <span class="difficulty-text" id="difficultyText-palette">--</span>
+      </div>
+      <!-- Instructions -->
+      <div class="shot-mini-instructions" id="shotMiniInstructions" style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);font-size:11px;color:#9ab;">
+        Place balls and select a pocket
+      </div>
+    </div>
+  </div>
+
+  <!-- Palette: Share/Export (Top-Right) -->
+  <div class="tool-palette" id="palette-share" style="top: 20px; right: 20px;">
+    <div class="palette-header">
+      <span class="palette-title"><span class="palette-title-icon">📤</span> Share</span>
+      <div class="palette-controls">
+        <button class="palette-btn minimize" title="Minimize">−</button>
+        <button class="palette-btn close" title="Hide">×</button>
+      </div>
+    </div>
+    <div class="palette-body">
+      <div class="share-buttons">
+        <button class="share-btn primary" id="btnCopyLink" title="Copy shareable link to clipboard">
+          <span class="btn-icon">🔗</span>
+          <span>Copy Link</span>
+        </button>
+        <button class="share-btn" id="btnExportPNG" title="Download as PNG image">
+          <span class="btn-icon">🖼️</span>
+          <span>Export PNG</span>
+        </button>
+        <button class="share-btn" id="btnExportSVG" title="Download as SVG vector">
+          <span class="btn-icon">📐</span>
+          <span>Export SVG</span>
+        </button>
+      </div>
+      <!-- Position Aids toggles -->
+      <div class="position-aids">
+        <div class="section-label">Position Aids</div>
+        <label class="toggle-row">
+          <input type="checkbox" id="toggleTangentLine">
+          <span>Tangent Line (stop shot)</span>
+        </label>
+        <label class="toggle-row">
+          <input type="checkbox" id="toggleFollowLine">
+          <span>Follow Line (top spin)</span>
+        </label>
+        <label class="toggle-row">
+          <input type="checkbox" id="toggleDrawLine">
+          <span>Draw Line (back spin)</span>
+        </label>
+        <label class="toggle-row">
+          <input type="checkbox" id="toggleShapeZone">
+          <span>Shape Zone</span>
+        </label>
+      </div>
+      <!-- Quick Actions -->
+      <div class="position-aids" style="margin-top:8px; padding-top:8px;">
+        <div class="section-label">Quick Actions</div>
+        <button class="share-btn" id="btnRandomRack" title="Place balls randomly on table" style="margin-top:4px;">
+          <span class="btn-icon">🎲</span>
+          <span>Random Rack</span>
+        </button>
+        <button class="tour-start-btn" id="btnStartTour" title="Learn how to use this tool">
+          <span>📚</span>
+          <span>Take the Tour</span>
+        </button>
+      </div>
+      <!-- Saved Diagrams -->
+      <div class="saved-diagrams">
+        <div class="section-label">Saved Diagrams</div>
+        <div class="save-input-row">
+          <input type="text" id="saveDiagramName" placeholder="Diagram name..." maxlength="50">
+          <button id="btnSaveDiagram" title="Save current diagram">Save</button>
+        </div>
+        <div class="saved-list" id="savedDiagramsList">
+          <div class="no-saved">No saved diagrams yet</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tour System Elements -->
+  <div class="tour-overlay" id="tourOverlay"></div>
+  <div class="tour-spotlight" id="tourSpotlight"></div>
+  <div class="tour-tooltip" id="tourTooltip">
+    <div class="tour-tooltip-arrow" id="tourArrow"></div>
+    <div class="tour-tooltip-header">
+      <h3 class="tour-tooltip-title" id="tourTitle">Welcome</h3>
+      <span class="tour-tooltip-step" id="tourStep">Step 1 of 12</span>
+    </div>
+    <div class="tour-tooltip-body">
+      <div class="tour-tooltip-content" id="tourContent">
+        Content goes here
+      </div>
+      <div class="tour-tooltip-task" id="tourTask" style="display:none;">
+        Task description
+      </div>
+    </div>
+    <div class="tour-tooltip-footer">
+      <button class="tour-btn tour-btn-skip" id="tourSkip">Skip Tour</button>
+      <div>
+        <button class="tour-btn tour-btn-back" id="tourBack" style="display:none;">Back</button>
+        <button class="tour-btn tour-btn-next" id="tourNext">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification for copy feedback -->
+  <div class="toast-notification" id="toastNotification">Link copied to clipboard!</div>
+
+  <!-- Restore buttons (shown when palette is hidden) -->
+  <button class="palette-restore-btn" id="restore-balls" title="Show Balls">🎱</button>
+  <button class="palette-restore-btn" id="restore-cue" title="Show Cue Control">🎯</button>
+  <button class="palette-restore-btn" id="restore-game" title="Show Game">🎮</button>
+  <button class="palette-restore-btn" id="restore-shot" title="Show Shot Info">📊</button>
+  <button class="palette-restore-btn" id="restore-share" title="Show Share">📤</button>
+
   <script>
     (function() {
       const container = document.getElementById('diagramContainer');
@@ -1181,6 +2265,18 @@
       const ghostBallIndicator = document.getElementById('ghost-ball-indicator');
       const kickAimIndicator = document.getElementById('kick-aim-indicator');
       const kickAimLabel = document.getElementById('kick-aim-label');
+      // Mirror system visualization elements
+      const mirrorSystemOverlay = document.getElementById('mirror-system-overlay');
+      const mirrorGhost = document.getElementById('mirror-ghost');
+      const mirrorAimLine = document.getElementById('mirror-aim-line');
+      const midpointMarker = document.getElementById('midpoint-marker');
+      const incomingAngleArc = document.getElementById('incoming-angle-arc');
+      const incomingAngleText = document.getElementById('incoming-angle-text');
+      const outgoingAngleArc = document.getElementById('outgoing-angle-arc');
+      const outgoingAngleText = document.getElementById('outgoing-angle-text');
+      const englishEffectIndicator = document.getElementById('english-effect-indicator');
+      const englishEffectArc = document.getElementById('english-effect-arc');
+      const englishEffectText = document.getElementById('english-effect-text');
       const cueStick = document.getElementById('cue-stick');
       const cueShaft = document.getElementById('cue-shaft');
       const cueFerule = document.getElementById('cue-ferrule');
@@ -1526,6 +2622,226 @@
         }
       }
 
+      // ========== MIRROR SYSTEM VISUALIZATION ==========
+      // Based on the pool/billiards mirror aiming system:
+      // 1. Mirror the ghost ball across the kick rail
+      // 2. Aim from cue ball directly at the mirrored ghost
+      // 3. The rail intersection point is your aim point
+      // Reference: https://drdavepoolinfo.com/faq/bank-kick/mirror/
+
+      function updateMirrorSystemVisualization(kickPath, cuePos, ghostPos, english) {
+        if (!kickPath || !kickPath.rails || kickPath.rails.length === 0) {
+          mirrorSystemOverlay.setAttribute('visibility', 'hidden');
+          return;
+        }
+
+        const railName = kickPath.rails[0];  // First rail for one-rail kicks
+        const aimPoint = kickPath.aimPoint;
+
+        // 1. Calculate mirror ghost position (ghost mirrored across the kick rail)
+        const mirrorGhostPos = mirrorAcrossRail(ghostPos, railName);
+
+        // 2. Position the mirror ghost indicator
+        mirrorGhost.setAttribute('transform', `translate(${mirrorGhostPos.x}, ${mirrorGhostPos.y})`);
+
+        // 3. Draw aim line from cue through mirror ghost (extended beyond)
+        const aimDir = vectorNormalize(vectorSubtract(mirrorGhostPos, cuePos));
+        const lineExtend = 120;  // Extend the line to show full aim direction
+        mirrorAimLine.setAttribute('x1', cuePos.x);
+        mirrorAimLine.setAttribute('y1', cuePos.y);
+        mirrorAimLine.setAttribute('x2', cuePos.x + aimDir.x * lineExtend);
+        mirrorAimLine.setAttribute('y2', cuePos.y + aimDir.y * lineExtend);
+
+        // 4. Calculate and position midpoint marker (for equal-distance method)
+        const midpoint = {
+          x: (cuePos.x + ghostPos.x) / 2,
+          y: (cuePos.y + ghostPos.y) / 2
+        };
+        midpointMarker.setAttribute('transform', `translate(${midpoint.x}, ${midpoint.y})`);
+
+        // 5. Calculate incoming and outgoing angles
+        const incomingVec = vectorNormalize(vectorSubtract(aimPoint, cuePos));
+        const outgoingVec = vectorNormalize(vectorSubtract(ghostPos, aimPoint));
+
+        // Get rail normal (perpendicular to rail)
+        let railNormal;
+        if (railName === 'top') railNormal = { x: 0, y: 1 };
+        else if (railName === 'bottom') railNormal = { x: 0, y: -1 };
+        else if (railName === 'left') railNormal = { x: 1, y: 0 };
+        else railNormal = { x: -1, y: 0 };  // right
+
+        // Calculate angles relative to rail normal
+        const incomingAngle = Math.acos(Math.abs(dotProduct(incomingVec, railNormal))) * (180 / Math.PI);
+        const outgoingAngle = Math.acos(Math.abs(dotProduct(outgoingVec, railNormal))) * (180 / Math.PI);
+
+        // 6. Draw angle arcs
+        const arcRadius = 4;
+        const incomingArcPath = createAngleArc(aimPoint, incomingVec, railNormal, arcRadius, railName, true);
+        const outgoingArcPath = createAngleArc(aimPoint, outgoingVec, railNormal, arcRadius, railName, false);
+
+        incomingAngleArc.setAttribute('d', incomingArcPath);
+        outgoingAngleArc.setAttribute('d', outgoingArcPath);
+
+        // Position angle text
+        const inTextOffset = vectorScale(vectorNormalize(vectorAdd(incomingVec, railNormal)), arcRadius + 1.5);
+        incomingAngleText.setAttribute('x', aimPoint.x - inTextOffset.x);
+        incomingAngleText.setAttribute('y', aimPoint.y - inTextOffset.y);
+        incomingAngleText.textContent = `${incomingAngle.toFixed(0)}°`;
+
+        const outTextOffset = vectorScale(vectorNormalize(vectorAdd(outgoingVec, railNormal)), arcRadius + 1.5);
+        outgoingAngleText.setAttribute('x', aimPoint.x + outTextOffset.x);
+        outgoingAngleText.setAttribute('y', aimPoint.y + outTextOffset.y);
+        outgoingAngleText.textContent = `${outgoingAngle.toFixed(0)}°`;
+
+        // 7. Show english effect on angle
+        if (Math.abs(english) > 0.05) {
+          // English affects the rebound angle
+          // Running english (same direction as ball travel along rail) = wider angle
+          // Reverse english (opposite direction) = narrower angle
+          // Roughly 1 diamond (~12.5 units) per tip of english
+
+          // Determine if this is running or reverse english based on rail and spin direction
+          const isRunning = isRunningEnglish(railName, english, incomingVec);
+          const effectDegrees = Math.abs(english) * 8;  // ~8 degrees per full tip
+
+          englishEffectText.setAttribute('x', aimPoint.x);
+          englishEffectText.setAttribute('y', aimPoint.y + (railName === 'top' ? 3 : -3));
+          englishEffectText.textContent = isRunning ?
+            `+${effectDegrees.toFixed(0)}° (running)` :
+            `-${effectDegrees.toFixed(0)}° (reverse)`;
+
+          englishEffectIndicator.setAttribute('visibility', 'visible');
+        } else {
+          englishEffectIndicator.setAttribute('visibility', 'hidden');
+        }
+
+        mirrorSystemOverlay.setAttribute('visibility', 'visible');
+      }
+
+      // Helper: Create an angle arc SVG path
+      function createAngleArc(center, vec1, vec2, radius, railName, isIncoming) {
+        // Calculate start and end angles for the arc
+        const startAngle = Math.atan2(-vec1.y, -vec1.x);  // Flip to show angle FROM the direction
+        const endAngle = Math.atan2(vec2.y, vec2.x);
+
+        // Adjust for rail orientation
+        let angle1, angle2;
+        if (isIncoming) {
+          angle1 = Math.atan2(-vec1.y, -vec1.x);
+          angle2 = Math.atan2(-vec2.y, -vec2.x);
+        } else {
+          angle1 = Math.atan2(vec2.y, vec2.x);
+          angle2 = Math.atan2(vec1.y, vec1.x);
+        }
+
+        const x1 = center.x + Math.cos(angle1) * radius;
+        const y1 = center.y + Math.sin(angle1) * radius;
+        const x2 = center.x + Math.cos(angle2) * radius;
+        const y2 = center.y + Math.sin(angle2) * radius;
+
+        // Determine arc sweep direction
+        const largeArc = 0;
+        const sweep = 1;
+
+        return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} ${sweep} ${x2} ${y2}`;
+      }
+
+      // Helper: Determine if english is "running" (widening) or "reverse" (narrowing)
+      function isRunningEnglish(railName, english, incomingVec) {
+        // Running english is when the spin direction matches the ball's travel along the rail
+        // For a ball hitting the top rail traveling right, left english is running
+        // For a ball hitting the top rail traveling left, right english is running
+
+        if (railName === 'top' || railName === 'bottom') {
+          // Horizontal rail - check x direction of travel
+          const travelingRight = incomingVec.x > 0;
+          if (railName === 'top') {
+            // Top rail: traveling right + left english = running, traveling left + right english = running
+            return (travelingRight && english < 0) || (!travelingRight && english > 0);
+          } else {
+            // Bottom rail: opposite
+            return (travelingRight && english > 0) || (!travelingRight && english < 0);
+          }
+        } else {
+          // Vertical rail - check y direction of travel
+          const travelingDown = incomingVec.y > 0;
+          if (railName === 'left') {
+            return (travelingDown && english > 0) || (!travelingDown && english < 0);
+          } else {
+            return (travelingDown && english < 0) || (!travelingDown && english > 0);
+          }
+        }
+      }
+
+      // Hide mirror system overlay
+      function hideMirrorSystemVisualization() {
+        mirrorSystemOverlay.setAttribute('visibility', 'hidden');
+      }
+
+      // Check if a path from start to ghostPos would hit the object ball PREMATURELY
+      // (i.e., before reaching the ghost position where CB should contact OB)
+      // Returns true if the path would hit OB at the wrong position
+      function wouldHitObjectBallPrematurely(start, ghostPos, objBallPos) {
+        if (!objBallPos) return false;
+
+        // Calculate path direction and length
+        const pathVec = vectorSubtract(ghostPos, start);
+        const pathLen = vectorLength(pathVec);
+        if (pathLen < 0.1) return false;
+
+        const pathDir = vectorNormalize(pathVec);
+
+        // Find the closest point on the path segment to the object ball
+        const toObj = vectorSubtract(objBallPos, start);
+        const projDist = dotProduct(toObj, pathDir);
+
+        // Clamp to segment [0, pathLen]
+        const clampedProj = Math.max(0, Math.min(projDist, pathLen));
+        const closestPoint = vectorAdd(start, vectorScale(pathDir, clampedProj));
+        const distToObj = vectorLength(vectorSubtract(objBallPos, closestPoint));
+
+        // The ghost is positioned BALL_RADIUS * 2 (one diameter) from OB
+        // CB at ghost would just touch OB
+        // If the path gets within 2 ball radii of OB center, check WHERE
+
+        const collisionRadius = BALL_RADIUS * 2;  // Two balls just touching
+
+        if (distToObj < collisionRadius) {
+          // Path gets close enough to potentially hit OB
+          // Check if this happens BEFORE the "approach zone"
+          // The approach zone is the last portion of the path where we EXPECT to be near OB
+
+          // Distance from closest point to ghost
+          const distFromClosestToGhost = pathLen - clampedProj;
+
+          // If closest approach is more than 2.5 ball radii from ghost,
+          // we'd hit OB prematurely (not in the approach zone)
+          const approachZone = BALL_RADIUS * 3;  // Generous approach zone
+
+          if (distFromClosestToGhost > approachZone) {
+            // Would hit OB before reaching the proper approach angle
+            return true;
+          }
+
+          // Additional check: the approach angle should be roughly correct
+          // CB should approach from the opposite side of OB from where OB needs to go
+          // If CB would hit OB from the wrong side, reject
+          const approachDir = vectorNormalize(vectorSubtract(ghostPos, start));
+          const ghostToObj = vectorNormalize(vectorSubtract(objBallPos, ghostPos));
+
+          // approachDir should be roughly aligned with ghostToObj (CB approaches ghost,
+          // then contacts OB which is in the ghostToObj direction)
+          const alignment = dotProduct(approachDir, ghostToObj);
+
+          // If approaching from wrong side (negative alignment), it's premature
+          if (alignment < -0.3) {
+            return true;
+          }
+        }
+
+        return false;
+      }
+
       // Maximum angle change from english (in degrees)
       // Full english (~0.7 ball radius offset) can change angle by ~15 degrees
       const MAX_ENGLISH_ANGLE = 15;
@@ -1642,7 +2958,21 @@
         const pocketCheck = canOBReachPocket(cbSpeed, cutAngleDegrees, obToPocketDist);
 
         if (!pocketCheck.canReach) {
-          return { score: 0, viable: false, reason: 'Not enough power to pocket', ...pocketCheck, cbSpeed };
+          return { score: 0, viable: false, reason: 'Not enough power to pocket', ...pocketCheck, cbSpeed, cutAngleDegrees };
+        }
+
+        // CRITICAL: Steep cut angles make kick shots extremely difficult
+        // A kick shot compounds difficulty - you need precision on BOTH the kick AND the cut
+        // Near-90° cuts are practically impossible even on direct shots
+        if (cutAngleDegrees > 75) {
+          return {
+            score: 0,
+            viable: false,
+            reason: `Cut angle too steep (${cutAngleDegrees.toFixed(0)}°) for kick shot`,
+            ...pocketCheck,
+            cbSpeed,
+            cutAngleDegrees
+          };
         }
 
         // Score based on margin (how comfortably the ball reaches the pocket)
@@ -1660,12 +2990,38 @@
         const englishPenalty = Math.abs(kickPath.requiredEnglish || 0) * 10;
         score -= englishPenalty;
 
+        // HEAVY penalty for steep cut angles (even below 75°)
+        // Cut angle difficulty scales exponentially - a 60° cut is MUCH harder than 30°
+        // On a kick shot, this compounds with the kick difficulty
+        if (cutAngleDegrees > 60) {
+          // 60-75°: -20 to -50 points (very hard cuts)
+          score -= (cutAngleDegrees - 60) * 2;
+        } else if (cutAngleDegrees > 45) {
+          // 45-60°: -5 to -20 points (hard cuts)
+          score -= (cutAngleDegrees - 45) * 1;
+        } else if (cutAngleDegrees > 30) {
+          // 30-45°: minor penalty (moderate cuts)
+          score -= (cutAngleDegrees - 30) * 0.3;
+        }
+        // 0-30°: no penalty (easy to moderate cuts)
+
+        // Determine difficulty label considering cut angle
+        let difficulty;
+        if (cutAngleDegrees > 60 || score < 30) {
+          difficulty = 'Hard';
+        } else if (cutAngleDegrees > 45 || score < 60) {
+          difficulty = 'Medium';
+        } else {
+          difficulty = 'Easy';
+        }
+
         return {
           score: Math.max(0, score),
-          viable: true,
+          viable: score > 10,  // Need minimum score to be considered viable
           ...pocketCheck,
           cbSpeed,
-          difficulty: score > 70 ? 'Easy' : score > 40 ? 'Medium' : 'Hard'
+          cutAngleDegrees,
+          difficulty
         };
       }
 
@@ -1871,11 +3227,9 @@
           return null; // Direct shot is fine, no kick needed
         }
 
-        // Calculate the cut angle for this shot (needed for energy transfer calculation)
-        // Cut angle is the angle between cue-to-ghost line and ghost-to-objBall line
-        const cueToGhost = vectorNormalize(vectorSubtract(ghostPos, cuePos));
+        // Direction from ghost to OB (used for cut angle calculation)
+        // This is constant regardless of which rail we kick from
         const ghostToObj = vectorNormalize(vectorSubtract(objBallPos, ghostPos));
-        const cutAngleDegrees = Math.acos(Math.abs(dotProduct(cueToGhost, ghostToObj))) * (180 / Math.PI);
 
         // Distance from object ball to pocket
         const obToPocketDist = pocketPos ? vectorLength(vectorSubtract(pocketPos, objBallPos)) : 50;
@@ -1898,6 +3252,17 @@
             const segment2Check = isPathBlockedByAnyBall(aimPoint, ghostPos, excludeIds);
 
             if (!segment1Check.blocked && !segment2Check.blocked) {
+              // CRITICAL: Check if path from bounce to ghost would hit target ball prematurely
+              // This catches kicks that dodge blockers but approach OB from the wrong side
+              if (wouldHitObjectBallPrematurely(aimPoint, ghostPos, objBallPos)) {
+                continue; // Skip this kick - would hit OB at wrong position
+              }
+
+              // IMPORTANT: Calculate cut angle based on APPROACH from bounce point, not from cue!
+              // Different rails give different approach angles, affecting shot difficulty
+              const approachDir = vectorNormalize(vectorSubtract(ghostPos, aimPoint));
+              const cutAngleDegrees = Math.acos(Math.abs(dotProduct(approachDir, ghostToObj))) * (180 / Math.PI);
+
               // Calculate required english for this kick
               const requiredEnglish = calculateRequiredEnglish(cuePos, aimPoint, ghostPos, railName);
 
@@ -1935,7 +3300,8 @@
                 englishErrorAngle: englishError.errorAngle,
                 actualDestination: actualDestination,  // Where CB actually goes with user's english
                 scratches: scratches,
-                totalLength: dist1 + dist2
+                totalLength: dist1 + dist2,
+                cutAngle: cutAngleDegrees  // Store cut angle for sorting/display
               };
 
               // Score this path for viability
@@ -1974,6 +3340,16 @@
               const seg3Check = isPathBlockedByAnyBall(bounce2, ghostPos, excludeIds);
 
               if (!seg1Check.blocked && !seg2Check.blocked && !seg3Check.blocked) {
+                // CRITICAL: Check if final segment (bounce2 → ghost) would hit target ball prematurely
+                if (wouldHitObjectBallPrematurely(bounce2, ghostPos, objBallPos)) {
+                  continue; // Skip this kick - would hit OB at wrong position
+                }
+
+                // IMPORTANT: Calculate cut angle based on APPROACH from final bounce point
+                // For 2-rail kicks, CB approaches ghost from bounce2
+                const approachDir = vectorNormalize(vectorSubtract(ghostPos, bounce2));
+                const cutAngleDegrees = Math.acos(Math.abs(dotProduct(approachDir, ghostToObj))) * (180 / Math.PI);
+
                 // Calculate required english for first rail
                 const requiredEnglish = calculateRequiredEnglish(cuePos, aimPoint, bounce2, rail1);
 
@@ -2003,7 +3379,8 @@
                   englishError: englishError.error,
                   englishErrorAngle: englishError.errorAngle,
                   scratches: scratches,
-                  totalLength: d1 + d2 + d3
+                  totalLength: d1 + d2 + d3,
+                  cutAngle: cutAngleDegrees  // Store cut angle for sorting/display
                 };
 
                 // Score this path for viability
@@ -2014,23 +3391,31 @@
           }
         }
 
-        // Sort kicks: prefer viable paths with high scores
+        // Sort kicks: prefer viable paths with high scores and lower cut angles
         if (validKicks.length > 0) {
           validKicks.sort((a, b) => {
             // First priority: viable paths over non-viable
             if (a.viability.viable && !b.viability.viable) return -1;
             if (!a.viability.viable && b.viability.viable) return 1;
 
-            // Second priority: higher viability score (includes scratch penalty, english, etc.)
+            // Second priority: higher viability score (includes scratch penalty, english, cut angle)
             if (Math.abs(a.viability.score - b.viability.score) > 5) {
               return b.viability.score - a.viability.score;  // Higher score first
             }
 
-            // Third priority: avoid scratches
+            // Third priority: lower cut angle (easier shot)
+            // Even if scores are similar, prefer the less-angled cut
+            const cutA = a.cutAngle || 0;
+            const cutB = b.cutAngle || 0;
+            if (Math.abs(cutA - cutB) > 5) {
+              return cutA - cutB;  // Lower cut angle first
+            }
+
+            // Fourth priority: avoid scratches
             if (!a.scratches && b.scratches) return -1;
             if (a.scratches && !b.scratches) return 1;
 
-            // Fourth priority: fewer rails (simpler shot)
+            // Fifth priority: fewer rails (simpler shot)
             if (a.rails.length !== b.rails.length) {
               return a.rails.length - b.rails.length;
             }
@@ -2084,6 +3469,11 @@
             // Check if cue ball can reach ghost ball (not blocked by ANY ball)
             const cueToGhostCheck = isPathBlockedByAnyBall(cuePos, ghostPos, excludeIds);
             if (cueToGhostCheck.blocked) continue;
+
+            // CRITICAL: Check if CB path to ghost would hit OB prematurely from wrong side
+            if (wouldHitObjectBallPrematurely(cuePos, ghostPos, objBallPos)) {
+              continue; // Skip this bank - CB would hit OB at wrong angle
+            }
 
             // Check if OB can reach bank point (not blocked by other balls)
             const obToBankCheck = isPathBlockedByAnyBall(objBallPos, bankPoint, excludeIds);
@@ -2186,26 +3576,58 @@
         const margin = obFinalSpeed / MIN_POCKETING_SPEED;
 
         if (!canReach) {
-          return { score: 0, viable: false, reason: 'Not enough power', obFinalSpeed, margin };
+          return { score: 0, viable: false, reason: 'Not enough power', obFinalSpeed, margin, cutAngleDeg };
+        }
+
+        // CRITICAL: Very steep cut angles make bank shots nearly impossible
+        // Bank shots compound difficulty - precision on cut AND bank angle
+        if (cutAngleDeg > 70) {
+          return {
+            score: 0,
+            viable: false,
+            reason: `Cut angle too steep (${cutAngleDeg.toFixed(0)}°) for bank shot`,
+            obFinalSpeed,
+            margin,
+            cutAngleDeg
+          };
         }
 
         // Score based on margin and shot difficulty
         let score = Math.min(100, margin * 40);
 
-        // Penalty for steep cut angles (harder to control)
-        if (cutAngleDeg > 45) score -= (cutAngleDeg - 45) * 0.5;
+        // ENHANCED penalty for steep cut angles
+        // Bank shots are already difficult; steep cuts compound this
+        if (cutAngleDeg > 55) {
+          // 55-70°: -15 to -45 points (very hard)
+          score -= (cutAngleDeg - 55) * 2;
+        } else if (cutAngleDeg > 45) {
+          // 45-55°: -5 to -15 points (hard)
+          score -= (cutAngleDeg - 45) * 1;
+        } else if (cutAngleDeg > 30) {
+          // 30-45°: minor penalty
+          score -= (cutAngleDeg - 30) * 0.3;
+        }
 
         // Penalty for long bank distances (more error accumulation)
         const totalDist = obToBankDist + bankToPocketDist;
         if (totalDist > 60) score -= (totalDist - 60) * 0.3;
 
-        const difficulty = score > 60 ? 'Easy' : score > 35 ? 'Medium' : 'Hard';
+        // Determine difficulty considering cut angle
+        let difficulty;
+        if (cutAngleDeg > 55 || score < 25) {
+          difficulty = 'Hard';
+        } else if (cutAngleDeg > 40 || score < 50) {
+          difficulty = 'Medium';
+        } else {
+          difficulty = 'Easy';
+        }
 
         return {
           score: Math.max(0, score),
-          viable: true,
+          viable: score > 10,
           obFinalSpeed,
           margin,
+          cutAngleDeg,
           difficulty
         };
       }
@@ -2289,9 +3711,19 @@
           const path1Check = isPathBlockedByAnyBall(cuePos, helperGhostPos, ['cue', helperBallId]);
           if (path1Check.blocked) continue;
 
+          // CRITICAL: Check if CB path to helper ghost would hit helper prematurely
+          if (wouldHitObjectBallPrematurely(cuePos, helperGhostPos, helperPos)) {
+            continue; // Skip - CB would hit helper at wrong angle
+          }
+
           // Path 2: Helper → Target ghost
           const path2Check = isPathBlockedByAnyBall(helperPos, targetGhostPos, [helperBallId, targetBallId]);
           if (path2Check.blocked) continue;
+
+          // CRITICAL: Check if helper path to target ghost would hit target prematurely
+          if (wouldHitObjectBallPrematurely(helperPos, targetGhostPos, targetPos)) {
+            continue; // Skip - helper would hit target at wrong angle
+          }
 
           // Path 3: Target → Pocket
           const path3Check = isPathBlockedByAnyBall(targetPos, pocketPos, [targetBallId]);
@@ -2333,13 +3765,35 @@
 
       // Score a combination shot based on alignment, cut angles, and distances
       function scoreComboShot(alignment, cutAngle1, cutAngle2, dist1, dist2, dist3) {
+        // CRITICAL: Very steep individual cut angles make combos nearly impossible
+        // Each collision compounds error - both cuts need to be achievable
+        const maxCutAngle = Math.max(cutAngle1, cutAngle2);
+        if (maxCutAngle > 65) {
+          return {
+            score: 0,
+            viable: false,
+            difficulty: 'Hard',
+            reason: `Cut angle too steep (${maxCutAngle.toFixed(0)}°) for combo shot`
+          };
+        }
+
         // Base score from alignment (0.3 to 1.0 maps to 0 to 50)
         let score = (alignment - 0.3) / 0.7 * 50;
 
-        // Penalty for cut angles (compound difficulty)
+        // ENHANCED penalty for cut angles (compound difficulty)
+        // Combos are already hard - each cut angle adds exponential difficulty
         const totalCutAngle = cutAngle1 + cutAngle2;
-        if (totalCutAngle > 30) score -= (totalCutAngle - 30) * 0.8;
-        if (totalCutAngle > 60) score -= (totalCutAngle - 60) * 1.0; // Extra penalty
+
+        // Individual cut angle penalties
+        if (cutAngle1 > 50) score -= (cutAngle1 - 50) * 1.5;
+        else if (cutAngle1 > 35) score -= (cutAngle1 - 35) * 0.8;
+
+        if (cutAngle2 > 50) score -= (cutAngle2 - 50) * 1.5;
+        else if (cutAngle2 > 35) score -= (cutAngle2 - 35) * 0.8;
+
+        // Combined cut angle penalty
+        if (totalCutAngle > 80) score -= (totalCutAngle - 80) * 1.0;
+        else if (totalCutAngle > 50) score -= (totalCutAngle - 50) * 0.5;
 
         // Penalty for long distances (more error accumulation)
         const totalDist = dist1 + dist2 + dist3;
@@ -2348,8 +3802,17 @@
         // Bonus for short, aligned combos
         if (dist2 < 15 && alignment > 0.8) score += 20;
 
+        // Determine difficulty based on cut angles and score
+        let difficulty;
+        if (maxCutAngle > 50 || totalCutAngle > 70 || score < 20) {
+          difficulty = 'Hard';
+        } else if (maxCutAngle > 35 || totalCutAngle > 50 || score < 40) {
+          difficulty = 'Medium';
+        } else {
+          difficulty = 'Easy';
+        }
+
         const viable = score > 10;
-        const difficulty = score > 50 ? 'Easy' : score > 30 ? 'Medium' : 'Hard';
 
         return {
           score: Math.max(0, Math.min(100, score)),
@@ -3051,23 +4514,35 @@
 
       let draggedBall = null;
       let offsetX = 0, offsetY = 0;
+      let dragStartPos = null;      // Track mouse position at start
+      let dragStartTime = null;     // Track time for long-press detection
+      let isDragging = false;       // True if actually dragging (not just click)
+      const DRAG_THRESHOLD = 5;     // Pixels to move before considered a drag
+      const LONG_PRESS_TIME = 400;  // Milliseconds for long-press selection
       const ballPositions = {}; // Track SVG coordinates for balls on table
 
-      // Create balls in rack
+      // Create balls in palette (or fallback to rack)
       function createBalls() {
+        const paletteGrid = document.getElementById('paletteBallGrid');
+        const paletteSpecial = document.getElementById('paletteBallSpecial');
+
         balls.forEach((ball, i) => {
           const el = document.createElement('div');
           el.className = `ball ${ball.cls}`;
           el.id = `ball-${ball.id}`;
           el.textContent = ball.label;
           el.dataset.ballId = ball.id;
-          ballRack.appendChild(el);
 
-          // Add separator after ghost ball
-          if (ball.id === 'ghost') {
-            const sep = document.createElement('div');
-            sep.className = 'rack-separator';
-            ballRack.appendChild(sep);
+          // Put cue and ghost in special row, others in grid
+          if (paletteGrid && paletteSpecial) {
+            if (ball.id === 'cue' || ball.id === 'ghost') {
+              paletteSpecial.appendChild(el);
+            } else {
+              paletteGrid.appendChild(el);
+            }
+          } else {
+            // Fallback to old rack
+            ballRack.appendChild(el);
           }
         });
       }
@@ -3187,6 +4662,7 @@
         // Hide kick aim indicator and actual path by default
         kickAimIndicator.setAttribute('visibility', 'hidden');
         actualKickPath.setAttribute('visibility', 'hidden');
+        hideMirrorSystemVisualization();
 
         if (cuePos && ghostPos) {
           // Check if we need a kick shot (object ball blocking direct path)
@@ -3253,6 +4729,14 @@
               }
 
               kickAimIndicator.setAttribute('visibility', 'visible');
+
+              // Update mirror system visualization (aiming aid overlay)
+              try {
+                updateMirrorSystemVisualization(kickPath, cuePos, ghostPos, contactOffset.x);
+              } catch (e) {
+                console.error('Mirror system visualization error:', e);
+                hideMirrorSystemVisualization();
+              }
 
               // Show actual kick path if user's english differs from required
               // This helps users see the effect of their english choice
@@ -3351,13 +4835,17 @@
           let currentBankShot = null;
           let showingBank = false;
 
-          if (cuePos && (currentSolverMode === 'bank' || currentSolverMode === 'auto')) {
+          // In auto mode, only consider bank if direct path is blocked
+          const directPathBlocked = currentKickPath !== null;
+
+          if (cuePos && (currentSolverMode === 'bank' || (currentSolverMode === 'auto' && directPathBlocked))) {
             // Check all balls on table as obstacles when finding bank shots
             const bankShots = findBankShots(cuePos, objBallPos, pocketPos, shotForce, contactOffset.x, selectedBallId);
             if (bankShots.length > 0) {
               const bestBank = bankShots[0];
-              // In bank mode, always show bank. In auto mode, show bank if viable and easier than direct
-              if (currentSolverMode === 'bank' || (bestBank.viability.viable && bestBank.viability.score > 50)) {
+              // In bank mode, always show bank. In auto mode, show bank if kick isn't viable
+              const kickNotViable = currentKickPath && (!currentKickPath.viability || !currentKickPath.viability.viable);
+              if (currentSolverMode === 'bank' || (bestBank.viability.viable && kickNotViable)) {
                 currentBankShot = bestBank;
                 showingBank = true;
               }
@@ -3412,6 +4900,12 @@
             ghostBallIndicator.setAttribute('transform', `translate(${currentCombo.helperGhostPos.x}, ${currentCombo.helperGhostPos.y})`);
             ballPositions['ghost'] = currentCombo.helperGhostPos;
 
+            // Also move the ghost ball element to match
+            const ghostBallElCombo = document.getElementById('ball-ghost');
+            if (ghostBallElCombo && ghostBallElCombo.classList.contains('on-table')) {
+              positionBallOnTable(ghostBallElCombo, currentCombo.helperGhostPos.x, currentCombo.helperGhostPos.y);
+            }
+
             // Combo shot - check if target would reach pocket
             obMadeIt = currentCombo.viable;
 
@@ -3424,6 +4918,12 @@
             const bankGhostPos = currentBankShot.ghostPos;
             ghostBallIndicator.setAttribute('transform', `translate(${bankGhostPos.x}, ${bankGhostPos.y})`);
             ballPositions['ghost'] = bankGhostPos;  // Update stored position for cue line
+
+            // Also move the ghost ball element to match
+            const ghostBallEl = document.getElementById('ball-ghost');
+            if (ghostBallEl && ghostBallEl.classList.contains('on-table')) {
+              positionBallOnTable(ghostBallEl, bankGhostPos.x, bankGhostPos.y);
+            }
 
             // Check if throw significantly affects the shot
             const throwError = vectorLength(vectorSubtract(actualBankPoint, idealBankPoint));
@@ -3571,6 +5071,48 @@
           const cutFactor = Math.cos(cutAngle * Math.PI / 180);
           const minPowerNeeded = Math.ceil(Math.max(2, totalDist / (15 * cutFactor)));
 
+          // Determine shot type for display
+          const isKick = !!currentKickPath;
+          const isBank = showingBank;
+          const isCombo = showingCombo;
+
+          // Determine aim instruction text
+          let aimInstructionText = '';
+          if (isKick) {
+            const railName = currentKickPath.rails[0].charAt(0).toUpperCase() + currentKickPath.rails[0].slice(1);
+            aimInstructionText = `${railName} rail kick point`;
+          } else if (isBank) {
+            const railName = currentBankShot.bankRail.charAt(0).toUpperCase() + currentBankShot.bankRail.slice(1);
+            aimInstructionText = `Ghost ball (bank off ${railName})`;
+          } else if (isCombo) {
+            aimInstructionText = `Hit ${currentCombo.helperBallId}-ball into ${currentCombo.targetBallId}-ball`;
+          } else {
+            aimInstructionText = `Ghost ball (${hitName})`;
+          }
+
+          // Check for foul (illegal ball selection)
+          const isLegalTarget = isBallLegalTarget(selectedBallId);
+          const isFoul = selectedBallId && !isLegalTarget && currentGameMode.targetRule !== 'any';
+
+          // Calculate difficulty level
+          let difficultyScore = 0;
+          if (cutAngle > 60) difficultyScore += 40;
+          else if (cutAngle > 45) difficultyScore += 25;
+          else if (cutAngle > 30) difficultyScore += 15;
+          else difficultyScore += 5;
+          if (totalDist > 80) difficultyScore += 25;
+          else if (totalDist > 50) difficultyScore += 15;
+          else difficultyScore += 5;
+          if (isKick) difficultyScore += 20;
+          if (isBank) difficultyScore += 15;
+          if (isCombo) difficultyScore += 25;
+
+          let difficultyLevel;
+          if (difficultyScore <= 25) difficultyLevel = 'easy';
+          else if (difficultyScore <= 45) difficultyLevel = 'medium';
+          else if (difficultyScore <= 70) difficultyLevel = 'hard';
+          else difficultyLevel = 'very-hard';
+
           // Build shot data for instructions panel
           const shotData = {
             isReady: true,
@@ -3581,9 +5123,19 @@
             contactY: contactOffset.y,
             power: shotForce,
             minPowerNeeded: Math.min(10, minPowerNeeded),
-            isKickShot: !!currentKickPath,
-            isBankShot: showingBank,
-            isComboShot: showingCombo,
+            // Original property names (for updateShotInstructions)
+            isKickShot: isKick,
+            isBankShot: isBank,
+            isComboShot: isCombo,
+            // Alias property names (for updatePaletteDisplays)
+            isKick: isKick,
+            isBank: isBank,
+            isCombo: isCombo,
+            // Additional display properties
+            difficulty: difficultyLevel,
+            overlap: overlap,
+            isFoul: isFoul,
+            aimInstruction: aimInstructionText,
             kickRail: currentKickPath ? currentKickPath.rails[0] : null,
             bankRail: currentBankShot ? currentBankShot.bankRail : null,
             requiredEnglish: currentKickPath ? currentKickPath.requiredEnglish : 0,
@@ -3597,7 +5149,7 @@
             comboCutAngle2: currentCombo ? currentCombo.cutAngle2 : null,
             // Legal target ball info for game mode warnings
             selectedBallId: selectedBallId,
-            isLegalTarget: isBallLegalTarget(selectedBallId),
+            isLegalTarget: isLegalTarget,
             legalTargetBalls: getLegalTargetBalls(),
             gameModeName: currentGameMode.name,
             targetRule: currentGameMode.targetRule
@@ -3730,40 +5282,81 @@
         });
       }
 
-      // Start drag
+      // Start drag (or prepare for potential drag)
       function startDrag(e) {
         const ball = e.target.closest('.ball');
-        if (!ball) return;
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+        if (!ball) {
+          // Clicked on empty space - check if we should move selected ball there
+          if (selectedBallId && selectedBallId !== 'cue' && selectedBallId !== 'ghost') {
+            const svgPos = pageToSvg(clientX, clientY);
+            if (isOnPlayingSurface(svgPos.x, svgPos.y)) {
+              // Move selected ball to clicked position
+              const selectedBall = document.getElementById(`ball-${selectedBallId}`);
+              if (selectedBall) {
+                ballPositions[selectedBallId] = { x: svgPos.x, y: svgPos.y };
+                positionBallOnTable(selectedBall, svgPos.x, svgPos.y);
+                autoPositionGhostBall();
+                updateCueGhostLine();
+              }
+            }
+          }
+          return;
+        }
 
         e.preventDefault();
         draggedBall = ball;
-        draggedBall.classList.add('dragging');
+        isDragging = false;  // Not dragging yet, just clicked
+        dragStartTime = Date.now();
 
         const rect = ball.getBoundingClientRect();
-        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        dragStartPos = { x: clientX, y: clientY };
 
         const halfBall = ballSizePx / 2;
         offsetX = clientX - rect.left - halfBall;
         offsetY = clientY - rect.top - halfBall;
+      }
 
-        // Move to table wrapper for dragging
-        if (!ball.classList.contains('on-table')) {
+      // Actually begin the drag (called when threshold exceeded)
+      function beginActualDrag() {
+        if (!draggedBall || isDragging) return;
+
+        isDragging = true;
+        draggedBall.classList.add('dragging');
+
+        // Move to table wrapper for dragging if from rack
+        if (!draggedBall.classList.contains('on-table')) {
+          const rect = draggedBall.getBoundingClientRect();
           const wrapperRect = tableWrapper.getBoundingClientRect();
-          ball.style.position = 'absolute';
-          ball.style.left = (rect.left - wrapperRect.left) + 'px';
-          ball.style.top = (rect.top - wrapperRect.top) + 'px';
-          tableWrapper.appendChild(ball);
+          draggedBall.style.position = 'absolute';
+          draggedBall.style.left = (rect.left - wrapperRect.left) + 'px';
+          draggedBall.style.top = (rect.top - wrapperRect.top) + 'px';
+          tableWrapper.appendChild(draggedBall);
         }
       }
 
       // During drag
       function doDrag(e) {
         if (!draggedBall) return;
-        e.preventDefault();
 
         const clientX = e.clientX || (e.touches && e.touches[0].clientX);
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+        // Check if we should start actual dragging (threshold check)
+        if (!isDragging && dragStartPos) {
+          const dx = clientX - dragStartPos.x;
+          const dy = clientY - dragStartPos.y;
+          if (Math.sqrt(dx * dx + dy * dy) < DRAG_THRESHOLD) {
+            return; // Haven't moved enough yet
+          }
+          beginActualDrag();
+        }
+
+        if (!isDragging) return;
+
+        e.preventDefault();
 
         const wrapperRect = tableWrapper.getBoundingClientRect();
         const halfBall = ballSizePx / 2;
@@ -3774,14 +5367,39 @@
         draggedBall.style.top = newTop + 'px';
       }
 
-      // End drag
+      // End drag (or handle click if no drag occurred)
       function endDrag(e) {
-        if (!draggedBall) return;
+        // Always capture the ball reference first, then clear state immediately
+        // This prevents any possibility of state getting stuck
+        const ball = draggedBall;
+        const wasDragging = isDragging;
+        const holdTime = dragStartTime ? Date.now() - dragStartTime : 0;
 
-        draggedBall.classList.remove('dragging');
+        // Clear state FIRST to prevent stuck state
+        draggedBall = null;
+        dragStartPos = null;
+        dragStartTime = null;
+        isDragging = false;
 
-        const ballId = draggedBall.dataset.ballId;
-        const rect = draggedBall.getBoundingClientRect();
+        if (!ball) return;
+
+        const ballId = ball.dataset.ballId;
+
+        // If it was just a click (not a drag):
+        // - Long press (>400ms) = select the ball
+        // - Short click = do nothing (use double-click to select)
+        if (!wasDragging) {
+          if (ballId !== 'cue' && ballId !== 'ghost' && holdTime >= LONG_PRESS_TIME) {
+            selectBall(ballId);
+          }
+          // Short click does nothing - use double-click instead
+          return;
+        }
+
+        // It was an actual drag - complete the drop
+        ball.classList.remove('dragging');
+
+        const rect = ball.getBoundingClientRect();
         const halfBall = ballSizePx / 2;
         const centerX = rect.left + halfBall;
         const centerY = rect.top + halfBall;
@@ -3791,8 +5409,8 @@
         if (isOnPlayingSurface(svgPos.x, svgPos.y)) {
           // Place on table
           ballPositions[ballId] = { x: svgPos.x, y: svgPos.y };
-          positionBallOnTable(draggedBall, svgPos.x, svgPos.y);
-          draggedBall.classList.add('on-table');
+          positionBallOnTable(ball, svgPos.x, svgPos.y);
+          ball.classList.add('on-table');
 
           // Auto-select object balls when dropped (not cue or ghost)
           if (ballId !== 'cue' && ballId !== 'ghost') {
@@ -3803,11 +5421,11 @@
         } else {
           // Return to rack
           delete ballPositions[ballId];
-          draggedBall.style.position = '';
-          draggedBall.style.left = '';
-          draggedBall.style.top = '';
-          draggedBall.classList.remove('on-table');
-          ballRack.appendChild(draggedBall);
+          ball.style.position = '';
+          ball.style.left = '';
+          ball.style.top = '';
+          ball.classList.remove('on-table');
+          ballRack.appendChild(ball);
 
           // Deselect if this ball was selected
           if (selectedBallId === ballId) {
@@ -3816,17 +5434,43 @@
         }
 
         updateCueGhostLine();
+      }
+
+      // Cancel drag completely (reset all state)
+      function cancelDrag() {
+        if (draggedBall) {
+          draggedBall.classList.remove('dragging');
+        }
         draggedBall = null;
+        dragStartPos = null;
+        isDragging = false;
+      }
+
+      // Double-click to select ball (alternative to long-press)
+      function handleBallDoubleClick(e) {
+        const ball = e.target.closest('.ball');
+        if (!ball) return;
+
+        const ballId = ball.dataset.ballId;
+        if (ballId !== 'cue' && ballId !== 'ghost') {
+          selectBall(ballId);
+        }
       }
 
       // Event listeners
       document.addEventListener('mousedown', startDrag);
       document.addEventListener('mousemove', doDrag);
       document.addEventListener('mouseup', endDrag);
+      document.addEventListener('dblclick', handleBallDoubleClick);
+      // Safety: cancel drag if mouse leaves window
+      document.addEventListener('mouseleave', cancelDrag);
+      // Safety: cancel drag on blur (user switches tabs/windows)
+      window.addEventListener('blur', cancelDrag);
 
       document.addEventListener('touchstart', startDrag, { passive: false });
       document.addEventListener('touchmove', doDrag, { passive: false });
       document.addEventListener('touchend', endDrag);
+      document.addEventListener('touchcancel', cancelDrag);
 
       // Reposition on resize
       // On resize, update ball sizes and reposition all balls
@@ -4040,49 +5684,60 @@
         });
       }
 
-      // Set up a default demo shot with BLOCKING BALLS to demonstrate obstacle detection
-      // Shows how the solver finds kick/bank shots when direct path is blocked
+      // APPROACH ANGLE TEST: Tests per-rail cut angle calculation
+      // Different rails give different approach angles to the ghost ball
+      // The solver should pick the rail that best aligns with the pocket direction
       function setupDemoShot() {
-        // Object ball at center-right area
-        const objBallX = 70;
-        const objBallY = 25;
+        // SCENARIO: Test that the solver picks the rail with best approach angle
+        //
+        // Object ball in lower-left, pocket is top-left corner
+        // This means OB needs to travel UP and LEFT
+        // The ghost ball is positioned BELOW and RIGHT of OB
+        //
+        // For CB to push OB toward the pocket, CB should approach from BELOW-RIGHT
+        // - BOTTOM rail kick: CB approaches from BELOW - good alignment!
+        // - LEFT rail kick: CB approaches from LEFT - pushes OB right (bad!)
+        // - RIGHT rail kick: CB approaches from RIGHT - pushes OB left (partially aligned)
+        // - TOP rail kick: CB approaches from ABOVE - pushes OB down (bad!)
+        //
+        // The solver should prefer BOTTOM rail for best pocket alignment
 
-        // Target: bottom-right corner pocket
-        const pocketId = 'corner-br';
+        // Object ball - lower-left area, needs to go to top-left pocket
+        const objBallX = 25;
+        const objBallY = 35;
+
+        // Target: top-left corner pocket
+        const pocketId = 'corner-tl';
         const pocket = pocketCenters[pocketId];
 
-        // Calculate ghost ball position (where CB must contact OB)
+        // Calculate ghost ball position (opposite pocket direction from OB)
         const objToPocket = vectorNormalize(vectorSubtract(pocket, { x: objBallX, y: objBallY }));
         const ghostBallX = objBallX - objToPocket.x * GHOST_BALL_OFFSET;
         const ghostBallY = objBallY - objToPocket.y * GHOST_BALL_OFFSET;
 
-        // Cue ball at head area, positioned for the cut shot
-        const cueBallX = 25;
+        // Cue ball - positioned so direct shot is blocked, multiple kicks possible
+        const cueBallX = 50;
         const cueBallY = 20;
 
-        // BLOCKING BALLS - positioned to block the direct path from cue to ghost
-        // This forces the solver to find a kick shot or combo
-        // Ball 1: In the middle of the direct line from cue to ghost (blocks direct)
-        const blocker1X = 45;
-        const blocker1Y = 22;
+        // BLOCKER: 1-ball blocks the direct path
+        const blocker1X = 38;
+        const blocker1Y = 27;
 
-        // Ball 2: Another ball positioned as a potential combo helper
-        // It's in a good position to combo the gray ball into the pocket
-        const blocker2X = 60;
-        const blocker2Y = 32;
+        // Other balls for context (not blocking kicks)
+        const ball2X = 70;
+        const ball2Y = 15;
 
-        // Ball 3: Add another ball to make combo scenarios more interesting
-        const ball3X = 35;
-        const ball3Y = 38;
+        const ball3X = 80;
+        const ball3Y = 40;
 
-        // Place the balls including blockers
+        // Place the balls
         const positions = {
           'cue': { x: cueBallX, y: cueBallY },
           'ghost': { x: ghostBallX, y: ghostBallY },
           'gray': { x: objBallX, y: objBallY },
-          '1': { x: blocker1X, y: blocker1Y },  // Blocker 1 (blocks direct path)
-          '2': { x: blocker2X, y: blocker2Y },  // Blocker 2 (potential combo helper)
-          '3': { x: ball3X, y: ball3Y }         // Additional ball for combo testing
+          '1': { x: blocker1X, y: blocker1Y },  // Main blocker
+          '2': { x: ball2X, y: ball2Y },
+          '3': { x: ball3X, y: ball3Y }
         };
 
         // Set positions and move balls to table
@@ -4098,15 +5753,14 @@
         selectBall('gray');
         selectPocket(pocketId);
 
-        // Set MAX FOLLOW (top spin) - contact point at top of safe zone
-        // y = -0.56 is the maximum safe offset (half ball radius)
-        contactOffset = { x: 0, y: -0.5 };  // Strong follow
+        // Set center hit - no english to see natural kick preference
+        contactOffset = { x: 0, y: 0 };
         contactPoint.setAttribute('cx', contactOffset.x);
         contactPoint.setAttribute('cy', contactOffset.y);
         spinTypeDisplay.textContent = getSpinType(contactOffset);
 
-        // Set MAX FORCE for dramatic curve effect
-        shotForce = 10;
+        // Set medium force
+        shotForce = 6;
         forceSlider.value = shotForce;
         forceValueDisplay.textContent = shotForce;
 
@@ -4124,6 +5778,1822 @@
 
       // Set up demo shot after a brief delay (to ensure DOM is ready)
       setTimeout(setupDemoShot, 100);
+
+      // ============================================
+      // FLOATING PALETTE MANAGEMENT
+      // ============================================
+
+      // Palette elements
+      const palettes = {
+        balls: document.getElementById('palette-balls'),
+        cue: document.getElementById('palette-cue'),
+        game: document.getElementById('palette-game'),
+        shot: document.getElementById('palette-shot')
+      };
+
+      const restoreButtons = {
+        balls: document.getElementById('restore-balls'),
+        cue: document.getElementById('restore-cue'),
+        game: document.getElementById('restore-game'),
+        shot: document.getElementById('restore-shot')
+      };
+
+      // Balls are now created directly in palette by createBalls()
+      function createPaletteBalls() {
+        // No longer needed - balls created directly in palette
+      }
+
+      // Palette minimize/close handlers
+      function setupPaletteControls() {
+        Object.keys(palettes).forEach(key => {
+          const palette = palettes[key];
+          const restoreBtn = restoreButtons[key];
+
+          if (!palette) return;
+
+          const minimizeBtn = palette.querySelector('.palette-btn.minimize');
+          const closeBtn = palette.querySelector('.palette-btn.close');
+
+          // Minimize toggle
+          if (minimizeBtn) {
+            minimizeBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              palette.classList.toggle('minimized');
+              minimizeBtn.textContent = palette.classList.contains('minimized') ? '+' : '−';
+            });
+          }
+
+          // Close (hide) palette
+          if (closeBtn) {
+            closeBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              palette.classList.add('hidden');
+              if (restoreBtn) restoreBtn.classList.add('visible');
+            });
+          }
+
+          // Restore button
+          if (restoreBtn) {
+            restoreBtn.addEventListener('click', () => {
+              palette.classList.remove('hidden');
+              restoreBtn.classList.remove('visible');
+            });
+          }
+        });
+      }
+
+      // Make palettes draggable
+      function setupPaletteDragging() {
+        let draggedPalette = null;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+
+        Object.values(palettes).forEach(palette => {
+          if (!palette) return;
+
+          const header = palette.querySelector('.palette-header');
+          if (!header) return;
+
+          header.addEventListener('mousedown', (e) => {
+            if (e.target.closest('.palette-btn')) return; // Don't drag if clicking buttons
+
+            e.preventDefault();
+            draggedPalette = palette;
+            palette.classList.add('dragging');
+
+            const rect = palette.getBoundingClientRect();
+            dragOffsetX = e.clientX - rect.left;
+            dragOffsetY = e.clientY - rect.top;
+
+            // Remove anchor positioning, switch to absolute
+            palette.style.top = rect.top + 'px';
+            palette.style.left = rect.left + 'px';
+            palette.style.right = 'auto';
+            palette.style.bottom = 'auto';
+          });
+        });
+
+        document.addEventListener('mousemove', (e) => {
+          if (!draggedPalette) return;
+
+          const newLeft = e.clientX - dragOffsetX;
+          const newTop = e.clientY - dragOffsetY;
+
+          // Constrain to viewport
+          const maxX = window.innerWidth - draggedPalette.offsetWidth;
+          const maxY = window.innerHeight - draggedPalette.offsetHeight;
+
+          draggedPalette.style.left = Math.max(0, Math.min(newLeft, maxX)) + 'px';
+          draggedPalette.style.top = Math.max(0, Math.min(newTop, maxY)) + 'px';
+        });
+
+        document.addEventListener('mouseup', () => {
+          if (draggedPalette) {
+            draggedPalette.classList.remove('dragging');
+            draggedPalette = null;
+          }
+        });
+      }
+
+      // Sync palette controls with original controls
+      function setupPaletteSync() {
+        // Force slider sync
+        const forcePalette = document.getElementById('forceSlider-palette');
+        const forceValuePalette = document.getElementById('forceValue-palette');
+
+        if (forcePalette) {
+          forcePalette.value = forceSlider.value;
+          forcePalette.addEventListener('input', (e) => {
+            shotForce = parseFloat(e.target.value);
+            forceSlider.value = e.target.value;
+            forceValueDisplay.textContent = shotForce;
+            if (forceValuePalette) forceValuePalette.textContent = shotForce;
+            updateShotGeometry();
+          });
+        }
+
+        // Sync original slider to palette
+        forceSlider.addEventListener('input', () => {
+          if (forcePalette) forcePalette.value = forceSlider.value;
+          if (forceValuePalette) forceValuePalette.textContent = forceSlider.value;
+        });
+
+        // Game mode sync
+        const gamePalette = document.getElementById('gameModeSelect-palette');
+        const gameDescPalette = document.getElementById('gameModeDescription-palette');
+        const suitPalette = document.getElementById('suitSelector-palette');
+        const pocketPalette = document.getElementById('pocketSelector-palette');
+
+        if (gamePalette) {
+          gamePalette.value = gameModeSelect.value;
+          gamePalette.addEventListener('change', (e) => {
+            gameModeSelect.value = e.target.value;
+            gameModeSelect.dispatchEvent(new Event('change'));
+            // Update palette-specific elements
+            const mode = GAME_MODES[Object.keys(GAME_MODES).find(k => GAME_MODES[k].id === e.target.value)];
+            if (mode && gameDescPalette) {
+              gameDescPalette.textContent = mode.description.split('.')[0];
+            }
+            if (suitPalette) suitPalette.style.display = e.target.value === '8ball' ? 'block' : 'none';
+            if (pocketPalette) pocketPalette.style.display = e.target.value === '1pocket' ? 'block' : 'none';
+          });
+        }
+
+        // Solver mode sync
+        const solverPaletteRadios = document.querySelectorAll('input[name="solver-mode-palette"]');
+        solverPaletteRadios.forEach(radio => {
+          radio.addEventListener('change', (e) => {
+            const originalRadio = document.querySelector(`input[name="solver-mode"][value="${e.target.value}"]`);
+            if (originalRadio) {
+              originalRadio.checked = true;
+              originalRadio.dispatchEvent(new Event('change'));
+            }
+          });
+        });
+
+        // Sync original solver to palette
+        solverRadios.forEach(radio => {
+          radio.addEventListener('change', (e) => {
+            const paletteRadio = document.querySelector(`input[name="solver-mode-palette"][value="${e.target.value}"]`);
+            if (paletteRadio) paletteRadio.checked = true;
+          });
+        });
+      }
+
+      // Update palette displays when shot geometry changes
+      function updatePaletteDisplays(shotData) {
+        // Cut angle
+        const cutPalette = document.getElementById('cutAngleDisplay-palette');
+        if (cutPalette && shotData) {
+          cutPalette.textContent = shotData.cutAngle !== undefined ? shotData.cutAngle.toFixed(1) + '°' : '--';
+        }
+
+        // Shot type
+        const typePalette = document.getElementById('shotTypeDisplay-palette');
+        if (typePalette && shotData) {
+          let typeText = 'Direct';
+          if (shotData.isCombo) typeText = 'Combo';
+          else if (shotData.isBank) typeText = 'Bank';
+          else if (shotData.isKick) typeText = 'Kick';
+          typePalette.textContent = typeText;
+        }
+
+        // Difficulty
+        const diffFillPalette = document.getElementById('difficultyFill-palette');
+        const diffTextPalette = document.getElementById('difficultyText-palette');
+        if (diffFillPalette && diffTextPalette && shotData && shotData.difficulty) {
+          diffFillPalette.className = 'difficulty-fill ' + shotData.difficulty;
+          diffTextPalette.className = 'difficulty-text ' + shotData.difficulty;
+          diffTextPalette.textContent = shotData.difficulty.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        // Overlap displays
+        const overlapEnglishP = document.getElementById('overlapEnglish-palette');
+        const overlapSlashP = document.getElementById('overlapSlash-palette');
+        const overlapGhostP = document.getElementById('overlap-ghost-ball-palette');
+        const overlapRegionP = document.getElementById('overlap-region-palette');
+
+        if (shotData && shotData.overlap !== undefined) {
+          const overlap = shotData.overlap;
+          const fractionInfo = getOverlapFraction(overlap);
+
+          if (overlapEnglishP) overlapEnglishP.textContent = fractionInfo.english;
+          if (overlapSlashP) overlapSlashP.textContent = fractionInfo.slash;
+
+          // Update ghost ball position in palette diagram
+          const ghostX = -0.5 - (1 - overlap) * 2;
+          if (overlapGhostP) overlapGhostP.setAttribute('cx', ghostX);
+          if (overlapRegionP) overlapRegionP.setAttribute('cx', ghostX);
+        }
+
+        // Mini instructions
+        const miniInst = document.getElementById('shotMiniInstructions');
+        if (miniInst && shotData) {
+          if (shotData.isFoul) {
+            miniInst.innerHTML = '<span style="color:#f66">⚠ FOUL - Hit wrong ball</span>';
+          } else if (shotData.aimInstruction) {
+            miniInst.textContent = shotData.aimInstruction;
+          } else {
+            miniInst.textContent = 'Place balls and select a pocket';
+          }
+        }
+      }
+
+      // Hook into existing updateShotInstructions
+      const originalUpdateShotInstructions = updateShotInstructions;
+      updateShotInstructions = function(shotData) {
+        originalUpdateShotInstructions(shotData);
+        updatePaletteDisplays(shotData);
+      };
+
+      // Initialize palettes
+      setTimeout(() => {
+        createPaletteBalls();
+        setupPaletteControls();
+        setupPaletteDragging();
+        setupPaletteSync();
+        setupSharePalette();
+        loadStateFromURL();
+      }, 150);
+
+      // ========== SHARE/EXPORT FUNCTIONALITY ==========
+
+      // Toast notification
+      function showToast(message, duration = 2000) {
+        const toast = document.getElementById('toastNotification');
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), duration);
+      }
+
+      // Capture current state for URL encoding
+      function captureState() {
+        const state = {
+          v: 1,
+          balls: {},
+          pocket: selectedPocket || '',
+          ball: selectedBallId || '',
+          mode: currentGameMode.id,
+          power: shotForce,
+          english: { x: contactOffset.x, y: contactOffset.y },
+          solver: currentSolverMode
+        };
+
+        // Only include balls that are on the table
+        for (const [id, pos] of Object.entries(ballPositions)) {
+          if (pos && isOnPlayingSurface(pos.x, pos.y)) {
+            state.balls[id] = { x: Math.round(pos.x * 10) / 10, y: Math.round(pos.y * 10) / 10 };
+          }
+        }
+
+        return state;
+      }
+
+      // Encode state to compact URL string
+      function encodeState(state) {
+        const parts = [`v${state.v}`];
+
+        // Encode balls: id:x,y
+        for (const [id, pos] of Object.entries(state.balls)) {
+          parts.push(`${id}:${pos.x.toFixed(1)},${pos.y.toFixed(1)}`);
+        }
+
+        // Encode settings
+        if (state.pocket) parts.push(`p:${state.pocket.replace('corner-', 'c').replace('side-', 's')}`);
+        if (state.ball) parts.push(`b:${state.ball}`);
+        parts.push(`m:${state.mode}`);
+        parts.push(`f:${state.power}`);
+        parts.push(`e:${state.english.x.toFixed(1)},${state.english.y.toFixed(1)}`);
+        parts.push(`s:${state.solver}`);
+
+        return parts.join('|');
+      }
+
+      // Decode URL string to state
+      function decodeState(encoded) {
+        const state = { balls: {}, english: { x: 0, y: 0 } };
+        const parts = encoded.split('|');
+
+        for (const part of parts) {
+          if (part.startsWith('v')) {
+            state.v = parseInt(part.slice(1));
+          } else if (part.startsWith('p:')) {
+            const pocketCode = part.slice(2);
+            state.pocket = pocketCode
+              .replace(/^c/, 'corner-')
+              .replace(/^s/, 'side-');
+          } else if (part.startsWith('b:')) {
+            state.ball = part.slice(2);
+          } else if (part.startsWith('m:')) {
+            state.mode = part.slice(2);
+          } else if (part.startsWith('f:')) {
+            state.power = parseFloat(part.slice(2));
+          } else if (part.startsWith('e:')) {
+            const [ex, ey] = part.slice(2).split(',').map(parseFloat);
+            state.english = { x: ex, y: ey };
+          } else if (part.startsWith('s:')) {
+            state.solver = part.slice(2);
+          } else if (part.includes(':')) {
+            // Ball position
+            const [id, coords] = part.split(':');
+            const [x, y] = coords.split(',').map(parseFloat);
+            state.balls[id] = { x, y };
+          }
+        }
+
+        return state;
+      }
+
+      // Apply state to diagram
+      function applyState(state) {
+        // Set game mode
+        if (state.mode) {
+          const modeKey = Object.keys(GAME_MODES).find(k => GAME_MODES[k].id === state.mode);
+          if (modeKey) {
+            currentGameMode = GAME_MODES[modeKey];
+            gameModeSelect.value = state.mode;
+            const gamePalette = document.getElementById('gameModeSelect-palette');
+            if (gamePalette) gamePalette.value = state.mode;
+          }
+        }
+
+        // Set ball positions
+        for (const [id, pos] of Object.entries(state.balls)) {
+          ballPositions[id] = pos;
+          const ball = document.getElementById(`ball-${id}`);
+          if (ball) {
+            positionBallOnTable(ball, pos.x, pos.y);
+          }
+        }
+
+        // Set selections
+        if (state.ball) selectBall(state.ball);
+        if (state.pocket) selectPocket(state.pocket);
+
+        // Set power
+        if (state.power) {
+          shotForce = state.power;
+          forceSlider.value = state.power;
+          forceValueDisplay.textContent = state.power;
+          const forcePalette = document.getElementById('forceSlider-palette');
+          const forceValuePalette = document.getElementById('forceValue-palette');
+          if (forcePalette) forcePalette.value = state.power;
+          if (forceValuePalette) forceValuePalette.textContent = state.power;
+        }
+
+        // Set english
+        if (state.english) {
+          contactOffset = { x: state.english.x, y: state.english.y };
+          updateContactPoint();
+        }
+
+        // Set solver mode
+        if (state.solver) {
+          currentSolverMode = state.solver;
+          const radio = document.querySelector(`input[name="solver-mode"][value="${state.solver}"]`);
+          if (radio) radio.checked = true;
+          const paletteRadio = document.querySelector(`input[name="solver-mode-palette"][value="${state.solver}"]`);
+          if (paletteRadio) paletteRadio.checked = true;
+        }
+
+        updateCueGhostLine();
+      }
+
+      // Load state from URL on page load
+      function loadStateFromURL() {
+        const hash = window.location.hash.slice(1);
+        if (hash && hash.startsWith('v')) {
+          try {
+            const state = decodeState(hash);
+            applyState(state);
+          } catch (e) {
+            console.error('Failed to load state from URL:', e);
+          }
+        }
+      }
+
+      // Update URL with current state (debounced)
+      let urlUpdateTimeout;
+      function updateURL() {
+        clearTimeout(urlUpdateTimeout);
+        urlUpdateTimeout = setTimeout(() => {
+          const state = captureState();
+          const encoded = encodeState(state);
+          history.replaceState(null, '', '#' + encoded);
+        }, 500);
+      }
+
+      // Copy link to clipboard
+      function copyShareLink() {
+        const state = captureState();
+        const encoded = encodeState(state);
+        const url = window.location.origin + window.location.pathname + '#' + encoded;
+
+        navigator.clipboard.writeText(url).then(() => {
+          showToast('Link copied to clipboard!');
+        }).catch(() => {
+          // Fallback for older browsers
+          const textarea = document.createElement('textarea');
+          textarea.value = url;
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+          showToast('Link copied to clipboard!');
+        });
+      }
+
+      // Export as PNG
+      async function exportPNG() {
+        const svg = document.getElementById('pool-table-svg');
+        const svgClone = svg.cloneNode(true);
+
+        // Remove UI elements that shouldn't be in export
+        svgClone.querySelectorAll('.pocket-target').forEach(el => {
+          el.style.opacity = '0';
+        });
+
+        // Set explicit dimensions
+        svgClone.setAttribute('width', '1600');
+        svgClone.setAttribute('height', '900');
+
+        const svgData = new XMLSerializer().serializeToString(svgClone);
+        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = 1600;
+        canvas.height = 900;
+        const ctx = canvas.getContext('2d');
+
+        const img = new Image();
+        img.onload = () => {
+          // Draw background
+          ctx.fillStyle = '#1a1a2e';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          // Draw SVG
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          URL.revokeObjectURL(url);
+
+          // Download
+          canvas.toBlob(blob => {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'shot-diagram.png';
+            a.click();
+            URL.revokeObjectURL(a.href);
+            showToast('PNG downloaded!');
+          }, 'image/png');
+        };
+        img.src = url;
+      }
+
+      // Export as SVG
+      function exportSVG() {
+        const svg = document.getElementById('pool-table-svg');
+        const svgClone = svg.cloneNode(true);
+
+        // Remove pocket target interactivity styling
+        svgClone.querySelectorAll('.pocket-target').forEach(el => {
+          el.style.opacity = '0';
+        });
+
+        // Set explicit dimensions
+        svgClone.setAttribute('width', '800');
+        svgClone.setAttribute('height', '450');
+
+        const svgData = new XMLSerializer().serializeToString(svgClone);
+        const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'shot-diagram.svg';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        showToast('SVG downloaded!');
+      }
+
+      // ========== LOCAL STORAGE SAVE/LOAD ==========
+
+      const STORAGE_KEY = 'ace_shot_diagrams';
+
+      function getSavedDiagrams() {
+        try {
+          const data = localStorage.getItem(STORAGE_KEY);
+          return data ? JSON.parse(data) : [];
+        } catch (e) {
+          console.error('Failed to load saved diagrams:', e);
+          return [];
+        }
+      }
+
+      function saveDiagram(name) {
+        if (!name || !name.trim()) {
+          showToast('Please enter a diagram name');
+          return false;
+        }
+
+        const state = captureState();
+        const diagrams = getSavedDiagrams();
+
+        // Check if name already exists
+        const existingIndex = diagrams.findIndex(d => d.name.toLowerCase() === name.trim().toLowerCase());
+        if (existingIndex >= 0) {
+          // Update existing
+          diagrams[existingIndex] = {
+            name: name.trim(),
+            state: state,
+            savedAt: Date.now()
+          };
+        } else {
+          // Add new
+          diagrams.push({
+            name: name.trim(),
+            state: state,
+            savedAt: Date.now()
+          });
+        }
+
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(diagrams));
+          showToast(`Saved "${name.trim()}"`);
+          renderSavedList();
+          return true;
+        } catch (e) {
+          console.error('Failed to save diagram:', e);
+          showToast('Failed to save - storage may be full');
+          return false;
+        }
+      }
+
+      function loadDiagram(index) {
+        const diagrams = getSavedDiagrams();
+        if (index >= 0 && index < diagrams.length) {
+          const diagram = diagrams[index];
+          applyState(diagram.state);
+          showToast(`Loaded "${diagram.name}"`);
+          updateURL();
+        }
+      }
+
+      function deleteDiagram(index) {
+        const diagrams = getSavedDiagrams();
+        if (index >= 0 && index < diagrams.length) {
+          const name = diagrams[index].name;
+          diagrams.splice(index, 1);
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(diagrams));
+            showToast(`Deleted "${name}"`);
+            renderSavedList();
+          } catch (e) {
+            console.error('Failed to delete diagram:', e);
+          }
+        }
+      }
+
+      function formatDate(timestamp) {
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 0) {
+          return 'Today ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } else if (diffDays === 1) {
+          return 'Yesterday';
+        } else if (diffDays < 7) {
+          return diffDays + ' days ago';
+        } else {
+          return date.toLocaleDateString();
+        }
+      }
+
+      function renderSavedList() {
+        const listEl = document.getElementById('savedDiagramsList');
+        const diagrams = getSavedDiagrams();
+
+        if (diagrams.length === 0) {
+          listEl.innerHTML = '<div class="no-saved">No saved diagrams yet</div>';
+          return;
+        }
+
+        // Sort by most recent first
+        diagrams.sort((a, b) => b.savedAt - a.savedAt);
+
+        listEl.innerHTML = diagrams.map((d, i) => `
+          <div class="saved-item" data-index="${i}">
+            <div class="saved-item-info" onclick="loadDiagram(${i})" title="Click to load">
+              <div class="saved-item-name">${escapeHtml(d.name)}</div>
+              <div class="saved-item-date">${formatDate(d.savedAt)}</div>
+            </div>
+            <div class="saved-item-actions">
+              <button class="saved-item-btn delete" onclick="deleteDiagram(${i})" title="Delete">×</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // Expose functions globally for onclick handlers
+      window.loadDiagram = loadDiagram;
+      window.deleteDiagram = deleteDiagram;
+
+      // ========== TANGENT LINE VISUALIZATION ==========
+
+      let showTangentLine = false;
+      const tangentLineGroup = document.getElementById('tangent-line-group');
+      const tangentLine = document.getElementById('tangent-line');
+      const tangentLabel = document.getElementById('tangent-label');
+
+      function updateTangentLine() {
+        if (!showTangentLine || !selectedBallId || !selectedPocket) {
+          tangentLineGroup.setAttribute('visibility', 'hidden');
+          return;
+        }
+
+        const ghostPos = ballPositions['ghost'];
+        const objBallPos = ballPositions[selectedBallId];
+        const cuePos = ballPositions['cue'];
+
+        if (!ghostPos || !objBallPos || !cuePos) {
+          tangentLineGroup.setAttribute('visibility', 'hidden');
+          return;
+        }
+
+        // Vector from ghost to object ball (contact direction)
+        const contactDir = vectorNormalize(vectorSubtract(objBallPos, ghostPos));
+
+        // Tangent is perpendicular (90° rotation)
+        let tangentDir = { x: -contactDir.y, y: contactDir.x };
+
+        // Determine which direction CB would go based on which side we're cutting
+        const cueToGhost = vectorSubtract(ghostPos, cuePos);
+        const crossProduct = cueToGhost.x * contactDir.y - cueToGhost.y * contactDir.x;
+        if (crossProduct < 0) {
+          tangentDir.x = -tangentDir.x;
+          tangentDir.y = -tangentDir.y;
+        }
+
+        // Calculate end point (extend toward table edge)
+        const lineLength = 50;
+        let endX = ghostPos.x + tangentDir.x * lineLength;
+        let endY = ghostPos.y + tangentDir.y * lineLength;
+
+        // Clip to table boundaries (playing surface is 0-100 x 0-50)
+        if (endX < 0) {
+          const t = -ghostPos.x / (endX - ghostPos.x);
+          endX = 0;
+          endY = ghostPos.y + t * (endY - ghostPos.y);
+        } else if (endX > 100) {
+          const t = (100 - ghostPos.x) / (endX - ghostPos.x);
+          endX = 100;
+          endY = ghostPos.y + t * (endY - ghostPos.y);
+        }
+        if (endY < 0) {
+          const t = -ghostPos.y / (endY - ghostPos.y);
+          endY = 0;
+          endX = ghostPos.x + t * (endX - ghostPos.x);
+        } else if (endY > 50) {
+          const t = (50 - ghostPos.y) / (endY - ghostPos.y);
+          endY = 50;
+          endX = ghostPos.x + t * (endX - ghostPos.x);
+        }
+
+        tangentLine.setAttribute('x1', ghostPos.x);
+        tangentLine.setAttribute('y1', ghostPos.y);
+        tangentLine.setAttribute('x2', endX);
+        tangentLine.setAttribute('y2', endY);
+
+        // Position label at end of line
+        tangentLabel.setAttribute('x', endX);
+        tangentLabel.setAttribute('y', endY - 1.5);
+
+        tangentLineGroup.setAttribute('visibility', 'visible');
+      }
+
+      // ========== FOLLOW/DRAW LINE VISUALIZATION ==========
+
+      let showFollowLine = false;
+      let showDrawLine = false;
+      const followLineGroup = document.getElementById('follow-line-group');
+      const followLine = document.getElementById('follow-line');
+      const followLabel = document.getElementById('follow-label');
+      const drawLineGroup = document.getElementById('draw-line-group');
+      const drawLine = document.getElementById('draw-line');
+      const drawLabel = document.getElementById('draw-label');
+
+      function updateFollowDrawLines() {
+        // Hide both by default
+        followLineGroup.setAttribute('visibility', 'hidden');
+        drawLineGroup.setAttribute('visibility', 'hidden');
+
+        if ((!showFollowLine && !showDrawLine) || !selectedBallId || !selectedPocket) {
+          return;
+        }
+
+        const ghostPos = ballPositions['ghost'];
+        const objBallPos = ballPositions[selectedBallId];
+        const cuePos = ballPositions['cue'];
+
+        if (!ghostPos || !objBallPos || !cuePos) return;
+
+        // Vector from ghost to object ball (contact direction)
+        const contactDir = vectorNormalize(vectorSubtract(objBallPos, ghostPos));
+
+        // Tangent is perpendicular (90° rotation)
+        let tangentDir = { x: -contactDir.y, y: contactDir.x };
+
+        // Determine which direction CB would go based on which side we're cutting
+        const cueToGhost = vectorSubtract(ghostPos, cuePos);
+        const crossProduct = cueToGhost.x * contactDir.y - cueToGhost.y * contactDir.x;
+        if (crossProduct < 0) {
+          tangentDir.x = -tangentDir.x;
+          tangentDir.y = -tangentDir.y;
+        }
+
+        // Follow line: CB continues forward ~30° from tangent (toward OB direction)
+        // The angle depends on the cut angle - steeper cuts = less follow effect
+        const cutAngle = angleBetweenVectors(cueToGhost, vectorSubtract(objBallPos, ghostPos));
+        const followAngleDeg = 30 * Math.cos(cutAngle * Math.PI / 180); // Reduces at steep cuts
+
+        if (showFollowLine) {
+          // Follow rotates toward the OB direction (opposite of tangent perpendicular)
+          const followDir = rotateVector(tangentDir, -followAngleDeg * Math.sign(crossProduct || 1));
+          const lineLength = 40;
+          let endX = ghostPos.x + followDir.x * lineLength;
+          let endY = ghostPos.y + followDir.y * lineLength;
+
+          // Clip to table
+          if (endX < 0) { const t = -ghostPos.x / (endX - ghostPos.x); endX = 0; endY = ghostPos.y + t * (endY - ghostPos.y); }
+          else if (endX > 100) { const t = (100 - ghostPos.x) / (endX - ghostPos.x); endX = 100; endY = ghostPos.y + t * (endY - ghostPos.y); }
+          if (endY < 0) { const t = -ghostPos.y / (endY - ghostPos.y); endY = 0; endX = ghostPos.x + t * (endX - ghostPos.x); }
+          else if (endY > 50) { const t = (50 - ghostPos.y) / (endY - ghostPos.y); endY = 50; endX = ghostPos.x + t * (endX - ghostPos.x); }
+
+          followLine.setAttribute('x1', ghostPos.x);
+          followLine.setAttribute('y1', ghostPos.y);
+          followLine.setAttribute('x2', endX);
+          followLine.setAttribute('y2', endY);
+          followLabel.setAttribute('x', endX);
+          followLabel.setAttribute('y', endY - 1.5);
+          followLineGroup.setAttribute('visibility', 'visible');
+        }
+
+        if (showDrawLine) {
+          // Draw rotates away from the OB direction (back toward shooter)
+          const drawAngleDeg = 30 + cutAngle * 0.3; // Draw pulls back more at steep cuts
+          const drawDir = rotateVector(tangentDir, drawAngleDeg * Math.sign(crossProduct || 1));
+          const lineLength = 35;
+          let endX = ghostPos.x + drawDir.x * lineLength;
+          let endY = ghostPos.y + drawDir.y * lineLength;
+
+          // Clip to table
+          if (endX < 0) { const t = -ghostPos.x / (endX - ghostPos.x); endX = 0; endY = ghostPos.y + t * (endY - ghostPos.y); }
+          else if (endX > 100) { const t = (100 - ghostPos.x) / (endX - ghostPos.x); endX = 100; endY = ghostPos.y + t * (endY - ghostPos.y); }
+          if (endY < 0) { const t = -ghostPos.y / (endY - ghostPos.y); endY = 0; endX = ghostPos.x + t * (endX - ghostPos.x); }
+          else if (endY > 50) { const t = (50 - ghostPos.y) / (endY - ghostPos.y); endY = 50; endX = ghostPos.x + t * (endX - ghostPos.x); }
+
+          drawLine.setAttribute('x1', ghostPos.x);
+          drawLine.setAttribute('y1', ghostPos.y);
+          drawLine.setAttribute('x2', endX);
+          drawLine.setAttribute('y2', endY);
+          drawLabel.setAttribute('x', endX);
+          drawLabel.setAttribute('y', endY - 1.5);
+          drawLineGroup.setAttribute('visibility', 'visible');
+        }
+      }
+
+      // ========== SHOT MAKE PROBABILITY ==========
+
+      function calculateMakeProbability(shotData) {
+        if (!shotData || !shotData.isReady) return null;
+
+        // Base probability starts at 95% for straight-in shots
+        let probability = 95;
+
+        // Cut angle penalty (biggest factor)
+        const cutAngle = shotData.cutAngle || 0;
+        if (cutAngle > 70) probability -= 50;
+        else if (cutAngle > 60) probability -= 35;
+        else if (cutAngle > 50) probability -= 25;
+        else if (cutAngle > 40) probability -= 15;
+        else if (cutAngle > 30) probability -= 8;
+        else if (cutAngle > 20) probability -= 4;
+
+        // Distance penalty
+        const distance = shotData.totalDistance || 50;
+        if (distance > 80) probability -= 15;
+        else if (distance > 60) probability -= 10;
+        else if (distance > 40) probability -= 5;
+
+        // Shot type penalties
+        if (shotData.isKickShot) probability -= 25;
+        if (shotData.isBankShot) probability -= 20;
+        if (shotData.isComboShot) probability -= 30;
+
+        // Ensure bounds
+        probability = Math.max(5, Math.min(95, probability));
+
+        return Math.round(probability);
+      }
+
+      function updateMakeProbability(shotData) {
+        const display = document.getElementById('makeProbabilityDisplay');
+        if (!display) return;
+
+        const prob = calculateMakeProbability(shotData);
+        if (prob === null) {
+          display.textContent = '--';
+          display.style.color = '#888';
+          return;
+        }
+
+        display.textContent = prob + '%';
+
+        // Color code by probability
+        if (prob >= 80) display.style.color = '#0f8';
+        else if (prob >= 60) display.style.color = '#8f0';
+        else if (prob >= 40) display.style.color = '#ff0';
+        else if (prob >= 20) display.style.color = '#f80';
+        else display.style.color = '#f44';
+      }
+
+      // ========== RANDOM RACK ==========
+
+      function randomRack() {
+        // Get current game mode's balls
+        const gameBalls = currentGameMode.ballIds || ['1','2','3','4','5','6','7','8','9'];
+
+        // Clear all ball positions first
+        for (const ballId of gameBalls) {
+          ballPositions[ballId] = null;
+          const ball = document.getElementById(`ball-${ballId}`);
+          if (ball) {
+            ball.style.display = 'none';
+          }
+        }
+
+        // Place cue ball in kitchen (head string area)
+        const cueX = 20 + Math.random() * 5;
+        const cueY = 10 + Math.random() * 30;
+        ballPositions['cue'] = { x: cueX, y: cueY };
+        const cueBall = document.getElementById('ball-cue');
+        if (cueBall) {
+          positionBallOnTable(cueBall, cueX, cueY);
+          cueBall.style.display = '';
+        }
+
+        // Place balls randomly on table (avoiding overlaps)
+        const placedPositions = [{ x: cueX, y: cueY }];
+        const minDist = 3; // Minimum distance between ball centers
+
+        for (const ballId of gameBalls) {
+          let placed = false;
+          let attempts = 0;
+          const maxAttempts = 100;
+
+          while (!placed && attempts < maxAttempts) {
+            // Random position on playing surface (with margin from rails)
+            const x = 5 + Math.random() * 90;
+            const y = 5 + Math.random() * 40;
+
+            // Check for overlaps
+            let overlaps = false;
+            for (const pos of placedPositions) {
+              const dist = Math.sqrt((x - pos.x) ** 2 + (y - pos.y) ** 2);
+              if (dist < minDist) {
+                overlaps = true;
+                break;
+              }
+            }
+
+            if (!overlaps) {
+              ballPositions[ballId] = { x, y };
+              placedPositions.push({ x, y });
+              const ball = document.getElementById(`ball-${ballId}`);
+              if (ball) {
+                positionBallOnTable(ball, x, y);
+                ball.style.display = '';
+              }
+              placed = true;
+            }
+
+            attempts++;
+          }
+        }
+
+        // Clear selections
+        selectBall(null);
+        selectPocket(null);
+
+        // Update display
+        updateCueGhostLine();
+        showToast('Random rack placed!');
+      }
+
+      // ========== SHAPE ZONE VISUALIZATION ==========
+
+      let showShapeZone = false;
+      const shapeZoneGroup = document.getElementById('shape-zone-group');
+      const shapeZonePath = document.getElementById('shape-zone-path');
+      const shapeZoneLabel = document.getElementById('shape-zone-label');
+
+      const SHAPE_ZONE_CONFIG = {
+        maxCutAngle: 65,    // degrees
+        maxDistance: 45,    // SVG units
+        minDistance: 3      // minimum approach distance
+      };
+
+      function rotateVector(v, angleDeg) {
+        const rad = angleDeg * Math.PI / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+        return {
+          x: v.x * cos - v.y * sin,
+          y: v.x * sin + v.y * cos
+        };
+      }
+
+      function clipPointToTable(point) {
+        return {
+          x: Math.max(0, Math.min(100, point.x)),
+          y: Math.max(0, Math.min(50, point.y))
+        };
+      }
+
+      function updateShapeZone() {
+        if (!showShapeZone || !selectedBallId || !selectedPocket) {
+          shapeZoneGroup.setAttribute('visibility', 'hidden');
+          return;
+        }
+
+        const objBallPos = ballPositions[selectedBallId];
+        const pocketPos = pocketCenters[selectedPocket];
+
+        if (!objBallPos || !pocketPos) {
+          shapeZoneGroup.setAttribute('visibility', 'hidden');
+          return;
+        }
+
+        // Calculate ghost ball position
+        const objToPocket = vectorNormalize(vectorSubtract(pocketPos, objBallPos));
+        const ghostPos = {
+          x: objBallPos.x - objToPocket.x * GHOST_BALL_OFFSET,
+          y: objBallPos.y - objToPocket.y * GHOST_BALL_OFFSET
+        };
+
+        // Direction from ghost AWAY from object ball (where CB approaches from)
+        const approachDir = { x: -objToPocket.x, y: -objToPocket.y };
+
+        // Generate zone polygon points
+        const points = [];
+
+        // Start at ghost position (apex of triangle)
+        points.push({ ...ghostPos });
+
+        // Arc from left edge to right edge
+        const numArcPoints = 16;
+        for (let i = 0; i <= numArcPoints; i++) {
+          const t = i / numArcPoints;
+          const angle = SHAPE_ZONE_CONFIG.maxCutAngle * (1 - 2 * t); // +max to -max
+          const dir = rotateVector(approachDir, angle);
+
+          // Distance varies: closer near center, farther at edges
+          const angleRatio = Math.abs(angle) / SHAPE_ZONE_CONFIG.maxCutAngle;
+          const dist = SHAPE_ZONE_CONFIG.maxDistance * (0.7 + 0.3 * (1 - angleRatio));
+
+          let point = {
+            x: ghostPos.x + dir.x * dist,
+            y: ghostPos.y + dir.y * dist
+          };
+
+          // Clip to table bounds
+          point = clipPointToTable(point);
+          points.push(point);
+        }
+
+        // Convert to SVG path
+        const pathD = `M ${points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' L ')} Z`;
+        shapeZonePath.setAttribute('d', pathD);
+
+        // Position label in center of zone
+        const centerDist = SHAPE_ZONE_CONFIG.maxDistance * 0.4;
+        const labelPos = clipPointToTable({
+          x: ghostPos.x + approachDir.x * centerDist,
+          y: ghostPos.y + approachDir.y * centerDist
+        });
+        shapeZoneLabel.setAttribute('x', labelPos.x);
+        shapeZoneLabel.setAttribute('y', labelPos.y);
+
+        shapeZoneGroup.setAttribute('visibility', 'visible');
+      }
+
+      // ========== SETUP SHARE PALETTE ==========
+
+      function setupSharePalette() {
+        // Copy Link button
+        const btnCopyLink = document.getElementById('btnCopyLink');
+        if (btnCopyLink) {
+          btnCopyLink.addEventListener('click', copyShareLink);
+        }
+
+        // Export PNG button
+        const btnExportPNG = document.getElementById('btnExportPNG');
+        if (btnExportPNG) {
+          btnExportPNG.addEventListener('click', exportPNG);
+        }
+
+        // Export SVG button
+        const btnExportSVG = document.getElementById('btnExportSVG');
+        if (btnExportSVG) {
+          btnExportSVG.addEventListener('click', exportSVG);
+        }
+
+        // Tangent line toggle
+        const toggleTangent = document.getElementById('toggleTangentLine');
+        if (toggleTangent) {
+          toggleTangent.addEventListener('change', (e) => {
+            showTangentLine = e.target.checked;
+            updateTangentLine();
+          });
+        }
+
+        // Shape zone toggle
+        const toggleShape = document.getElementById('toggleShapeZone');
+        if (toggleShape) {
+          toggleShape.addEventListener('change', (e) => {
+            showShapeZone = e.target.checked;
+            updateShapeZone();
+          });
+        }
+
+        // Follow line toggle
+        const toggleFollow = document.getElementById('toggleFollowLine');
+        if (toggleFollow) {
+          toggleFollow.addEventListener('change', (e) => {
+            showFollowLine = e.target.checked;
+            updateFollowDrawLines();
+          });
+        }
+
+        // Draw line toggle
+        const toggleDraw = document.getElementById('toggleDrawLine');
+        if (toggleDraw) {
+          toggleDraw.addEventListener('change', (e) => {
+            showDrawLine = e.target.checked;
+            updateFollowDrawLines();
+          });
+        }
+
+        // Random rack button
+        const btnRandomRack = document.getElementById('btnRandomRack');
+        if (btnRandomRack) {
+          btnRandomRack.addEventListener('click', randomRack);
+        }
+
+        // Save diagram button
+        const btnSaveDiagram = document.getElementById('btnSaveDiagram');
+        const saveDiagramName = document.getElementById('saveDiagramName');
+        if (btnSaveDiagram && saveDiagramName) {
+          btnSaveDiagram.addEventListener('click', () => {
+            if (saveDiagram(saveDiagramName.value)) {
+              saveDiagramName.value = '';
+            }
+          });
+
+          // Also save on Enter key
+          saveDiagramName.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              if (saveDiagram(saveDiagramName.value)) {
+                saveDiagramName.value = '';
+              }
+            }
+          });
+        }
+
+        // Initialize saved diagrams list
+        renderSavedList();
+
+        // Setup restore button for share palette
+        const restoreShare = document.getElementById('restore-share');
+        const paletteShare = document.getElementById('palette-share');
+        if (restoreShare && paletteShare) {
+          restoreShare.addEventListener('click', () => {
+            paletteShare.style.display = 'block';
+            restoreShare.style.display = 'none';
+          });
+
+          // Setup close button
+          const closeBtn = paletteShare.querySelector('.palette-btn.close');
+          if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+              paletteShare.style.display = 'none';
+              restoreShare.style.display = 'block';
+            });
+          }
+
+          // Setup minimize button
+          const minBtn = paletteShare.querySelector('.palette-btn.minimize');
+          const body = paletteShare.querySelector('.palette-body');
+          if (minBtn && body) {
+            minBtn.addEventListener('click', () => {
+              const isMinimized = body.style.display === 'none';
+              body.style.display = isMinimized ? 'block' : 'none';
+              minBtn.textContent = isMinimized ? '−' : '+';
+            });
+          }
+
+          // Make palette draggable
+          const header = paletteShare.querySelector('.palette-header');
+          if (header) {
+            let isDragging = false;
+            let startX, startY, startLeft, startTop;
+
+            header.addEventListener('mousedown', (e) => {
+              if (e.target.classList.contains('palette-btn')) return;
+              isDragging = true;
+              startX = e.clientX;
+              startY = e.clientY;
+              const rect = paletteShare.getBoundingClientRect();
+              startLeft = rect.left;
+              startTop = rect.top;
+              header.style.cursor = 'grabbing';
+            });
+
+            document.addEventListener('mousemove', (e) => {
+              if (!isDragging) return;
+              const dx = e.clientX - startX;
+              const dy = e.clientY - startY;
+              paletteShare.style.left = (startLeft + dx) + 'px';
+              paletteShare.style.top = (startTop + dy) + 'px';
+              paletteShare.style.right = 'auto';
+            });
+
+            document.addEventListener('mouseup', () => {
+              isDragging = false;
+              header.style.cursor = 'grab';
+            });
+          }
+        }
+      }
+
+      // Hook into updateShotGeometry to also update position aids
+      const origUpdateShotGeometry = updateShotGeometry;
+      updateShotGeometry = function() {
+        origUpdateShotGeometry();
+        updateTangentLine();
+        updateFollowDrawLines();
+        updateShapeZone();
+        updateURL();
+      };
+
+      // Hook into updatePaletteDisplays to also update make probability
+      const origUpdatePaletteDisplays = updatePaletteDisplays;
+      updatePaletteDisplays = function(shotData) {
+        origUpdatePaletteDisplays(shotData);
+        updateMakeProbability(shotData);
+      };
+
+      // ========== FIRST-TIME USER TOUR SYSTEM ==========
+
+      const TOUR_STEPS = [
+        {
+          id: 'welcome',
+          title: 'Welcome to ACE Shot Diagrams',
+          content: `<div class="tour-welcome-icon">🎱</div>
+            <h2>Master Your Pool Game</h2>
+            <p>This interactive tool helps you visualize shots, understand aiming systems, and improve your position play.</p>
+            <p style="color:#8af;margin-top:12px;">Let's take a quick tour of the features!</p>`,
+          target: null,
+          position: 'center',
+          task: null
+        },
+        {
+          id: 'ball-rack',
+          title: 'The Ball Rack',
+          content: `Drag balls from this rack onto the table to set up your shot scenario.<br><br>
+            The rack contains the <span class="highlight">cue ball</span> (white), <span class="highlight">numbered balls 1-15</span>, and a generic gray ball for blockers.`,
+          target: '#palette-balls',
+          position: 'right',
+          task: 'Drag the CUE ball onto the table'
+        },
+        {
+          id: 'place-object-ball',
+          title: 'Place Object Balls',
+          content: `Now place an object ball on the table. In 9-ball, you must hit the <span class="highlight">lowest numbered ball</span> first.<br><br>
+            Try placing the 1-ball somewhere on the table.`,
+          target: '#palette-balls',
+          position: 'right',
+          task: 'Drag the 1-ball onto the table'
+        },
+        {
+          id: 'select-ball',
+          title: 'Select a Ball',
+          content: `<strong>Double-click</strong> (or long-press on mobile) on a ball to select it as your target.<br><br>
+            Selected balls show a <span class="highlight">green ring</span>. This tells the system which ball you want to pocket.`,
+          target: '#tableWrapper',
+          position: 'bottom',
+          task: 'Double-click the 1-ball to select it'
+        },
+        {
+          id: 'select-pocket',
+          title: 'Choose Your Pocket',
+          content: `Click on any <span class="highlight">pocket</span> to set your target. The pockets glow when you hover over them.<br><br>
+            Once you select a pocket, the system calculates the <span class="highlight">ghost ball</span> position - where you need to aim.`,
+          target: '#tableWrapper',
+          position: 'bottom',
+          task: 'Click on a pocket to target it'
+        },
+        {
+          id: 'ghost-ball',
+          title: 'The Ghost Ball (AIM)',
+          content: `The yellow <span class="highlight">AIM</span> indicator shows the "ghost ball" - the exact spot where the cue ball needs to be at the moment of contact.<br><br>
+            Aim your cue stick at this point to pocket the object ball!`,
+          target: '#ghost-ball-indicator',
+          position: 'left',
+          task: null
+        },
+        {
+          id: 'shot-info',
+          title: 'Shot Information',
+          content: `This panel shows critical shot data:<br><br>
+            • <strong>Cut Angle</strong> - How much you're cutting the ball<br>
+            • <strong>Make %</strong> - Probability of pocketing<br>
+            • <strong>Difficulty</strong> - Visual difficulty meter<br>
+            • <strong>Overlap</strong> - Ball-to-ball contact fraction`,
+          target: '#palette-shot',
+          position: 'left',
+          task: null
+        },
+        {
+          id: 'cue-controls',
+          title: 'Cue Ball Control',
+          content: `Adjust your shot parameters here:<br><br>
+            • <strong>Contact Point</strong> - Click the cue ball diagram to apply english (spin)<br>
+            • <strong>Power Slider</strong> - Set shot force (1-10)<br><br>
+            English affects cue ball path after contact!`,
+          target: '#palette-cue',
+          position: 'right',
+          task: 'Try clicking the cue ball diagram to add spin'
+        },
+        {
+          id: 'game-modes',
+          title: 'Game Modes',
+          content: `Switch between different pool games:<br><br>
+            • <strong>9-Ball</strong> - Must hit lowest ball first<br>
+            • <strong>8-Ball</strong> - Hit your suit (solids/stripes)<br>
+            • <strong>10-Ball</strong> - Like 9-ball but call pocket<br>
+            • <strong>Straight Pool</strong> - Any ball, call pocket<br>
+            • <strong>One Pocket</strong> - Score in your pocket only`,
+          target: '#palette-game',
+          position: 'right',
+          task: null
+        },
+        {
+          id: 'shot-types',
+          title: 'Automatic Shot Detection',
+          content: `The system automatically finds the best shot:<br><br>
+            • <strong>Direct</strong> - Clear path to object ball<br>
+            • <strong>Kick</strong> - Bounce off rail(s) first<br>
+            • <strong>Bank</strong> - Object ball banks off rail<br>
+            • <strong>Combo</strong> - Hit one ball into another<br><br>
+            Place a blocker ball to see kick shots in action!`,
+          target: '#palette-game',
+          position: 'right',
+          task: null
+        },
+        {
+          id: 'position-aids',
+          title: 'Position Aids',
+          content: `Enable visual helpers for position play:<br><br>
+            • <strong>Tangent Line</strong> - Where CB goes with stop shot<br>
+            • <strong>Follow/Draw Lines</strong> - CB path with spin<br>
+            • <strong>Shape Zone</strong> - Area where CB can be to make next shot<br><br>
+            These are essential for planning run-outs!`,
+          target: '#palette-share',
+          position: 'left',
+          task: 'Enable the Tangent Line checkbox'
+        },
+        {
+          id: 'share-export',
+          title: 'Share & Export',
+          content: `Save and share your diagrams:<br><br>
+            • <strong>Copy Link</strong> - Get a shareable URL<br>
+            • <strong>Export PNG</strong> - Download as image<br>
+            • <strong>Export SVG</strong> - Download as vector<br>
+            • <strong>Random Rack</strong> - Generate practice scenarios`,
+          target: '#palette-share',
+          position: 'left',
+          task: null
+        },
+        {
+          id: 'complete',
+          title: 'You\'re Ready!',
+          content: `<div class="tour-welcome-icon">🏆</div>
+            <h2>Tour Complete!</h2>
+            <p>You now know the basics of ACE Shot Diagrams. Here are some tips:</p>
+            <ul style="text-align:left;margin:12px 0;padding-left:20px;color:#aaa;">
+              <li>Drag palettes by their headers to reposition</li>
+              <li>Use the mirror system overlay for kick shots</li>
+              <li>Try different game modes to learn the rules</li>
+              <li>Export diagrams to share with friends</li>
+            </ul>
+            <p style="color:#0fa;margin-top:12px;">Happy shooting! 🎯</p>`,
+          target: null,
+          position: 'center',
+          task: null
+        }
+      ];
+
+      // Tour state
+      let tourActive = false;
+      let tourCurrentStep = 0;
+      let tourCompletedSteps = new Set();
+
+      // Tour DOM elements
+      const tourOverlay = document.getElementById('tourOverlay');
+      const tourSpotlight = document.getElementById('tourSpotlight');
+      const tourTooltip = document.getElementById('tourTooltip');
+      const tourTitle = document.getElementById('tourTitle');
+      const tourStep = document.getElementById('tourStep');
+      const tourContent = document.getElementById('tourContent');
+      const tourTask = document.getElementById('tourTask');
+      const tourArrow = document.getElementById('tourArrow');
+      const tourBack = document.getElementById('tourBack');
+      const tourNext = document.getElementById('tourNext');
+      const tourSkip = document.getElementById('tourSkip');
+
+      function startTour() {
+        tourActive = true;
+        tourCurrentStep = 0;
+        tourCompletedSteps.clear();
+        showTourStep(0);
+        tourOverlay.classList.add('active');
+      }
+
+      function endTour(completed = false) {
+        tourActive = false;
+        tourOverlay.classList.remove('active');
+        tourTooltip.classList.remove('active');
+        tourSpotlight.style.display = 'none';
+
+        // Clear any highlights
+        document.querySelectorAll('.tour-highlight').forEach(el => {
+          el.classList.remove('tour-highlight');
+        });
+
+        // Save completion status
+        if (completed) {
+          localStorage.setItem('ace-tour-completed', 'true');
+          showToast('Tour complete! You\'re ready to use ACE Shot Diagrams.');
+        }
+      }
+
+      function showTourStep(stepIndex) {
+        if (stepIndex < 0 || stepIndex >= TOUR_STEPS.length) return;
+
+        tourCurrentStep = stepIndex;
+        const step = TOUR_STEPS[stepIndex];
+
+        // Update content
+        tourTitle.textContent = step.title;
+        tourStep.textContent = `Step ${stepIndex + 1} of ${TOUR_STEPS.length}`;
+        tourContent.innerHTML = step.content;
+
+        // Update task
+        if (step.task) {
+          tourTask.textContent = step.task;
+          tourTask.style.display = 'block';
+        } else {
+          tourTask.style.display = 'none';
+        }
+
+        // Update navigation buttons
+        tourBack.style.display = stepIndex > 0 ? 'inline-block' : 'none';
+        tourNext.textContent = stepIndex === TOUR_STEPS.length - 1 ? 'Finish' : 'Next';
+
+        // Clear previous highlights
+        document.querySelectorAll('.tour-highlight').forEach(el => {
+          el.classList.remove('tour-highlight');
+        });
+
+        // Position tooltip and spotlight
+        if (step.target) {
+          const targetEl = document.querySelector(step.target);
+          if (targetEl) {
+            targetEl.classList.add('tour-highlight');
+            positionSpotlight(targetEl);
+            positionTooltip(targetEl, step.position);
+            tourSpotlight.style.display = 'block';
+          }
+        } else {
+          // Center position (welcome/complete screens)
+          tourSpotlight.style.display = 'none';
+          tourTooltip.classList.add('tour-welcome');
+          tourTooltip.style.left = '50%';
+          tourTooltip.style.top = '50%';
+          tourTooltip.style.transform = 'translate(-50%, -50%)';
+          tourArrow.style.display = 'none';
+        }
+
+        // Show tooltip with animation
+        setTimeout(() => tourTooltip.classList.add('active'), 50);
+      }
+
+      function positionSpotlight(targetEl) {
+        const rect = targetEl.getBoundingClientRect();
+        const padding = 8;
+
+        tourSpotlight.style.left = (rect.left - padding) + 'px';
+        tourSpotlight.style.top = (rect.top - padding) + 'px';
+        tourSpotlight.style.width = (rect.width + padding * 2) + 'px';
+        tourSpotlight.style.height = (rect.height + padding * 2) + 'px';
+        tourSpotlight.classList.add('pulse');
+      }
+
+      function positionTooltip(targetEl, position) {
+        const rect = targetEl.getBoundingClientRect();
+        const tooltipWidth = 360;
+        const tooltipHeight = tourTooltip.offsetHeight || 300;
+        const margin = 20;
+
+        tourTooltip.classList.remove('tour-welcome');
+        tourTooltip.style.transform = 'none';
+        tourArrow.style.display = 'block';
+
+        // Remove all arrow position classes
+        tourArrow.className = 'tour-tooltip-arrow';
+
+        let left, top;
+
+        switch (position) {
+          case 'right':
+            left = rect.right + margin;
+            top = rect.top + rect.height / 2 - tooltipHeight / 2;
+            tourArrow.classList.add('left');
+            tourArrow.style.left = '-7px';
+            tourArrow.style.top = '50%';
+            tourArrow.style.transform = 'translateY(-50%) rotate(45deg)';
+            break;
+          case 'left':
+            left = rect.left - tooltipWidth - margin;
+            top = rect.top + rect.height / 2 - tooltipHeight / 2;
+            tourArrow.classList.add('right');
+            tourArrow.style.right = '-7px';
+            tourArrow.style.left = 'auto';
+            tourArrow.style.top = '50%';
+            tourArrow.style.transform = 'translateY(-50%) rotate(45deg)';
+            break;
+          case 'bottom':
+            left = rect.left + rect.width / 2 - tooltipWidth / 2;
+            top = rect.bottom + margin;
+            tourArrow.classList.add('top');
+            tourArrow.style.top = '-7px';
+            tourArrow.style.left = '50%';
+            tourArrow.style.transform = 'translateX(-50%) rotate(45deg)';
+            break;
+          case 'top':
+            left = rect.left + rect.width / 2 - tooltipWidth / 2;
+            top = rect.top - tooltipHeight - margin;
+            tourArrow.classList.add('bottom');
+            tourArrow.style.bottom = '-7px';
+            tourArrow.style.top = 'auto';
+            tourArrow.style.left = '50%';
+            tourArrow.style.transform = 'translateX(-50%) rotate(45deg)';
+            break;
+        }
+
+        // Keep tooltip in viewport
+        left = Math.max(10, Math.min(window.innerWidth - tooltipWidth - 10, left));
+        top = Math.max(10, Math.min(window.innerHeight - tooltipHeight - 10, top));
+
+        tourTooltip.style.left = left + 'px';
+        tourTooltip.style.top = top + 'px';
+      }
+
+      function nextTourStep() {
+        tourCompletedSteps.add(tourCurrentStep);
+        tourTooltip.classList.remove('active');
+
+        if (tourCurrentStep >= TOUR_STEPS.length - 1) {
+          endTour(true);
+        } else {
+          setTimeout(() => showTourStep(tourCurrentStep + 1), 200);
+        }
+      }
+
+      function prevTourStep() {
+        tourTooltip.classList.remove('active');
+        setTimeout(() => showTourStep(tourCurrentStep - 1), 200);
+      }
+
+      // Tour event listeners
+      function setupTour() {
+        const btnStartTour = document.getElementById('btnStartTour');
+        if (btnStartTour) {
+          btnStartTour.addEventListener('click', startTour);
+        }
+
+        tourNext.addEventListener('click', nextTourStep);
+        tourBack.addEventListener('click', prevTourStep);
+        tourSkip.addEventListener('click', () => endTour(false));
+
+        // Check if first visit
+        const tourCompleted = localStorage.getItem('ace-tour-completed');
+        if (!tourCompleted && !window.location.hash) {
+          // Show tour prompt after a short delay
+          setTimeout(() => {
+            if (confirm('Welcome to ACE Shot Diagrams! Would you like a quick tour of the features?')) {
+              startTour();
+            } else {
+              localStorage.setItem('ace-tour-completed', 'true');
+            }
+          }, 1000);
+        }
+      }
+
+      // ========== TEST SUITE ==========
+
+      const TestSuite = {
+        results: [],
+        passed: 0,
+        failed: 0,
+
+        // Test runner
+        async runAll() {
+          this.results = [];
+          this.passed = 0;
+          this.failed = 0;
+
+          console.log('%c🧪 ACE Shot Diagrams - Test Suite', 'font-size:16px;font-weight:bold;color:#0fa;');
+          console.log('─'.repeat(50));
+
+          // Core function tests
+          await this.test('vectorSubtract calculates correctly', () => {
+            const result = vectorSubtract({x: 10, y: 20}, {x: 3, y: 5});
+            return result.x === 7 && result.y === 15;
+          });
+
+          await this.test('vectorNormalize produces unit vector', () => {
+            const result = vectorNormalize({x: 3, y: 4});
+            const length = Math.sqrt(result.x * result.x + result.y * result.y);
+            return Math.abs(length - 1) < 0.0001;
+          });
+
+          await this.test('dotProduct calculates correctly', () => {
+            const result = dotProduct({x: 1, y: 0}, {x: 0, y: 1});
+            return result === 0; // Perpendicular vectors
+          });
+
+          await this.test('rotateVector rotates 90 degrees', () => {
+            const result = rotateVector({x: 1, y: 0}, 90);
+            return Math.abs(result.x) < 0.0001 && Math.abs(result.y - 1) < 0.0001;
+          });
+
+          // State encoding/decoding tests
+          await this.test('encodeState produces valid string', () => {
+            const state = {
+              v: 1,
+              balls: { cue: {x: 25, y: 25}, '1': {x: 50, y: 25} },
+              pocket: 'corner-br',
+              ball: '1',
+              mode: '9ball',
+              power: 5,
+              english: {x: 0, y: 0},
+              solver: 'auto'
+            };
+            const encoded = encodeState(state);
+            return encoded.includes('v1') && encoded.includes('cue:') && encoded.includes('p:cbr');
+          });
+
+          await this.test('decodeState reverses encodeState', () => {
+            const original = {
+              v: 1,
+              balls: { cue: {x: 25.0, y: 25.0} },
+              pocket: 'corner-br',
+              ball: '1',
+              mode: '9ball',
+              power: 5,
+              english: {x: 0.0, y: 0.0},
+              solver: 'auto'
+            };
+            const encoded = encodeState(original);
+            const decoded = decodeState(encoded);
+            return decoded.pocket === 'corner-br' && decoded.mode === '9ball';
+          });
+
+          // Make probability tests
+          await this.test('calculateMakeProbability returns null for invalid data', () => {
+            return calculateMakeProbability(null) === null;
+          });
+
+          await this.test('calculateMakeProbability returns high % for easy shots', () => {
+            const shotData = { isReady: true, cutAngle: 10, totalDistance: 30 };
+            const prob = calculateMakeProbability(shotData);
+            return prob >= 80;
+          });
+
+          await this.test('calculateMakeProbability penalizes steep cuts', () => {
+            const easy = calculateMakeProbability({ isReady: true, cutAngle: 10, totalDistance: 30 });
+            const hard = calculateMakeProbability({ isReady: true, cutAngle: 60, totalDistance: 30 });
+            return hard < easy;
+          });
+
+          await this.test('calculateMakeProbability penalizes kick shots', () => {
+            const direct = calculateMakeProbability({ isReady: true, cutAngle: 30, totalDistance: 40 });
+            const kick = calculateMakeProbability({ isReady: true, cutAngle: 30, totalDistance: 40, isKickShot: true });
+            return kick < direct;
+          });
+
+          // DOM element tests
+          await this.test('Pool table SVG exists', () => {
+            return document.getElementById('pool-table-svg') !== null;
+          });
+
+          await this.test('Cue ball element exists', () => {
+            return document.getElementById('ball-cue') !== null;
+          });
+
+          await this.test('All numbered balls exist (1-15)', () => {
+            for (let i = 1; i <= 15; i++) {
+              if (!document.getElementById(`ball-${i}`)) return false;
+            }
+            return true;
+          });
+
+          await this.test('Ghost ball indicator exists', () => {
+            return document.getElementById('ghost-ball-indicator') !== null;
+          });
+
+          await this.test('All palettes exist', () => {
+            const palettes = ['palette-balls', 'palette-cue', 'palette-game', 'palette-shot', 'palette-share'];
+            return palettes.every(id => document.getElementById(id) !== null);
+          });
+
+          await this.test('Position aid elements exist', () => {
+            const elements = ['tangent-line-group', 'follow-line-group', 'draw-line-group', 'shape-zone-group'];
+            return elements.every(id => document.getElementById(id) !== null);
+          });
+
+          await this.test('Tour elements exist', () => {
+            const elements = ['tourOverlay', 'tourSpotlight', 'tourTooltip'];
+            return elements.every(id => document.getElementById(id) !== null);
+          });
+
+          // Game mode tests
+          await this.test('GAME_MODES object exists with all modes', () => {
+            const modes = ['NINE_BALL', 'EIGHT_BALL', 'TEN_BALL', 'STRAIGHT_POOL', 'ONE_POCKET'];
+            return modes.every(m => GAME_MODES[m] !== undefined);
+          });
+
+          await this.test('9-ball mode has correct rotation rule', () => {
+            return GAME_MODES.NINE_BALL.targetRule === 'rotation';
+          });
+
+          await this.test('8-ball mode has correct suit rule', () => {
+            return GAME_MODES.EIGHT_BALL.targetRule === 'suit';
+          });
+
+          // Pocket centers test
+          await this.test('pocketCenters has all 6 pockets', () => {
+            const pockets = ['corner-tl', 'corner-tr', 'corner-bl', 'corner-br', 'side-l', 'side-r'];
+            return pockets.every(p => pocketCenters[p] !== undefined);
+          });
+
+          // Export function tests
+          await this.test('exportPNG function exists', () => {
+            return typeof exportPNG === 'function';
+          });
+
+          await this.test('exportSVG function exists', () => {
+            return typeof exportSVG === 'function';
+          });
+
+          await this.test('copyShareLink function exists', () => {
+            return typeof copyShareLink === 'function';
+          });
+
+          // Position aid function tests
+          await this.test('updateTangentLine function exists', () => {
+            return typeof updateTangentLine === 'function';
+          });
+
+          await this.test('updateFollowDrawLines function exists', () => {
+            return typeof updateFollowDrawLines === 'function';
+          });
+
+          await this.test('updateShapeZone function exists', () => {
+            return typeof updateShapeZone === 'function';
+          });
+
+          // Tour function tests
+          await this.test('TOUR_STEPS has expected steps', () => {
+            return TOUR_STEPS.length >= 10 && TOUR_STEPS[0].id === 'welcome';
+          });
+
+          await this.test('startTour function exists', () => {
+            return typeof startTour === 'function';
+          });
+
+          await this.test('endTour function exists', () => {
+            return typeof endTour === 'function';
+          });
+
+          // Local storage save/load tests
+          await this.test('getSavedDiagrams function exists', () => {
+            return typeof getSavedDiagrams === 'function';
+          });
+
+          await this.test('saveDiagram function exists', () => {
+            return typeof saveDiagram === 'function';
+          });
+
+          await this.test('loadDiagram function exists', () => {
+            return typeof loadDiagram === 'function';
+          });
+
+          await this.test('deleteDiagram function exists', () => {
+            return typeof deleteDiagram === 'function';
+          });
+
+          await this.test('renderSavedList function exists', () => {
+            return typeof renderSavedList === 'function';
+          });
+
+          await this.test('Saved diagrams list element exists', () => {
+            return document.getElementById('savedDiagramsList') !== null;
+          });
+
+          await this.test('Save input element exists', () => {
+            return document.getElementById('saveDiagramName') !== null;
+          });
+
+          await this.test('Save button element exists', () => {
+            return document.getElementById('btnSaveDiagram') !== null;
+          });
+
+          // Print summary
+          console.log('─'.repeat(50));
+          console.log(`%c✓ Passed: ${this.passed}`, 'color:#0f0;font-weight:bold;');
+          console.log(`%c✗ Failed: ${this.failed}`, this.failed > 0 ? 'color:#f00;font-weight:bold;' : 'color:#888;');
+          console.log(`Total: ${this.passed + this.failed} tests`);
+
+          if (this.failed === 0) {
+            console.log('%c🎉 All tests passed!', 'font-size:14px;color:#0fa;');
+          }
+
+          return { passed: this.passed, failed: this.failed, results: this.results };
+        },
+
+        async test(name, fn) {
+          try {
+            const result = await fn();
+            if (result) {
+              this.passed++;
+              this.results.push({ name, status: 'passed' });
+              console.log(`%c  ✓ ${name}`, 'color:#0f0;');
+            } else {
+              this.failed++;
+              this.results.push({ name, status: 'failed', error: 'Assertion failed' });
+              console.log(`%c  ✗ ${name}`, 'color:#f00;');
+            }
+          } catch (e) {
+            this.failed++;
+            this.results.push({ name, status: 'failed', error: e.message });
+            console.log(`%c  ✗ ${name}: ${e.message}`, 'color:#f00;');
+          }
+        }
+      };
+
+      // Expose test suite globally for console access
+      window.ACETests = TestSuite;
+
+      // Initialize tour
+      setTimeout(setupTour, 200);
+
     })();
   </script>
 </body>
