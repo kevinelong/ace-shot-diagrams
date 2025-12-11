@@ -7321,6 +7321,20 @@
         tourBack.addEventListener('click', prevTourStep);
         tourSkip.addEventListener('click', () => endTour(false));
 
+        // Allow clicking overlay to close tour
+        tourOverlay.addEventListener('click', (e) => {
+          if (e.target === tourOverlay) {
+            endTour(false);
+          }
+        });
+
+        // Allow Escape key to close tour
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && tourActive) {
+            endTour(false);
+          }
+        });
+
         // Check if first visit
         const tourCompleted = localStorage.getItem('ace-tour-completed');
         if (!tourCompleted && !window.location.hash) {
