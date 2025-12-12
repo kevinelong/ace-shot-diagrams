@@ -4,11 +4,12 @@ Pool table SVG template for creating interactive shot diagrams with physics-base
 
 ## Project Structure
 
-- `index.html` - Main interactive shot diagram application
+- `index.html` - Main interactive shot diagram application (all-in-one HTML/CSS/JS)
 - `pool-table-template.svg` - Main SVG template (v008)
 - `pool-table-labeled.svg` - Labeled version for reference
 - `versions/` - Version history (v001-v008)
 - `GAME_MODE_PLAN.md` - Implementation plan for game modes & combos
+- `FEATURE_ROADMAP.md` - Feature roadmap with priorities and implementation details
 
 ## Pool Table SVG Layers
 
@@ -36,18 +37,19 @@ Pool table SVG template for creating interactive shot diagrams with physics-base
 - Diamond spacing: 12.5"
 - Ghost ball offset: 2.25 units (two ball radii)
 
-## index.html Features (2024-12-08)
+## Features
 
 ### Interactive Elements
 - Draggable balls: CUE, GHOST (aim), 1-15, generic gray
-- Ball rack below table, centered
+- Floating glassmorphism palettes (draggable, minimizable)
 - Cue ball contact point selector (english/spin)
 - Power slider (1-10)
 - Clickable pocket selection
+- Double-click/long-press to select balls
 
 ### Shot Types
 1. **Direct Shot** - Clear path from cue to ghost ball
-2. **Kick Shot** - Bounces off rail(s) when direct blocked
+2. **Kick Shot** - Bounces off rail(s) when direct blocked (1-rail and 2-rail)
 3. **Bank Shot** - Object ball bounces off rail to pocket
 4. **Combination Shot** - Hit helper ball into target ball
 
@@ -68,13 +70,41 @@ Pool table SVG template for creating interactive shot diagrams with physics-base
 - Ghost ball indicator with crosshair and "AIM" label
 - Kick shot diamond marker on rail aim point
 - Bank shot diamond marker on rail contact point
+- Mirror system aiming overlay for kick shots
 - Combo shot paths: cyan→magenta→yellow-green
 - Legal/illegal ball highlighting per game rules
 - FOUL warning banner for illegal ball selection
 - One Pocket scoring pocket glow (green=yours, red=opponent)
 
+### Position Aids (Toggleable)
+- **Tangent Line** (cyan) - Where CB goes with stop shot (90° from contact)
+- **Follow Line** (green) - Where CB goes with top spin
+- **Draw Line** (orange) - Where CB goes with back spin
+- **Shape Zone** (green triangle) - Area where CB can be to make next shot
+
+### Share & Export
+- **Copy Link** - URL with encoded state (auto-updates as you edit)
+- **Export PNG** - 1600x900 high-res image download
+- **Export SVG** - 800x450 vector download
+- **Random Rack** - Scatter balls randomly for practice
+- **Save/Load Diagrams** - Named diagrams stored in localStorage
+
+### Shot Analysis
+- Cut angle display
+- Shot make probability (%) with color coding
+- Difficulty meter (easy/medium/hard/very-hard)
+- Ball overlap fraction visualization
+
+### First-Time User Tour
+- 13-step guided walkthrough
+- Spotlight highlighting with pulse animation
+- Task suggestions for interactive learning
+- Saved to localStorage after completion
+- Accessible via "Take the Tour" button
+
 ### Physics
 - Cut angle calculation using dot product
+- Per-rail approach angle awareness for kick shots
 - Energy transfer with coefficient of restitution (0.95)
 - Ball friction: 0.2, Rail bounce: 0.85
 - Throw calculation for spin transfer
@@ -82,13 +112,26 @@ Pool table SVG template for creating interactive shot diagrams with physics-base
 
 ## Usage
 
-Open `index.html` in browser. Drag balls onto table, select pocket, adjust english and power. Shot Instructions panel shows aim point, difficulty, and warnings.
+Open `index.html` in browser. Drag balls onto table, select pocket, adjust english and power. Shot Info panel shows aim point, difficulty, make %, and warnings.
+
+### URL State Sharing
+URLs auto-update with diagram state. Format:
+```
+#v1|cue:25.5,32.1|1:60,25|p:cbr|b:1|m:9ball|f:6|e:0.0,0.0|s:auto
+```
+
+### Running Tests
+Open browser console and run:
+```javascript
+ACETests.runAll()
+```
 
 ## Development Notes
 
-### Critical Bug Fixed
+### Critical Bugs Fixed
 - Pocket elements use `data-pocket` attribute, NOT `id`
-- Must use `pocket.dataset.pocket` not `pocket.id`
+- Cut angle must be calculated PER-RAIL inside kick loop (not before)
+- Shot info panel requires all shotData properties for both original and palette displays
 
 ### Color Accessibility
 - Dark backgrounds (#1a1a2e) require light text (#9ab minimum)
@@ -109,12 +152,44 @@ GAME_MODES.NINE_BALL = {
   targetRule: 'rotation',  // 'rotation' | 'suit' | 'any'
   comboMustHitLowestFirst: true
 };
+
+// State encoding for URL
+encodeState(state) // returns compact string
+decodeState(encoded) // returns state object
+
+// Make probability
+calculateMakeProbability(shotData) // returns 5-95%
 ```
+
+### Key Functions
+- `updateShotGeometry()` - Main calculation, calls updateShotInstructions
+- `updateTangentLine()` - Position aid visualization
+- `updateFollowDrawLines()` - Follow/draw line visualization
+- `updateShapeZone()` - Shape zone polygon
+- `updateMirrorSystemVisualization()` - Kick shot aiming overlay
+- `scoreKickPath()` - Rates kick shots with cut angle penalties
+- `exportPNG()`, `exportSVG()`, `copyShareLink()` - Export functions
+- `saveDiagram(name)`, `loadDiagram(index)`, `deleteDiagram(index)` - Local storage ops
+- `getSavedDiagrams()`, `renderSavedList()` - Saved diagrams management
+
+### Floating Palettes
+- `#palette-balls` - Ball rack (top-left)
+- `#palette-cue` - Cue control with english diagram (bottom-left)
+- `#palette-game` - Game mode and solver (top area)
+- `#palette-shot` - Shot info display (bottom-right)
+- `#palette-share` - Share, export, position aids (top-right)
 
 ## TODO
 
-- [ ] Improve legal ball highlighting (more contrast)
-- [ ] Add mobile responsiveness (@media queries)
-- [ ] Add ARIA labels for accessibility
-- [ ] Save/load diagram configurations
-- [ ] Export as PNG/PDF
+- [x] ~~Export as PNG/SVG~~ (Implemented)
+- [x] ~~URL state sharing~~ (Implemented)
+- [x] ~~Position aids (tangent, follow, draw, shape zone)~~ (Implemented)
+- [x] ~~Shot make probability~~ (Implemented)
+- [x] ~~Random rack button~~ (Implemented)
+- [x] ~~First-time user tour~~ (Implemented)
+- [x] ~~Test suite~~ (Implemented)
+- [x] ~~Local storage save/load named diagrams~~ (Implemented)
+- [ ] Safety shot mode (snooker zones, defensive positions)
+- [ ] Multi-shot sequences (run-out planning)
+- [ ] Mobile responsiveness (@media queries)
+- [ ] ARIA labels for accessibility

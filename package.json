@@ -1,0 +1,27 @@
+{
+  "name": "ace-shot-diagrams-tests",
+  "version": "1.0.0",
+  "description": "Playwright UX tests for ACE Shot Diagrams",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    "test:chrome": "playwright test --project=chromium",
+    "test:firefox": "playwright test --project=firefox",
+    "test:safari": "playwright test --project=webkit",
+    "test:critical": "playwright test tests/critical-path",
+    "test:features": "playwright test tests/features",
+    "test:visual": "playwright test tests/visual",
+    "test:update-snapshots": "playwright test --update-snapshots",
+    "report": "playwright show-report",
+    "install": "playwright install"
+  },
+  "keywords": ["playwright", "testing", "ux", "e2e", "pool", "billiards"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.41.0",
+    "@types/node": "^20.11.0"
+  }
+}
