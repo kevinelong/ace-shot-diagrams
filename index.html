@@ -32,7 +32,6 @@
     .table-wrapper {
       position: relative;
       width: 95vw;
-      max-width: 1400px;
     }
 
     .table-wrapper svg#pool-table-svg {
@@ -138,6 +137,34 @@
       padding: 12px 14px;
     }
 
+    /* Larger panels (all except balls and cue) */
+    #palette-game .palette-header,
+    #palette-shot .palette-header,
+    #palette-legend .palette-header,
+    #palette-aids .palette-header,
+    #palette-actions .palette-header,
+    #palette-save .palette-header {
+      padding: 12px 18px;
+    }
+
+    #palette-game .palette-title,
+    #palette-shot .palette-title,
+    #palette-legend .palette-title,
+    #palette-aids .palette-title,
+    #palette-actions .palette-title,
+    #palette-save .palette-title {
+      font-size: 13px;
+    }
+
+    #palette-game .palette-body,
+    #palette-shot .palette-body,
+    #palette-legend .palette-body,
+    #palette-aids .palette-body,
+    #palette-actions .palette-body,
+    #palette-save .palette-body {
+      padding: 16px 18px;
+    }
+
     /* Minimized state */
     .tool-palette.minimized .palette-body {
       display: none;
@@ -158,10 +185,14 @@
     }
 
     /* Palette anchor positions */
-    #palette-balls { top: 20px; left: 20px; }
-    #palette-cue { bottom: 20px; left: 20px; }
-    #palette-game { top: 20px; right: 20px; }
-    #palette-shot { bottom: 20px; right: 20px; }
+    #palette-balls { top: 30px; left: 30px; }
+    #palette-cue { bottom: 30px; left: 30px; }
+    #palette-legend { left: 30px; top: 50%; transform: translateY(-50%); }
+    #palette-game { top: 30px; right: 30px; }
+    #palette-shot { bottom: 30px; right: 30px; }
+    #palette-aids { right: 30px; top: 50%; transform: translateY(-50%); }
+    #palette-actions { top: 30px; left: 50%; transform: translateX(-50%); }
+    #palette-save { bottom: 30px; left: 50%; transform: translateX(-50%); }
 
     /* Dragging state */
     .tool-palette.dragging {
@@ -216,32 +247,41 @@
     #palette-game .game-content {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      min-width: 160px;
+      gap: 14px;
+      min-width: 200px;
+    }
+
+    #palette-game .game-mode-select {
+      font-size: 14px;
+      padding: 10px 12px;
+    }
+
+    #palette-game .game-mode-description {
+      font-size: 13px;
     }
 
     /* Shot Info Palette */
     #palette-shot {
-      min-width: 280px;
-      max-width: 320px;
+      min-width: 320px;
+      max-width: 380px;
     }
 
-    /* Share/Export Palette */
-    #palette-share {
-      min-width: 200px;
+    /* Quick Actions Palette (top center) */
+    #palette-actions {
+      min-width: 180px;
     }
 
-    #palette-share .share-buttons {
+    #palette-actions .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    #palette-actions .action-btn {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-    }
-
-    #palette-share .share-btn {
-      display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
+      gap: 6px;
+      padding: 12px 18px;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 8px;
@@ -249,33 +289,105 @@
       font-size: 13px;
       cursor: pointer;
       transition: all 0.2s;
+      flex: 1;
     }
 
-    #palette-share .share-btn:hover {
+    #palette-actions .action-btn:hover {
       background: rgba(255, 255, 255, 0.1);
       border-color: rgba(255, 255, 255, 0.2);
       color: #fff;
     }
 
-    #palette-share .share-btn:active {
-      transform: scale(0.98);
+    #palette-actions .action-btn .btn-icon {
+      font-size: 24px;
     }
 
-    #palette-share .share-btn .btn-icon {
-      font-size: 16px;
-      width: 20px;
-      text-align: center;
+    #palette-actions .action-btn.primary {
+      background: rgba(0, 200, 255, 0.15);
+      border-color: rgba(0, 200, 255, 0.3);
+      color: #0cf;
     }
 
-    #palette-share .share-btn.primary {
+    /* Save Palette (bottom center) - compact horizontal */
+    #palette-save {
+      min-width: 220px;
+    }
+
+    #palette-save .export-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    #palette-save .export-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      color: #aaa;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex: 1;
+    }
+
+    #palette-save .export-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    #palette-save .export-btn:active {
+      transform: scale(0.96);
+    }
+
+    #palette-save .export-btn .btn-icon {
+      font-size: 22px;
+    }
+
+    #palette-save .export-btn.primary {
       background: rgba(0, 255, 136, 0.15);
       border-color: rgba(0, 255, 136, 0.3);
       color: #0f8;
     }
 
-    #palette-share .share-btn.primary:hover {
+    #palette-save .export-btn.primary:hover {
       background: rgba(0, 255, 136, 0.25);
       border-color: rgba(0, 255, 136, 0.5);
+    }
+
+    /* Position Aids Palette (right center) */
+    #palette-aids {
+      min-width: 220px;
+    }
+
+    #palette-aids .share-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: #ddd;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    #palette-aids .share-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    #palette-aids .share-btn .btn-icon {
+      font-size: 16px;
+      width: 20px;
+      text-align: center;
     }
 
     /* Toast notification */
@@ -301,57 +413,94 @@
       opacity: 1;
     }
 
-    /* Position aids toggle section */
-    #palette-share .position-aids {
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    /* Status banner (persistent message at bottom center) */
+    .status-banner {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, rgba(255, 68, 68, 0.95), rgba(180, 40, 40, 0.95));
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 1500;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 20px rgba(255, 68, 68, 0.4);
+      border: 1px solid rgba(255, 100, 100, 0.5);
     }
 
-    #palette-share .position-aids .section-label {
-      font-size: 10px;
+    .status-banner.visible {
+      display: flex;
+    }
+
+    .status-banner .status-icon {
+      font-size: 18px;
+    }
+
+    .status-banner .status-message {
+      flex: 1;
+    }
+
+    .status-banner .status-suggestion {
+      color: #ffcc00;
+      font-weight: bold;
+    }
+
+    /* Position aids toggle section */
+    #palette-aids .position-aids {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
+    }
+
+    #palette-aids .position-aids .section-label {
+      font-size: 11px;
       color: #8af;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
-    #palette-share .toggle-row {
+    #palette-aids .toggle-row {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 6px 0;
-      font-size: 12px;
+      gap: 10px;
+      padding: 8px 0;
+      font-size: 14px;
       color: #aaa;
       cursor: pointer;
     }
 
-    #palette-share .toggle-row:hover {
+    #palette-aids .toggle-row:hover {
       color: #fff;
     }
 
-    #palette-share .toggle-row input[type="checkbox"] {
+    #palette-aids .toggle-row input[type="checkbox"] {
       accent-color: #0fa;
     }
 
-    #palette-share .toggle-row input[type="checkbox"]:checked + span {
+    #palette-aids .toggle-row input[type="checkbox"]:checked + span {
       color: #0fa;
     }
 
     /* Saved Diagrams Section */
-    #palette-share .saved-diagrams {
+    #palette-save .saved-diagrams {
       margin-top: 12px;
       padding-top: 12px;
       border-top: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    #palette-share .save-input-row {
+    #palette-save .save-input-row {
       display: flex;
       gap: 6px;
       margin-top: 8px;
     }
 
-    #palette-share .save-input-row input {
+    #palette-save .save-input-row input {
       flex: 1;
       padding: 8px 10px;
       background: rgba(0, 0, 0, 0.3);
@@ -361,16 +510,16 @@
       font-size: 12px;
     }
 
-    #palette-share .save-input-row input::placeholder {
+    #palette-save .save-input-row input::placeholder {
       color: #666;
     }
 
-    #palette-share .save-input-row input:focus {
+    #palette-save .save-input-row input:focus {
       outline: none;
       border-color: #0fa;
     }
 
-    #palette-share .save-input-row button {
+    #palette-save .save-input-row button {
       padding: 8px 12px;
       background: rgba(0, 255, 136, 0.2);
       border: 1px solid rgba(0, 255, 136, 0.3);
@@ -381,31 +530,31 @@
       transition: all 0.2s;
     }
 
-    #palette-share .save-input-row button:hover {
+    #palette-save .save-input-row button:hover {
       background: rgba(0, 255, 136, 0.3);
     }
 
-    #palette-share .saved-list {
+    #palette-save .saved-list {
       max-height: 150px;
       overflow-y: auto;
       margin-top: 8px;
     }
 
-    #palette-share .saved-list::-webkit-scrollbar {
+    #palette-save .saved-list::-webkit-scrollbar {
       width: 6px;
     }
 
-    #palette-share .saved-list::-webkit-scrollbar-track {
+    #palette-save .saved-list::-webkit-scrollbar-track {
       background: rgba(0, 0, 0, 0.2);
       border-radius: 3px;
     }
 
-    #palette-share .saved-list::-webkit-scrollbar-thumb {
+    #palette-save .saved-list::-webkit-scrollbar-thumb {
       background: rgba(255, 255, 255, 0.2);
       border-radius: 3px;
     }
 
-    #palette-share .saved-item {
+    #palette-save .saved-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -417,18 +566,18 @@
       transition: all 0.2s;
     }
 
-    #palette-share .saved-item:hover {
+    #palette-save .saved-item:hover {
       background: rgba(255, 255, 255, 0.08);
       border-color: rgba(255, 255, 255, 0.12);
     }
 
-    #palette-share .saved-item-info {
+    #palette-save .saved-item-info {
       flex: 1;
       min-width: 0;
       cursor: pointer;
     }
 
-    #palette-share .saved-item-name {
+    #palette-save .saved-item-name {
       font-size: 12px;
       color: #ddd;
       white-space: nowrap;
@@ -436,19 +585,19 @@
       text-overflow: ellipsis;
     }
 
-    #palette-share .saved-item-date {
+    #palette-save .saved-item-date {
       font-size: 10px;
       color: #666;
       margin-top: 2px;
     }
 
-    #palette-share .saved-item-actions {
+    #palette-save .saved-item-actions {
       display: flex;
       gap: 4px;
       margin-left: 8px;
     }
 
-    #palette-share .saved-item-btn {
+    #palette-save .saved-item-btn {
       width: 24px;
       height: 24px;
       border-radius: 4px;
@@ -463,17 +612,17 @@
       transition: all 0.2s;
     }
 
-    #palette-share .saved-item-btn:hover {
+    #palette-save .saved-item-btn:hover {
       background: rgba(255, 255, 255, 0.2);
       color: #fff;
     }
 
-    #palette-share .saved-item-btn.delete:hover {
+    #palette-save .saved-item-btn.delete:hover {
       background: rgba(255, 80, 80, 0.3);
       color: #f66;
     }
 
-    #palette-share .no-saved {
+    #palette-save .no-saved {
       text-align: center;
       color: #555;
       font-size: 11px;
@@ -800,6 +949,7 @@
 
     #restore-balls { top: 20px; left: 20px; }
     #restore-cue { bottom: 20px; left: 20px; }
+    #restore-legend { left: 20px; top: 50%; transform: translateY(-50%); }
     #restore-game { top: 20px; right: 20px; }
     #restore-shot { bottom: 20px; right: 20px; }
 
@@ -842,47 +992,72 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: var(--ball-font-size, 9px);
-      font-weight: bold;
-      color: #fff;
-      text-shadow: 0 1px 1px rgba(0,0,0,0.6);
       box-shadow: 2px 2px 4px rgba(0,0,0,0.5), inset -2px -2px 3px rgba(0,0,0,0.3), inset 2px 2px 3px rgba(255,255,255,0.2);
       transition: transform 0.1s;
       flex-shrink: 0;
+      position: relative;
+    }
+
+    /* SVG label container inside ball */
+    .ball-label-svg {
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    /* Base SVG text label styling */
+    .ball-label {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-weight: bold;
+      paint-order: stroke fill;
+    }
+
+    /* Numbered balls - black text for white center circle */
+    .ball-label-number {
+      font-size: 42px;
+      fill: #000;
+      stroke: none;
+    }
+
+    /* Cue ball label */
+    .ball-label-cue {
+      font-size: 32px;
+      fill: #666;
+      stroke: none;
+    }
+
+    /* Ghost/AIM ball label */
+    .ball-label-ghost {
+      font-size: 32px;
+      fill: rgba(255,255,255,0.85);
+      stroke: none;
     }
     .ball:hover { transform: scale(1.1); }
     .ball.dragging { cursor: grabbing; z-index: 200; transform: scale(1.15); box-shadow: 0 6px 12px rgba(0,0,0,0.5); }
     .ball.on-table { position: absolute; z-index: 100; }
 
     /* Solid balls - white number circle (larger to fit text at same size as stripes) */
-    .ball-1 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #ffe44d, #ffd700, #c9a600); color: #000; text-shadow: none; }
-    .ball-2 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #4d8fcc, #0066cc, #004c99); color: #000; text-shadow: none; }
-    .ball-3 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #ff6666, #ff4444, #cc0000); color: #000; text-shadow: none; }
-    .ball-4 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #9955bb, #6b2d8b, #4a1f61); color: #000; text-shadow: none; }
-    .ball-5 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #ff8833, #ff6600, #cc5200); color: #000; text-shadow: none; }
-    .ball-6 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #339955, #006633, #004422); color: #000; text-shadow: none; }
-    .ball-7 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #cc3333, #8b0000, #5c0000); color: #000; text-shadow: none; }
-    .ball-8 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #444, #111, #000); color: #000; text-shadow: none; }
+    .ball-1 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #ffe44d, #ffd700, #c9a600); }
+    .ball-2 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #4d8fcc, #0066cc, #004c99); }
+    .ball-3 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #ff6666, #ff4444, #cc0000); }
+    .ball-4 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #9955bb, #6b2d8b, #4a1f61); }
+    .ball-5 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #ff8833, #ff6600, #cc5200); }
+    .ball-6 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #339955, #006633, #004422); }
+    .ball-7 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #cc3333, #8b0000, #5c0000); }
+    .ball-8 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #444, #111, #000); }
 
     /* Striped balls - white band in middle */
-    .ball-9, .ball-10, .ball-11, .ball-12, .ball-13, .ball-14, .ball-15 {
-      position: relative;
-      overflow: hidden;
-    }
-    .ball-9 { background: linear-gradient(180deg, #ffd700 0%, #ffd700 25%, #fff 25%, #fff 75%, #ffd700 75%); color: #000; text-shadow: none; }
-    .ball-10 { background: linear-gradient(180deg, #0066cc 0%, #0066cc 25%, #fff 25%, #fff 75%, #0066cc 75%); color: #000; text-shadow: none; }
-    .ball-11 { background: linear-gradient(180deg, #ff4444 0%, #ff4444 25%, #fff 25%, #fff 75%, #ff4444 75%); color: #000; text-shadow: none; }
-    .ball-12 { background: linear-gradient(180deg, #6b2d8b 0%, #6b2d8b 25%, #fff 25%, #fff 75%, #6b2d8b 75%); color: #000; text-shadow: none; }
-    .ball-13 { background: linear-gradient(180deg, #ff6600 0%, #ff6600 25%, #fff 25%, #fff 75%, #ff6600 75%); color: #000; text-shadow: none; }
-    .ball-14 { background: linear-gradient(180deg, #006633 0%, #006633 25%, #fff 25%, #fff 75%, #006633 75%); color: #000; text-shadow: none; }
-    .ball-15 { background: linear-gradient(180deg, #8b0000 0%, #8b0000 25%, #fff 25%, #fff 75%, #8b0000 75%); color: #000; text-shadow: none; }
+    .ball-9 { background: linear-gradient(180deg, #ffd700 0%, #ffd700 25%, #fff 25%, #fff 75%, #ffd700 75%); }
+    .ball-10 { background: linear-gradient(180deg, #0066cc 0%, #0066cc 25%, #fff 25%, #fff 75%, #0066cc 75%); }
+    .ball-11 { background: linear-gradient(180deg, #ff4444 0%, #ff4444 25%, #fff 25%, #fff 75%, #ff4444 75%); }
+    .ball-12 { background: linear-gradient(180deg, #6b2d8b 0%, #6b2d8b 25%, #fff 25%, #fff 75%, #6b2d8b 75%); }
+    .ball-13 { background: linear-gradient(180deg, #ff6600 0%, #ff6600 25%, #fff 25%, #fff 75%, #ff6600 75%); }
+    .ball-14 { background: linear-gradient(180deg, #006633 0%, #006633 25%, #fff 25%, #fff 75%, #006633 75%); }
+    .ball-15 { background: linear-gradient(180deg, #8b0000 0%, #8b0000 25%, #fff 25%, #fff 75%, #8b0000 75%); }
 
     /* Cue ball */
     .ball-cue {
       background: radial-gradient(circle at 30% 30%, #fff, #f0f0f0, #d0d0d0);
-      color: #666;
-      font-size: 7px;
-      text-shadow: none;
     }
 
     /* Ghost ball - transparent with dashed outline */
@@ -890,16 +1065,11 @@
       background: transparent;
       border: 2px dashed rgba(255,255,255,0.6);
       box-shadow: none;
-      color: rgba(255,255,255,0.7);
-      font-size: 7px;
     }
 
     /* Generic gray object ball */
     .ball-gray {
       background: radial-gradient(circle at 30% 30%, #aaa, #777, #555);
-      color: #fff;
-      font-size: 7px;
-      text-shadow: 0 1px 1px rgba(0,0,0,0.5);
     }
 
     /* Separator in rack */
@@ -941,10 +1111,10 @@
     }
 
     .control-label {
-      font-size: 12px;
+      font-size: 14px;
       color: #888;
       text-align: center;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
     /* Overlap Diagram (Shooter's View) - horizontal layout */
@@ -1008,8 +1178,25 @@
 
     #contact-diagram {
       background: #1a1a2e;
-      border-radius: 50%;
+      border-radius: 8px;
       box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    /* Large contact diagram container */
+    .contact-diagram-large {
+      min-width: 336px;
+    }
+
+    /* Guide circle text styling */
+    #contact-diagram .guide-clock text,
+    #contact-diagram .guide-inner text {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-weight: bold;
+      dominant-baseline: middle;
+    }
+
+    #contact-diagram .english-legend text {
+      font-family: 'Segoe UI', Arial, sans-serif;
     }
 
     #contact-point {
@@ -1097,17 +1284,17 @@
     .solver-radio-group {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
     }
 
     .solver-radio-group label {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 12px;
+      gap: 8px;
+      font-size: 14px;
       color: #aaa;
       cursor: pointer;
-      padding: 4px 8px;
+      padding: 6px 10px;
       border-radius: 4px;
       transition: background 0.2s;
     }
@@ -1214,29 +1401,29 @@
       margin-bottom: 4px;
     }
 
-    /* Path Legend */
-    .path-legend {
+    /* Path Legend Palette */
+    #palette-legend .legend-content {
       display: flex;
       flex-direction: column;
       gap: 6px;
-      font-size: 11px;
-      color: #888;
     }
 
     .legend-item {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 12px;
+      font-size: 14px;
+      color: #bbb;
     }
 
     .legend-line {
-      width: 20px;
-      height: 3px;
-      border-radius: 1px;
+      width: 28px;
+      height: 4px;
+      border-radius: 2px;
+      flex-shrink: 0;
     }
 
     .legend-line.aim-line {
-      background: #fff;
       background: repeating-linear-gradient(90deg, #fff 0, #fff 4px, transparent 4px, transparent 8px);
     }
 
@@ -1252,8 +1439,12 @@
       background: #00bfff;
     }
 
-    .legend-line.actual-path {
-      background: repeating-linear-gradient(90deg, #ff4444, #ff4444 4px, transparent 4px, transparent 8px);
+    .legend-line.blocked-path {
+      background: repeating-linear-gradient(90deg, #ff4444 0, #ff4444 3px, transparent 3px, transparent 6px);
+    }
+
+    .legend-line.kick-path {
+      background: repeating-linear-gradient(90deg, #00ff88 0, #00ff88 4px, transparent 4px, transparent 8px);
     }
 
     .legend-line.combo-path {
@@ -1713,12 +1904,15 @@
 
         <!-- Layer 3: Pocket Voids -->
         <g id="layer-pocket-voids">
+          <!-- Corner pockets: circles at corners -->
           <circle cx="0" cy="0" r="4" fill="#050505"/>
           <circle cx="100" cy="0" r="4" fill="#050505"/>
           <circle cx="0" cy="50" r="4" fill="#050505"/>
           <circle cx="100" cy="50" r="4" fill="#050505"/>
-          <ellipse cx="50" cy="0" rx="3" ry="2.5" fill="#050505"/>
-          <ellipse cx="50" cy="50" rx="3" ry="2.5" fill="#050505"/>
+          <!-- Side pockets: circles shifted outward for deeper, rounder pockets -->
+          <!-- Center shifted so inner edge stays at same position, outer edge reaches ~same as corners -->
+          <circle cx="50" cy="-0.75" r="3.25" fill="#050505"/>
+          <circle cx="50" cy="50.75" r="3.25" fill="#050505"/>
         </g>
 
         <!-- Layer 4: Slate/Cloth -->
@@ -1776,7 +1970,6 @@
         <!-- Layer 8: Spots -->
         <g id="layer-spots">
           <g id="head-spot"><circle cx="25" cy="25" r="0.8" fill="#1a1a1a"/><circle cx="25" cy="25" r="0.25" fill="#ffffff"/></g>
-          <g id="center-spot"><circle cx="50" cy="25" r="0.6" fill="#1a1a1a"/><circle cx="50" cy="25" r="0.2" fill="#ffffff"/></g>
           <g id="foot-spot"><circle cx="75" cy="25" r="0.8" fill="#1a1a1a"/><circle cx="75" cy="25" r="0.25" fill="#ffffff"/></g>
         </g>
 
@@ -1843,7 +2036,7 @@
       <!-- Cue Ball Contact Diagram -->
       <div class="contact-diagram-container">
         <div class="control-label">Cue Tip Contact</div>
-        <svg id="contact-diagram" viewBox="-1.5 -1.5 3 3" width="100" height="100">
+        <svg id="contact-diagram-hidden" viewBox="-1.5 -1.5 3 3" width="100" height="100">
           <!-- Ball outline -->
           <circle cx="0" cy="0" r="1.125" fill="#e8e8e8" stroke="#999" stroke-width="0.05"/>
           <!-- Miscue zone (outer ring) -->
@@ -1859,10 +2052,10 @@
           <text x="-0.95" y="0.05" text-anchor="middle" font-size="0.15" fill="#666">L</text>
           <text x="0.95" y="0.05" text-anchor="middle" font-size="0.15" fill="#666">R</text>
           <!-- Cue tip contact point (draggable) -->
-          <circle id="contact-point" cx="0" cy="0" r="0.15" fill="#0066cc" stroke="#003366" stroke-width="0.03" cursor="move"/>
+          <circle id="contact-point-hidden" cx="0" cy="0" r="0.15" fill="#0066cc" stroke="#003366" stroke-width="0.03" cursor="move"/>
         </svg>
         <div class="spin-display">
-          <span id="spinType">Center</span>
+          <span id="spinType-hidden">Center</span>
         </div>
       </div>
 
@@ -1906,11 +2099,12 @@
 
       <!-- Solver Options -->
       <div class="solver-options">
-        <div class="control-label">Shot Solver</div>
+        <div class="control-label">Shot Preference:</div>
+        <div class="solver-instructions" style="font-size:12px;color:#666;margin-bottom:8px;">Select an object ball and pocket</div>
         <div class="solver-radio-group">
           <label>
             <input type="radio" name="solver-mode" value="auto" checked>
-            <span>Auto (Best)</span>
+            <span>Standard</span>
           </label>
           <label>
             <input type="radio" name="solver-mode" value="kick">
@@ -1929,16 +2123,6 @@
           <input type="checkbox" id="simpleViewToggle">
           <span>Simple View</span>
         </label>
-      </div>
-
-      <!-- Legend -->
-      <div class="path-legend">
-        <div class="legend-item"><span class="legend-line aim-line"></span> Aim Line</div>
-        <div class="legend-item"><span class="legend-line target-line"></span> Target</div>
-        <div class="legend-item"><span class="legend-line obj-path"></span> OB Path</div>
-        <div class="legend-item"><span class="legend-line cb-path"></span> CB Path</div>
-        <div class="legend-item"><span class="legend-line actual-path"></span> Actual</div>
-        <div class="legend-item"><span class="legend-line combo-path"></span> Combo</div>
       </div>
 
       <!-- Shot Instructions Panel - THE KEY ANSWER -->
@@ -2025,18 +2209,114 @@
     <div class="palette-body">
       <div class="cue-controls-grid">
         <div class="control-row">
-          <!-- Contact Diagram -->
-          <div class="contact-diagram-container">
-            <div class="control-label">English</div>
-            <svg id="contact-diagram-palette" viewBox="-1.5 -1.5 3 3" width="80" height="80">
-              <circle cx="0" cy="0" r="1.125" fill="#e8e8e8" stroke="#999" stroke-width="0.05"/>
-              <circle cx="0" cy="0" r="1.125" fill="none" stroke="#ff4444" stroke-width="0.1" stroke-dasharray="0.15,0.1" opacity="0.3"/>
-              <circle cx="0" cy="0" r="0.56" fill="none" stroke="#4a4a4a" stroke-width="0.02" stroke-dasharray="0.1,0.05"/>
-              <line x1="-0.8" y1="0" x2="0.8" y2="0" stroke="#ccc" stroke-width="0.03"/>
-              <line x1="0" y1="-0.8" x2="0" y2="0.8" stroke="#ccc" stroke-width="0.03"/>
-              <circle id="contact-point-palette" cx="0" cy="0" r="0.15" fill="#0066cc" stroke="#003366" stroke-width="0.03" cursor="move"/>
+          <!-- Contact Diagram with Guide Circles - 4x size with left legend -->
+          <div class="contact-diagram-container contact-diagram-large">
+            <div class="control-label">English / Spin</div>
+            <svg id="contact-diagram" viewBox="-2.8 -1.0 4.2 2.0" width="336" height="160">
+              <!-- Legend on left side -->
+              <g class="english-legend" font-family="Arial, sans-serif">
+                <text x="-2.6" y="-0.8" font-size="0.18" fill="#888" font-weight="bold">TIP POSITION</text>
+                <!-- Clock positions legend -->
+                <text x="-2.6" y="-0.55" font-size="0.14" fill="#f90">12 = Follow</text>
+                <text x="-2.6" y="-0.38" font-size="0.14" fill="#f90">6 = Draw</text>
+                <text x="-2.6" y="-0.21" font-size="0.14" fill="#f90">3 = Right</text>
+                <text x="-2.6" y="-0.04" font-size="0.14" fill="#f90">9 = Left</text>
+                <!-- Compass legend -->
+                <text x="-2.6" y="0.16" font-size="0.13" fill="#0af">Inner: N/E/S/W</text>
+                <!-- Zones -->
+                <text x="-2.6" y="0.36" font-size="0.13" fill="#0fa">C = Center</text>
+                <text x="-2.6" y="0.54" font-size="0.12" fill="#f44" opacity="0.7">Red = Miscue</text>
+              </g>
+
+              <!-- Ball outline (1/3 smaller: 1.125 * 0.667 = 0.75) -->
+              <circle cx="0" cy="0" r="0.75" fill="#e8e8e8" stroke="#999" stroke-width="0.03"/>
+
+              <!-- Miscue zone boundary (scaled) -->
+              <circle cx="0" cy="0" r="0.75" fill="none" stroke="#ff4444" stroke-width="0.05" stroke-dasharray="0.08,0.05" opacity="0.4"/>
+              <circle cx="0" cy="0" r="0.42" fill="none" stroke="#ff4444" stroke-width="0.015" stroke-dasharray="0.04,0.03" opacity="0.3"/>
+
+              <!-- Outer ring: All 12 clock positions (0.42 radius - moved out 2/3 circle) -->
+              <g class="guide-clock" opacity="0.8">
+                <!-- 12 o'clock (top) -->
+                <circle cx="0" cy="-0.42" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <text x="0" y="-0.393" text-anchor="middle" font-size="0.09" fill="#f90" font-weight="bold">12</text>
+                <!-- 1 o'clock -->
+                <circle cx="0.21" cy="-0.364" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <text x="0.21" y="-0.337" text-anchor="middle" font-size="0.07" fill="#f90">1</text>
+                <!-- 2 o'clock -->
+                <circle cx="0.364" cy="-0.21" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <text x="0.364" y="-0.183" text-anchor="middle" font-size="0.07" fill="#f90">2</text>
+                <!-- 3 o'clock (right) -->
+                <circle cx="0.42" cy="0" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <text x="0.42" y="0.027" text-anchor="middle" font-size="0.09" fill="#f90" font-weight="bold">3</text>
+                <!-- 4 o'clock -->
+                <circle cx="0.364" cy="0.21" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <text x="0.364" y="0.237" text-anchor="middle" font-size="0.07" fill="#f90">4</text>
+                <!-- 5 o'clock -->
+                <circle cx="0.21" cy="0.364" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <text x="0.21" y="0.391" text-anchor="middle" font-size="0.07" fill="#f90">5</text>
+                <!-- 6 o'clock (bottom) -->
+                <circle cx="0" cy="0.42" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <text x="0" y="0.447" text-anchor="middle" font-size="0.09" fill="#f90" font-weight="bold">6</text>
+                <!-- 7 o'clock -->
+                <circle cx="-0.21" cy="0.364" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <text x="-0.21" y="0.391" text-anchor="middle" font-size="0.07" fill="#f90">7</text>
+                <!-- 8 o'clock -->
+                <circle cx="-0.364" cy="0.21" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <text x="-0.364" y="0.237" text-anchor="middle" font-size="0.07" fill="#f90">8</text>
+                <!-- 9 o'clock (left) -->
+                <circle cx="-0.42" cy="0" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <text x="-0.42" y="0.027" text-anchor="middle" font-size="0.09" fill="#f90" font-weight="bold">9</text>
+                <!-- 10 o'clock -->
+                <circle cx="-0.364" cy="-0.21" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <text x="-0.364" y="-0.183" text-anchor="middle" font-size="0.07" fill="#f90">10</text>
+                <!-- 11 o'clock -->
+                <circle cx="-0.21" cy="-0.364" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <text x="-0.21" y="-0.337" text-anchor="middle" font-size="0.07" fill="#f90">11</text>
+              </g>
+
+              <!-- Inner ring: 8 compass positions (0.24 radius - moved in half circle) -->
+              <g class="guide-inner" opacity="0.8">
+                <!-- N (North - top) -->
+                <circle cx="0" cy="-0.24" r="0.08" fill="none" stroke="#0af" stroke-width="0.02"/>
+                <text x="0" y="-0.215" text-anchor="middle" font-size="0.07" fill="#0af" font-weight="bold">N</text>
+                <!-- NE (Northeast) -->
+                <circle cx="0.17" cy="-0.17" r="0.08" fill="none" stroke="#0af" stroke-width="0.02"/>
+                <text x="0.17" y="-0.145" text-anchor="middle" font-size="0.06" fill="#0af">NE</text>
+                <!-- E (East - right) -->
+                <circle cx="0.24" cy="0" r="0.08" fill="none" stroke="#0af" stroke-width="0.02"/>
+                <text x="0.24" y="0.025" text-anchor="middle" font-size="0.07" fill="#0af" font-weight="bold">E</text>
+                <!-- SE (Southeast) -->
+                <circle cx="0.17" cy="0.17" r="0.08" fill="none" stroke="#0af" stroke-width="0.02"/>
+                <text x="0.17" y="0.195" text-anchor="middle" font-size="0.06" fill="#0af">SE</text>
+                <!-- S (South - bottom) -->
+                <circle cx="0" cy="0.24" r="0.08" fill="none" stroke="#0af" stroke-width="0.02"/>
+                <text x="0" y="0.265" text-anchor="middle" font-size="0.07" fill="#0af" font-weight="bold">S</text>
+                <!-- SW (Southwest) -->
+                <circle cx="-0.17" cy="0.17" r="0.08" fill="none" stroke="#0af" stroke-width="0.02"/>
+                <text x="-0.17" y="0.195" text-anchor="middle" font-size="0.06" fill="#0af">SW</text>
+                <!-- W (West - left) -->
+                <circle cx="-0.24" cy="0" r="0.08" fill="none" stroke="#0af" stroke-width="0.02"/>
+                <text x="-0.24" y="0.025" text-anchor="middle" font-size="0.07" fill="#0af" font-weight="bold">W</text>
+                <!-- NW (Northwest) -->
+                <circle cx="-0.17" cy="-0.17" r="0.08" fill="none" stroke="#0af" stroke-width="0.02"/>
+                <text x="-0.17" y="-0.145" text-anchor="middle" font-size="0.06" fill="#0af">NW</text>
+              </g>
+
+              <!-- Center marker (r=0.08, same as all others) -->
+              <circle cx="0" cy="0" r="0.08" fill="none" stroke="#0fa" stroke-width="0.02"/>
+              <text x="0" y="0.025" text-anchor="middle" font-size="0.08" fill="#0fa" font-weight="bold">C</text>
+
+              <!-- Crosshairs for alignment (between inner and outer rings) -->
+              <line x1="-0.52" y1="0" x2="-0.32" y2="0" stroke="#555" stroke-width="0.01" opacity="0.4"/>
+              <line x1="0.32" y1="0" x2="0.52" y2="0" stroke="#555" stroke-width="0.01" opacity="0.4"/>
+              <line x1="0" y1="-0.52" x2="0" y2="-0.32" stroke="#555" stroke-width="0.01" opacity="0.4"/>
+              <line x1="0" y1="0.32" x2="0" y2="0.52" stroke="#555" stroke-width="0.01" opacity="0.4"/>
+
+              <!-- Cue tip contact point (draggable, r=0.08 same as guides) -->
+              <circle id="contact-point" cx="0" cy="0" r="0.08" fill="#0066cc" stroke="#003366" stroke-width="0.02" cursor="move"/>
             </svg>
-            <div class="spin-display"><span id="spinType-palette">Center</span></div>
+            <div class="spin-display"><span id="spinType">Center</span></div>
           </div>
           <!-- Power Slider -->
           <div class="force-container">
@@ -2084,14 +2364,37 @@
         </div>
         <!-- Solver Options -->
         <div class="solver-options" style="min-width:0;">
-          <div class="control-label">Shot Solver</div>
+          <div class="control-label">Shot Preference:</div>
+          <div class="solver-instructions" style="font-size:12px;color:#666;margin-bottom:8px;">Select an object ball and pocket</div>
           <div class="solver-radio-group">
-            <label><input type="radio" name="solver-mode-palette" value="auto" checked><span>Auto</span></label>
+            <label><input type="radio" name="solver-mode-palette" value="auto" checked><span>Standard</span></label>
             <label><input type="radio" name="solver-mode-palette" value="kick"><span>Kick</span></label>
             <label><input type="radio" name="solver-mode-palette" value="bank"><span>Bank</span></label>
             <label><input type="radio" name="solver-mode-palette" value="combo"><span>Combo</span></label>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Palette: Legend (Left-Middle) -->
+  <div class="tool-palette" id="palette-legend">
+    <div class="palette-header">
+      <span class="palette-title"><span class="palette-title-icon">🎨</span> Legend</span>
+      <div class="palette-controls">
+        <button class="palette-btn minimize" title="Minimize">−</button>
+        <button class="palette-btn close" title="Hide">×</button>
+      </div>
+    </div>
+    <div class="palette-body">
+      <div class="legend-content">
+        <div class="legend-item"><span class="legend-line aim-line"></span> Aim Line</div>
+        <div class="legend-item"><span class="legend-line target-line"></span> Target Line</div>
+        <div class="legend-item"><span class="legend-line obj-path"></span> Object Ball</div>
+        <div class="legend-item"><span class="legend-line cb-path"></span> Cue Ball</div>
+        <div class="legend-item"><span class="legend-line kick-path"></span> Kick Shot</div>
+        <div class="legend-item"><span class="legend-line blocked-path"></span> Blocked</div>
+        <div class="legend-item"><span class="legend-line combo-path"></span> Combo</div>
       </div>
     </div>
   </div>
@@ -2148,79 +2451,102 @@
     </div>
   </div>
 
-  <!-- Palette: Share/Export (Top-Right) -->
-  <div class="tool-palette" id="palette-share" style="top: 20px; right: 20px;">
+  <!-- Palette: Quick Actions (Top Center) -->
+  <div class="tool-palette" id="palette-actions">
     <div class="palette-header">
-      <span class="palette-title"><span class="palette-title-icon">📤</span> Share</span>
+      <span class="palette-title"><span class="palette-title-icon">⚡</span> Actions</span>
       <div class="palette-controls">
         <button class="palette-btn minimize" title="Minimize">−</button>
         <button class="palette-btn close" title="Hide">×</button>
       </div>
     </div>
     <div class="palette-body">
-      <div class="share-buttons">
-        <button class="share-btn primary" id="btnCopyLink" title="Copy shareable link to clipboard">
+      <div class="action-buttons">
+        <button class="action-btn primary" id="btnRandomRack" title="Rack balls and animate break shot">
+          <span class="btn-icon">🎱</span>
+          <span>Break</span>
+        </button>
+        <button class="action-btn" id="btnStartTour" title="Learn how to use this tool">
+          <span class="btn-icon">📚</span>
+          <span>Tour</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Palette: Save (Bottom Center) -->
+  <div class="tool-palette" id="palette-save">
+    <div class="palette-header">
+      <span class="palette-title"><span class="palette-title-icon">💾</span> Save</span>
+      <div class="palette-controls">
+        <button class="palette-btn minimize" title="Minimize">−</button>
+        <button class="palette-btn close" title="Hide">×</button>
+      </div>
+    </div>
+    <div class="palette-body">
+      <div class="export-buttons">
+        <button class="export-btn primary" id="btnCopyLink" title="Copy shareable link to clipboard">
           <span class="btn-icon">🔗</span>
-          <span>Copy Link</span>
+          <span>Link</span>
         </button>
-        <button class="share-btn" id="btnExportPNG" title="Download as PNG image">
+        <button class="export-btn" id="btnExportPNG" title="Download as PNG image">
           <span class="btn-icon">🖼️</span>
-          <span>Export PNG</span>
+          <span>PNG</span>
         </button>
-        <button class="share-btn" id="btnExportSVG" title="Download as SVG vector">
+        <button class="export-btn" id="btnExportSVG" title="Download as SVG vector">
           <span class="btn-icon">📐</span>
-          <span>Export SVG</span>
-        </button>
-      </div>
-      <!-- Position Aids toggles -->
-      <div class="position-aids">
-        <div class="section-label">Position Aids</div>
-        <label class="toggle-row">
-          <input type="checkbox" id="toggleTangentLine">
-          <span>Tangent Line (stop shot)</span>
-        </label>
-        <label class="toggle-row">
-          <input type="checkbox" id="toggleFollowLine">
-          <span>Follow Line (top spin)</span>
-        </label>
-        <label class="toggle-row">
-          <input type="checkbox" id="toggleDrawLine">
-          <span>Draw Line (back spin)</span>
-        </label>
-        <label class="toggle-row">
-          <input type="checkbox" id="toggleShapeZone">
-          <span>Shape Zone</span>
-        </label>
-      </div>
-      <!-- Quick Actions -->
-      <div class="position-aids" style="margin-top:8px; padding-top:8px;">
-        <div class="section-label">Quick Actions</div>
-        <button class="share-btn" id="btnRandomRack" title="Place balls randomly on table" style="margin-top:4px;">
-          <span class="btn-icon">🎲</span>
-          <span>Random Rack</span>
-        </button>
-        <button class="tour-start-btn" id="btnStartTour" title="Learn how to use this tool">
-          <span>📚</span>
-          <span>Take the Tour</span>
+          <span>SVG</span>
         </button>
       </div>
       <!-- Saved Diagrams -->
       <div class="saved-diagrams">
         <div class="section-label">Saved Diagrams</div>
         <div class="save-input-row">
-          <input type="text" id="saveDiagramName" placeholder="Diagram name..." maxlength="50">
+          <input type="text" id="saveDiagramName" placeholder="Name..." maxlength="50">
           <button id="btnSaveDiagram" title="Save current diagram">Save</button>
         </div>
         <div class="saved-list" id="savedDiagramsList">
-          <div class="no-saved">No saved diagrams yet</div>
+          <div class="no-saved">No saved diagrams</div>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Palette: Position Aids (Center-Right) -->
+  <div class="tool-palette" id="palette-aids">
+    <div class="palette-header">
+      <span class="palette-title"><span class="palette-title-icon">📍</span> Aids</span>
+      <div class="palette-controls">
+        <button class="palette-btn minimize" title="Minimize">−</button>
+        <button class="palette-btn close" title="Hide">×</button>
+      </div>
+    </div>
+    <div class="palette-body">
+      <!-- Position Aids toggles -->
+      <div class="position-aids" style="margin-top:0;padding-top:0;border-top:none;">
+        <label class="toggle-row">
+          <input type="checkbox" id="toggleTangentLine">
+          <span>Tangent Line (stop)</span>
+        </label>
+        <label class="toggle-row">
+          <input type="checkbox" id="toggleFollowLine">
+          <span>Follow Line (top)</span>
+        </label>
+        <label class="toggle-row">
+          <input type="checkbox" id="toggleDrawLine">
+          <span>Draw Line (back)</span>
+        </label>
+        <label class="toggle-row">
+          <input type="checkbox" id="toggleShapeZone">
+          <span>Shape Zone</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
   <!-- Tour System Elements -->
-  <div class="tour-overlay" id="tourOverlay"></div>
-  <div class="tour-spotlight" id="tourSpotlight"></div>
+  <div class="tour-overlay" id="tourOverlay" style="display:none;"></div>
+  <div class="tour-spotlight" id="tourSpotlight" style="display:none;"></div>
   <div class="tour-tooltip" id="tourTooltip">
     <div class="tour-tooltip-arrow" id="tourArrow"></div>
     <div class="tour-tooltip-header">
@@ -2247,9 +2573,17 @@
   <!-- Toast notification for copy feedback -->
   <div class="toast-notification" id="toastNotification">Link copied to clipboard!</div>
 
+  <!-- Status banner for persistent messages (blocked paths, etc.) -->
+  <div class="status-banner" id="statusBanner">
+    <span class="status-icon">🚫</span>
+    <span class="status-message" id="statusMessage">All lanes blocked.</span>
+    <span class="status-suggestion" id="statusSuggestion">Jump shot?</span>
+  </div>
+
   <!-- Restore buttons (shown when palette is hidden) -->
   <button class="palette-restore-btn" id="restore-balls" title="Show Balls">🎱</button>
   <button class="palette-restore-btn" id="restore-cue" title="Show Cue Control">🎯</button>
+  <button class="palette-restore-btn" id="restore-legend" title="Show Legend">🎨</button>
   <button class="palette-restore-btn" id="restore-game" title="Show Game">🎮</button>
   <button class="palette-restore-btn" id="restore-shot" title="Show Shot Info">📊</button>
   <button class="palette-restore-btn" id="restore-share" title="Show Share">📤</button>
@@ -2302,6 +2636,9 @@
       const overlapSlashDisplay = document.getElementById('overlapSlash');
       const cbFinalPosition = document.getElementById('cb-final-position');
       const obFinalPosition = document.getElementById('ob-final-position');
+      const statusBanner = document.getElementById('statusBanner');
+      const statusMessage = document.getElementById('statusMessage');
+      const statusSuggestion = document.getElementById('statusSuggestion');
 
       // Combination shot elements
       const comboShotIndicator = document.getElementById('combo-shot-indicator');
@@ -3391,6 +3728,87 @@
           }
         }
 
+        // If no 2-rail kick works, try 3-rail kicks
+        if (validKicks.length === 0 || validKicks.every(k => !k.viability.viable)) {
+          for (const rail1 of railNames) {
+            for (const rail2 of railNames) {
+              if (rail1 === rail2) continue;
+              for (const rail3 of railNames) {
+                if (rail3 === rail2) continue;
+                // Skip if rail3 equals rail1 (would be redundant)
+                if (rail3 === rail1) continue;
+
+                // Triple mirror: ghost across rail3, then rail2, then rail1
+                const mirror1 = mirrorAcrossRail(ghostPos, rail3);
+                const mirror2 = mirrorAcrossRail(mirror1, rail2);
+                const mirror3 = mirrorAcrossRail(mirror2, rail1);
+
+                // Find first bounce point
+                const bounce1 = lineRailIntersection(cuePos, mirror3, rail1);
+                if (!bounce1) continue;
+
+                // Find second bounce point
+                const bounce2 = lineRailIntersection(bounce1, mirror1, rail2);
+                if (!bounce2) continue;
+
+                // Find third bounce point
+                const bounce3 = lineRailIntersection(bounce2, ghostPos, rail3);
+                if (!bounce3) continue;
+
+                // Check all four segments for ball collisions
+                const seg1Check = isPathBlockedByAnyBall(cuePos, bounce1, excludeIds);
+                const seg2Check = isPathBlockedByAnyBall(bounce1, bounce2, excludeIds);
+                const seg3Check = isPathBlockedByAnyBall(bounce2, bounce3, excludeIds);
+                const seg4Check = isPathBlockedByAnyBall(bounce3, ghostPos, excludeIds);
+
+                if (!seg1Check.blocked && !seg2Check.blocked && !seg3Check.blocked && !seg4Check.blocked) {
+                  // Check if final segment would hit OB prematurely
+                  if (wouldHitObjectBallPrematurely(bounce3, ghostPos, objBallPos)) {
+                    continue;
+                  }
+
+                  // Calculate cut angle from final approach
+                  const approachDir = vectorNormalize(vectorSubtract(ghostPos, bounce3));
+                  const cutAngleDegrees = Math.acos(Math.abs(dotProduct(approachDir, ghostToObj))) * (180 / Math.PI);
+
+                  // Calculate distances
+                  const d1 = vectorLength(vectorSubtract(bounce1, cuePos));
+                  const d2 = vectorLength(vectorSubtract(bounce2, bounce1));
+                  const d3 = vectorLength(vectorSubtract(bounce3, bounce2));
+                  const d4 = vectorLength(vectorSubtract(ghostPos, bounce3));
+
+                  // Check for scratches
+                  const scratches = pathCrossesPocket(cuePos, bounce1) ||
+                                   pathCrossesPocket(bounce1, bounce2) ||
+                                   pathCrossesPocket(bounce2, bounce3) ||
+                                   pathCrossesPocket(bounce3, ghostPos);
+
+                  const kickPath = {
+                    rails: [rail1, rail2, rail3],
+                    bouncePoints: [bounce1, bounce2, bounce3],
+                    aimPoint: bounce1,
+                    cuePos: cuePos,
+                    ghostPos: ghostPos,
+                    requiredEnglish: 0,  // Complex to calculate for 3-rail
+                    currentEnglish: currentEnglish,
+                    englishPossible: true,
+                    englishError: 0,
+                    englishErrorAngle: 0,
+                    scratches: scratches,
+                    totalLength: d1 + d2 + d3 + d4,
+                    cutAngle: cutAngleDegrees
+                  };
+
+                  kickPath.viability = scoreKickPath(kickPath, shotForce || 5, cutAngleDegrees, obToPocketDist);
+                  // Reduce score for 3-rail (harder shot)
+                  kickPath.viability.score -= 15;
+                  validKicks.push(kickPath);
+                }
+              }
+            }
+          }
+        }
+
         // Sort kicks: prefer viable paths with high scores and lower cut angles
         if (validKicks.length > 0) {
           validKicks.sort((a, b) => {
@@ -3653,7 +4071,7 @@
 
           // Calculate where helper needs to hit target to send it toward pocket
           // Ghost ball position for helper → target collision
-          const targetToPocket = normalize({
+          const targetToPocket = vectorNormalize({
             x: pocketPos.x - targetPos.x,
             y: pocketPos.y - targetPos.y
           });
@@ -3665,7 +4083,7 @@
           };
 
           // Calculate where cue needs to hit helper to send it toward target ghost
-          const helperToTargetGhost = normalize({
+          const helperToTargetGhost = vectorNormalize({
             x: targetGhostPos.x - helperPos.x,
             y: targetGhostPos.y - helperPos.y
           });
@@ -3677,7 +4095,7 @@
           };
 
           // Check alignment: does helper → target direction align with target → pocket?
-          const helperToTarget = normalize({
+          const helperToTarget = vectorNormalize({
             x: targetPos.x - helperPos.x,
             y: targetPos.y - helperPos.y
           });
@@ -3688,7 +4106,7 @@
           if (alignment < 0.3) continue;
 
           // Calculate cut angles
-          const cueToHelperGhost = normalize({
+          const cueToHelperGhost = vectorNormalize({
             x: helperGhostPos.x - cuePos.x,
             y: helperGhostPos.y - cuePos.y
           });
@@ -4008,6 +4426,13 @@
           }
         }
 
+        // Check if object ball path to pocket is blocked
+        let obPathBlockedWarning = '';
+        if (shotData.obPathBlocked && shotData.obBlockingBalls && shotData.obBlockingBalls.length > 0) {
+          const blockingBallIds = shotData.obBlockingBalls.join(', ');
+          obPathBlockedWarning = `Path blocked by ${blockingBallIds}-ball!`;
+        }
+
         // Determine shot type and aim point description
         let aimText = '';
         let englishText = 'Center';
@@ -4112,12 +4537,17 @@
         // Determine verdict and difficulty level
         let verdict, verdictClass, diffLevel, diffClass;
 
-        // Override verdict if illegal ball is selected
+        // Override verdict if illegal ball is selected or path is blocked
         if (illegalBallWarning) {
           verdict = 'FOUL';
           verdictClass = 'foul';
           diffLevel = 'Illegal';
           diffClass = 'foul';
+        } else if (obPathBlockedWarning) {
+          verdict = 'Blocked';
+          verdictClass = 'very-hard';
+          diffLevel = 'Blocked';
+          diffClass = 'very-hard';
         } else if (difficultyScore <= 25) {
           verdict = 'Makeable';
           verdictClass = 'makeable';
@@ -4147,10 +4577,13 @@
         englishInstruction.textContent = englishText;
         englishHint.textContent = englishHintText;
 
-        // Show/hide foul warning banner
+        // Show/hide foul warning banner (for fouls or blocked paths)
         if (illegalBallWarning) {
           foulWarningBanner.style.display = 'flex';
           foulMessage.textContent = illegalBallWarning;
+        } else if (obPathBlockedWarning) {
+          foulWarningBanner.style.display = 'flex';
+          foulMessage.textContent = obPathBlockedWarning;
         } else {
           foulWarningBanner.style.display = 'none';
         }
@@ -4530,8 +4963,31 @@
           const el = document.createElement('div');
           el.className = `ball ${ball.cls}`;
           el.id = `ball-${ball.id}`;
-          el.textContent = ball.label;
           el.dataset.ballId = ball.id;
+
+          // Create SVG label instead of text content
+          const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          svg.setAttribute('viewBox', '0 0 100 100');
+          svg.setAttribute('class', 'ball-label-svg');
+
+          const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          text.setAttribute('x', '50');
+          text.setAttribute('y', '50');
+          text.setAttribute('text-anchor', 'middle');
+          text.setAttribute('dominant-baseline', 'central');
+          text.textContent = ball.label;
+
+          // Apply different styling based on ball type
+          if (ball.id === 'cue') {
+            text.setAttribute('class', 'ball-label ball-label-cue');
+          } else if (ball.id === 'ghost') {
+            text.setAttribute('class', 'ball-label ball-label-ghost');
+          } else {
+            text.setAttribute('class', 'ball-label ball-label-number');
+          }
+
+          svg.appendChild(text);
+          el.appendChild(svg);
 
           // Put cue and ghost in special row, others in grid
           if (paletteGrid && paletteSpecial) {
@@ -4831,12 +5287,23 @@
             obMadeIt = true;
           }
 
+          // Check if object ball path to pocket is blocked by other balls
+          const obPathExcludeIds = ['cue', 'ghost', selectedBallId].filter(Boolean);
+          const obPathBlockCheck = isPathBlockedByAnyBall(objBallPos, pocketPos, obPathExcludeIds);
+          const obPathBlocked = obPathBlockCheck.blocked;
+          const obBlockingBalls = obPathBlockCheck.blockingBalls || [];
+
+          // If OB path is blocked, OB won't make it to pocket
+          if (obPathBlocked) {
+            obMadeIt = false;
+          }
+
           // Check if we should show a bank shot instead of direct shot
           let currentBankShot = null;
           let showingBank = false;
 
-          // In auto mode, only consider bank if direct path is blocked
-          const directPathBlocked = currentKickPath !== null;
+          // In auto mode, consider alternatives if cue-to-ghost OR ob-to-pocket path is blocked
+          const directPathBlocked = currentKickPath !== null || obPathBlocked;
 
           if (cuePos && (currentSolverMode === 'bank' || (currentSolverMode === 'auto' && directPathBlocked))) {
             // Check all balls on table as obstacles when finding bank shots
@@ -4880,6 +5347,31 @@
 
           // Hide combo indicator by default
           hideComboShot();
+
+          // Determine if ALL lanes are blocked (no viable shot path exists)
+          // A shot is viable if:
+          // - Direct: cue can reach ghost (no kick needed) AND OB can reach pocket (not blocked)
+          // - Kick: a viable kick path exists (handles cue-to-ghost blocking)
+          // - Bank: a viable bank shot exists (OB bounces off rail to pocket)
+          // - Combo: a viable combo exists (use another ball to pocket the target)
+          const cueToGhostBlocked = currentKickPath !== null;  // If kick path exists, direct was blocked
+          const kickViable = currentKickPath && currentKickPath.viability && currentKickPath.viability.viable;
+          const bankViable = currentBankShot && currentBankShot.viability && currentBankShot.viability.viable;
+          const comboViable = currentCombo && currentCombo.viable;
+          const directViable = !cueToGhostBlocked && !obPathBlocked;  // Both paths must be clear
+
+          // All lanes blocked if no viable option exists
+          const hasViablePath = directViable || kickViable || bankViable || comboViable;
+          const allLanesBlocked = !hasViablePath;
+
+          // Update status banner
+          if (allLanesBlocked && selectedBallId && selectedPocket) {
+            statusMessage.textContent = 'All lanes blocked.';
+            statusSuggestion.textContent = 'Jump shot?';
+            statusBanner.classList.add('visible');
+          } else {
+            statusBanner.classList.remove('visible');
+          }
 
           let objPathEnd;
           if (showingCombo && currentCombo) {
@@ -4997,9 +5489,39 @@
           } else {
             // Direct shot path: OB → pocket
             objPathEnd = vectorAdd(objBallPos, vectorScale(objToPocket, objPathLength));
+
+            // If path is blocked, find where OB would stop (at the blocking ball)
+            if (obPathBlocked && obBlockingBalls.length > 0) {
+              // Find the closest blocking ball along the path
+              let closestBlockDist = Infinity;
+              let blockPoint = objPathEnd;
+              for (const blockBallId of obBlockingBalls) {
+                const blockBallPos = ballPositions[blockBallId];
+                if (blockBallPos) {
+                  const distToBlock = vectorLength(vectorSubtract(blockBallPos, objBallPos));
+                  if (distToBlock < closestBlockDist) {
+                    closestBlockDist = distToBlock;
+                    // OB stops one ball diameter before hitting the blocking ball
+                    const stopDist = Math.max(0, distToBlock - BALL_RADIUS * 2);
+                    blockPoint = vectorAdd(objBallPos, vectorScale(objToPocket, stopDist));
+                  }
+                }
+              }
+              objPathEnd = blockPoint;
+            }
+
             const obPathD = `M ${objBallPos.x} ${objBallPos.y} L ${objPathEnd.x} ${objPathEnd.y}`;
             objBallPath.setAttribute('d', obPathD);
             objBallPath.setAttribute('visibility', 'visible');
+
+            // Change path style if blocked
+            if (obPathBlocked) {
+              objBallPath.setAttribute('stroke', '#ff4444');  // Red for blocked
+              objBallPath.setAttribute('stroke-dasharray', '2,2');  // Dashed
+            } else {
+              objBallPath.setAttribute('stroke', '#ffaa00');  // Normal orange-yellow
+              objBallPath.setAttribute('stroke-dasharray', 'none');
+            }
           }
 
           // Show OB final position indicator
@@ -5152,7 +5674,11 @@
             isLegalTarget: isLegalTarget,
             legalTargetBalls: getLegalTargetBalls(),
             gameModeName: currentGameMode.name,
-            targetRule: currentGameMode.targetRule
+            targetRule: currentGameMode.targetRule,
+            // Object ball path blocked info
+            obPathBlocked: obPathBlocked && !showingBank && !showingCombo,  // Only relevant for direct shots
+            obBlockingBalls: obBlockingBalls,
+            allLanesBlocked: allLanesBlocked
           };
           updateShotInstructions(shotData);
         } else {
@@ -5166,6 +5692,7 @@
           overlapDisplay.textContent = '--';
           updateOverlapDiagram(0.5);  // Default to half-ball view
           updateShotInstructions(null);  // Clear instructions
+          statusBanner.classList.remove('visible');  // Hide status banner
         }
       }
 
@@ -5365,6 +5892,21 @@
 
         draggedBall.style.left = newLeft + 'px';
         draggedBall.style.top = newTop + 'px';
+
+        // Update ball position and shot info in real-time during drag
+        const ballId = draggedBall.dataset.ballId;
+        const centerX = clientX - offsetX;
+        const centerY = clientY - offsetY;
+        const svgPos = pageToSvg(centerX, centerY);
+
+        if (isOnPlayingSurface(svgPos.x, svgPos.y)) {
+          ballPositions[ballId] = { x: svgPos.x, y: svgPos.y };
+          // Auto-position ghost ball if dragging object ball or if dragging cue
+          if (ballId === selectedBallId) {
+            autoPositionGhostBall();
+          }
+          updateCueGhostLine();
+        }
       }
 
       // End drag (or handle click if no drag occurred)
@@ -5787,6 +6329,7 @@
       const palettes = {
         balls: document.getElementById('palette-balls'),
         cue: document.getElementById('palette-cue'),
+        legend: document.getElementById('palette-legend'),
         game: document.getElementById('palette-game'),
         shot: document.getElementById('palette-shot')
       };
@@ -5794,6 +6337,7 @@
       const restoreButtons = {
         balls: document.getElementById('restore-balls'),
         cue: document.getElementById('restore-cue'),
+        legend: document.getElementById('restore-legend'),
         game: document.getElementById('restore-game'),
         shot: document.getElementById('restore-shot')
       };
@@ -6164,7 +6708,9 @@
         // Set english
         if (state.english) {
           contactOffset = { x: state.english.x, y: state.english.y };
-          updateContactPoint();
+          contactPoint.setAttribute('cx', contactOffset.x);
+          contactPoint.setAttribute('cy', contactOffset.y);
+          spinTypeDisplay.textContent = getSpinType(contactOffset);
         }
 
         // Set solver mode
@@ -6223,36 +6769,423 @@
         });
       }
 
-      // Export as PNG
-      async function exportPNG() {
-        const svg = document.getElementById('pool-table-svg');
-        const svgClone = svg.cloneNode(true);
+      // Ball colors for SVG export (simplified solid colors)
+      const BALL_EXPORT_COLORS = {
+        'cue': { fill: '#f0f0f0', stroke: '#999', textFill: '#666' },
+        'ghost': { fill: 'none', stroke: '#fff', strokeDash: '0.3,0.2', textFill: 'rgba(255,255,255,0.8)' },
+        '1': { fill: '#ffd700', stroke: '#c9a600', textFill: '#000' },
+        '2': { fill: '#0066cc', stroke: '#004c99', textFill: '#fff' },
+        '3': { fill: '#ff4444', stroke: '#cc0000', textFill: '#fff' },
+        '4': { fill: '#6b2d8b', stroke: '#4a1f61', textFill: '#fff' },
+        '5': { fill: '#ff6600', stroke: '#cc5200', textFill: '#fff' },
+        '6': { fill: '#006633', stroke: '#004422', textFill: '#fff' },
+        '7': { fill: '#8b0000', stroke: '#5c0000', textFill: '#fff' },
+        '8': { fill: '#111', stroke: '#000', textFill: '#fff' },
+        '9': { fill: '#ffd700', stroke: '#c9a600', textFill: '#000', stripe: true },
+        '10': { fill: '#0066cc', stroke: '#004c99', textFill: '#fff', stripe: true },
+        '11': { fill: '#ff4444', stroke: '#cc0000', textFill: '#fff', stripe: true },
+        '12': { fill: '#6b2d8b', stroke: '#4a1f61', textFill: '#fff', stripe: true },
+        '13': { fill: '#ff6600', stroke: '#cc5200', textFill: '#fff', stripe: true },
+        '14': { fill: '#006633', stroke: '#004422', textFill: '#fff', stripe: true },
+        '15': { fill: '#8b0000', stroke: '#5c0000', textFill: '#fff', stripe: true },
+        'gray': { fill: '#777', stroke: '#555', textFill: '#fff' }
+      };
 
-        // Remove UI elements that shouldn't be in export
-        svgClone.querySelectorAll('.pocket-target').forEach(el => {
-          el.style.opacity = '0';
+      // Create a composite SVG for export with all visible elements
+      function createExportSVG() {
+        const tableSvg = document.getElementById('pool-table-svg');
+        const overlay = document.getElementById('connection-overlay');
+
+        // Extended viewBox to include info panels below table
+        // Original: -8 -8 116 66, now add 22 units below for panels
+        const exportSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        exportSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        exportSvg.setAttribute('viewBox', '-8 -8 116 88');
+
+        // Add background (extended for panels)
+        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        bg.setAttribute('x', '-8');
+        bg.setAttribute('y', '-8');
+        bg.setAttribute('width', '116');
+        bg.setAttribute('height', '88');
+        bg.setAttribute('fill', '#1a1a2e');
+        exportSvg.appendChild(bg);
+
+        // Clone and add table SVG content (excluding defs, we'll handle those)
+        const tableClone = tableSvg.cloneNode(true);
+        // Copy defs
+        const tableDefs = tableClone.querySelector('defs');
+        if (tableDefs) {
+          exportSvg.appendChild(tableDefs.cloneNode(true));
+        }
+        // Copy all other children
+        Array.from(tableClone.children).forEach(child => {
+          if (child.tagName !== 'defs' && child.tagName !== 'title') {
+            exportSvg.appendChild(child.cloneNode(true));
+          }
         });
 
-        // Set explicit dimensions
-        svgClone.setAttribute('width', '1600');
-        svgClone.setAttribute('height', '900');
+        // Clone overlay defs (gradients for cue stick)
+        const overlayDefs = overlay.querySelector('defs');
+        if (overlayDefs) {
+          const existingDefs = exportSvg.querySelector('defs');
+          if (existingDefs) {
+            Array.from(overlayDefs.children).forEach(child => {
+              existingDefs.appendChild(child.cloneNode(true));
+            });
+          }
+        }
 
-        const svgData = new XMLSerializer().serializeToString(svgClone);
+        // Add visible overlay elements (skip pocket-targets and hidden items)
+        const overlayGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        overlayGroup.setAttribute('id', 'shot-overlay');
+
+        Array.from(overlay.children).forEach(child => {
+          // Skip defs and pocket targets
+          if (child.tagName === 'defs') return;
+          if (child.id === 'pocket-targets') return;
+          if (child.classList && child.classList.contains('pocket-target')) return;
+
+          // Only include visible elements
+          const visibility = child.getAttribute('visibility');
+          const display = child.style.display;
+          if (visibility === 'hidden' || display === 'none') return;
+
+          // Clone the element
+          const clone = child.cloneNode(true);
+          overlayGroup.appendChild(clone);
+        });
+
+        exportSvg.appendChild(overlayGroup);
+
+        // Add balls as SVG circles
+        const ballsGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        ballsGroup.setAttribute('id', 'balls');
+
+        // Ball radius in SVG units
+        const BALL_RADIUS = 1.125;
+
+        Object.entries(ballPositions).forEach(([ballId, pos]) => {
+          if (!pos) return;
+
+          const colors = BALL_EXPORT_COLORS[ballId] || BALL_EXPORT_COLORS['gray'];
+          const ballGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          ballGroup.setAttribute('transform', `translate(${pos.x}, ${pos.y})`);
+
+          // For striped balls, draw stripe pattern
+          if (colors.stripe) {
+            // Bottom half of ball color
+            const bottomHalf = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            bottomHalf.setAttribute('r', BALL_RADIUS);
+            bottomHalf.setAttribute('fill', colors.fill);
+            bottomHalf.setAttribute('stroke', colors.stroke);
+            bottomHalf.setAttribute('stroke-width', '0.1');
+            ballGroup.appendChild(bottomHalf);
+
+            // White stripe band in middle
+            const stripe = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            stripe.setAttribute('x', -BALL_RADIUS);
+            stripe.setAttribute('y', -BALL_RADIUS * 0.4);
+            stripe.setAttribute('width', BALL_RADIUS * 2);
+            stripe.setAttribute('height', BALL_RADIUS * 0.8);
+            stripe.setAttribute('fill', '#fff');
+            // Clip to circle
+            const clipId = `clip-ball-${ballId}`;
+            const clipPath = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
+            clipPath.setAttribute('id', clipId);
+            const clipCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            clipCircle.setAttribute('r', BALL_RADIUS);
+            clipPath.appendChild(clipCircle);
+            ballGroup.appendChild(clipPath);
+            stripe.setAttribute('clip-path', `url(#${clipId})`);
+            ballGroup.appendChild(stripe);
+          } else if (ballId === 'ghost') {
+            // Ghost ball - dashed outline
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('r', BALL_RADIUS);
+            circle.setAttribute('fill', 'none');
+            circle.setAttribute('stroke', colors.stroke);
+            circle.setAttribute('stroke-width', '0.15');
+            circle.setAttribute('stroke-dasharray', colors.strokeDash || '');
+            circle.setAttribute('opacity', '0.7');
+            ballGroup.appendChild(circle);
+          } else {
+            // Solid balls and cue ball
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('r', BALL_RADIUS);
+            circle.setAttribute('fill', colors.fill);
+            circle.setAttribute('stroke', colors.stroke);
+            circle.setAttribute('stroke-width', '0.1');
+            ballGroup.appendChild(circle);
+
+            // For numbered solid balls, add white center circle
+            if (!isNaN(parseInt(ballId)) && parseInt(ballId) <= 8) {
+              const centerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+              centerCircle.setAttribute('r', BALL_RADIUS * 0.45);
+              centerCircle.setAttribute('fill', '#fff');
+              ballGroup.appendChild(centerCircle);
+            }
+          }
+
+          // Add label text
+          const label = balls.find(b => b.id === ballId)?.label || ballId;
+          const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          text.setAttribute('x', '0');
+          text.setAttribute('y', '0.35');
+          text.setAttribute('text-anchor', 'middle');
+          text.setAttribute('font-size', ballId === 'cue' || ballId === 'ghost' || ballId === 'gray' ? '0.7' : '0.9');
+          text.setAttribute('font-family', 'Arial, sans-serif');
+          text.setAttribute('font-weight', 'bold');
+          text.setAttribute('fill', colors.textFill);
+          text.textContent = label;
+          ballGroup.appendChild(text);
+
+          ballsGroup.appendChild(ballGroup);
+        });
+
+        exportSvg.appendChild(ballsGroup);
+
+        // ========== ADD INFO PANELS BELOW TABLE ==========
+        const panelY = 60;  // Start panels below the table
+        const panelHeight = 18;
+        const panelPadding = 1.5;
+
+        // Panel background
+        const panelBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        panelBg.setAttribute('x', '-6');
+        panelBg.setAttribute('y', panelY);
+        panelBg.setAttribute('width', '112');
+        panelBg.setAttribute('height', panelHeight);
+        panelBg.setAttribute('fill', '#0d1520');
+        panelBg.setAttribute('rx', '2');
+        exportSvg.appendChild(panelBg);
+
+        // Create three panel sections
+        const sectionWidth = 35;
+
+        // Helper to create text elements
+        function addText(parent, x, y, text, options = {}) {
+          const el = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          el.setAttribute('x', x);
+          el.setAttribute('y', y);
+          el.setAttribute('font-family', 'Arial, sans-serif');
+          el.setAttribute('font-size', options.size || '2');
+          el.setAttribute('fill', options.fill || '#fff');
+          if (options.weight) el.setAttribute('font-weight', options.weight);
+          if (options.anchor) el.setAttribute('text-anchor', options.anchor);
+          el.textContent = text;
+          parent.appendChild(el);
+          return el;
+        }
+
+        // Helper to draw a line sample for legend
+        function addLineSample(parent, x, y, color, dasharray, label) {
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('x1', x);
+          line.setAttribute('y1', y);
+          line.setAttribute('x2', x + 4);
+          line.setAttribute('y2', y);
+          line.setAttribute('stroke', color);
+          line.setAttribute('stroke-width', '0.5');
+          if (dasharray) line.setAttribute('stroke-dasharray', dasharray);
+          parent.appendChild(line);
+          addText(parent, x + 5.5, y + 0.5, label, { size: '1.6', fill: '#aaa' });
+        }
+
+        // ===== PANEL 1: CUE CONTROL =====
+        const panel1X = -4;
+        const panel1 = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        panel1.setAttribute('id', 'export-cue-control');
+
+        addText(panel1, panel1X, panelY + 3, 'CUE CONTROL', { size: '2.2', fill: '#0fa', weight: 'bold' });
+
+        // English position
+        const engX = contactOffset.x;
+        const engY = contactOffset.y;
+        let engDesc = 'Center';
+        if (Math.abs(engX) > 0.1 || Math.abs(engY) > 0.1) {
+          const parts = [];
+          if (engY < -0.15) parts.push('Follow');
+          else if (engY > 0.15) parts.push('Draw');
+          if (engX < -0.15) parts.push('Left');
+          else if (engX > 0.15) parts.push('Right');
+          engDesc = parts.length > 0 ? parts.join(' + ') : 'Center';
+        }
+        addText(panel1, panel1X, panelY + 6, 'English:', { size: '1.8', fill: '#888' });
+        addText(panel1, panel1X + 10, panelY + 6, engDesc, { size: '1.8', fill: '#fff' });
+
+        // Power
+        addText(panel1, panel1X, panelY + 9, 'Power:', { size: '1.8', fill: '#888' });
+        addText(panel1, panel1X + 10, panelY + 9, `${shotForce}/10`, { size: '1.8', fill: '#fff' });
+
+        // Draw mini cue ball with contact point
+        const miniCueX = panel1X + 25;
+        const miniCueY = panelY + 9;
+        const miniR = 4;
+        const miniCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        miniCircle.setAttribute('cx', miniCueX);
+        miniCircle.setAttribute('cy', miniCueY);
+        miniCircle.setAttribute('r', miniR);
+        miniCircle.setAttribute('fill', '#e8e8e8');
+        miniCircle.setAttribute('stroke', '#666');
+        miniCircle.setAttribute('stroke-width', '0.2');
+        panel1.appendChild(miniCircle);
+
+        // Contact point on mini cue ball (scaled from -0.56 to 0.56 range)
+        const contactDotX = miniCueX + (engX / 0.56) * (miniR * 0.9);
+        const contactDotY = miniCueY + (engY / 0.56) * (miniR * 0.9);
+        const contactDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        contactDot.setAttribute('cx', contactDotX);
+        contactDot.setAttribute('cy', contactDotY);
+        contactDot.setAttribute('r', '0.8');
+        contactDot.setAttribute('fill', '#0066cc');
+        panel1.appendChild(contactDot);
+
+        exportSvg.appendChild(panel1);
+
+        // ===== PANEL 2: SHOT INFO =====
+        const panel2X = 33;
+        const panel2 = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        panel2.setAttribute('id', 'export-shot-info');
+
+        addText(panel2, panel2X, panelY + 3, 'SHOT INFO', { size: '2.2', fill: '#0fa', weight: 'bold' });
+
+        // Get current shot info from display elements
+        const cutAngleText = cutAngleDisplay?.textContent || '--';
+        const overlapText = overlapDisplay?.textContent || '--';
+        const overlapPercentText = document.getElementById('overlapPercent')?.textContent || '50%';
+        const overlapEnglishText = document.getElementById('overlapEnglish')?.textContent || 'Half ball';
+        const diffText = difficultyText?.textContent || '--';
+        const verdictText = shotVerdict?.textContent || '--';
+
+        // Text info on left side of panel 2
+        addText(panel2, panel2X, panelY + 6, 'Cut Angle:', { size: '1.6', fill: '#888' });
+        addText(panel2, panel2X + 11, panelY + 6, cutAngleText, { size: '1.6', fill: '#fff' });
+
+        addText(panel2, panel2X, panelY + 8.5, 'Overlap:', { size: '1.6', fill: '#888' });
+        addText(panel2, panel2X + 11, panelY + 8.5, `${overlapEnglishText} (${overlapPercentText})`, { size: '1.6', fill: '#fff' });
+
+        addText(panel2, panel2X, panelY + 11, 'Difficulty:', { size: '1.6', fill: '#888' });
+        addText(panel2, panel2X + 11, panelY + 11, diffText, { size: '1.6', fill: '#fff' });
+
+        addText(panel2, panel2X, panelY + 13.5, 'Verdict:', { size: '1.6', fill: '#888' });
+        addText(panel2, panel2X + 11, panelY + 13.5, verdictText, { size: '1.6', fill: '#0fa', weight: 'bold' });
+
+        // Venn diagram (overlap visualization) on right side of panel 2
+        const vennX = panel2X + 27;
+        const vennY = panelY + 9;
+        const vennScale = 3.5;  // Scale factor for the diagram
+
+        // Parse overlap percentage to calculate ghost ball position
+        const overlapPercent = parseInt(overlapPercentText) || 50;
+        const overlapFraction = overlapPercent / 100;
+        const objBallXVenn = 0.5;
+        const vennOffset = (1 - overlapFraction) * 2;
+        const ghostBallXVenn = objBallXVenn - vennOffset;
+
+        // Venn diagram background
+        const vennBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        vennBg.setAttribute('x', vennX - 3.5 * vennScale / 3);
+        vennBg.setAttribute('y', vennY - vennScale);
+        vennBg.setAttribute('width', 7 * vennScale / 3);
+        vennBg.setAttribute('height', 2 * vennScale);
+        vennBg.setAttribute('fill', '#0a0f15');
+        vennBg.setAttribute('rx', '1');
+        panel2.appendChild(vennBg);
+
+        // ClipPath for overlap region
+        const vennClipId = 'export-clip-obj-ball';
+        const vennDefs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        const vennClip = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
+        vennClip.setAttribute('id', vennClipId);
+        const clipCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        clipCircle.setAttribute('cx', vennX + objBallXVenn * vennScale / 3);
+        clipCircle.setAttribute('cy', vennY);
+        clipCircle.setAttribute('r', vennScale / 3);
+        vennClip.appendChild(clipCircle);
+        vennDefs.appendChild(vennClip);
+        panel2.appendChild(vennDefs);
+
+        // Object Ball (OB) - orange outline
+        const vennOB = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        vennOB.setAttribute('cx', vennX + objBallXVenn * vennScale / 3);
+        vennOB.setAttribute('cy', vennY);
+        vennOB.setAttribute('r', vennScale / 3);
+        vennOB.setAttribute('fill', 'none');
+        vennOB.setAttribute('stroke', '#ff6b35');
+        vennOB.setAttribute('stroke-width', '0.15');
+        panel2.appendChild(vennOB);
+
+        // Ghost Ball (GB) - gold dashed
+        const vennGB = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        vennGB.setAttribute('cx', vennX + ghostBallXVenn * vennScale / 3);
+        vennGB.setAttribute('cy', vennY);
+        vennGB.setAttribute('r', vennScale / 3);
+        vennGB.setAttribute('fill', 'rgba(255,215,0,0.15)');
+        vennGB.setAttribute('stroke', '#ffd700');
+        vennGB.setAttribute('stroke-width', '0.15');
+        vennGB.setAttribute('stroke-dasharray', '0.3,0.2');
+        panel2.appendChild(vennGB);
+
+        // Overlap region highlight (clipped to OB)
+        const vennOverlap = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        vennOverlap.setAttribute('cx', vennX + ghostBallXVenn * vennScale / 3);
+        vennOverlap.setAttribute('cy', vennY);
+        vennOverlap.setAttribute('r', vennScale / 3);
+        vennOverlap.setAttribute('fill', 'rgba(0,255,170,0.3)');
+        vennOverlap.setAttribute('clip-path', `url(#${vennClipId})`);
+        panel2.appendChild(vennOverlap);
+
+        // Labels
+        addText(panel2, vennX + objBallXVenn * vennScale / 3, vennY + 0.3, 'OB', { size: '1.1', fill: '#ff6b35', anchor: 'middle' });
+        addText(panel2, vennX + ghostBallXVenn * vennScale / 3, vennY + 0.3, 'CB', { size: '1.1', fill: '#ffd700', anchor: 'middle' });
+
+        exportSvg.appendChild(panel2);
+
+        // ===== PANEL 3: LEGEND =====
+        const panel3X = 68;
+        const panel3 = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        panel3.setAttribute('id', 'export-legend');
+
+        addText(panel3, panel3X, panelY + 3, 'LEGEND', { size: '2.2', fill: '#0fa', weight: 'bold' });
+
+        // Line legend items
+        addLineSample(panel3, panel3X, panelY + 5.5, '#fff', '1,1', 'Aim Line');
+        addLineSample(panel3, panel3X, panelY + 8, '#ffd700', null, 'Target Line');
+        addLineSample(panel3, panel3X, panelY + 10.5, '#ff6b35', null, 'OB Path');
+        addLineSample(panel3, panel3X, panelY + 13, '#00bfff', null, 'CB Path');
+
+        addLineSample(panel3, panel3X + 18, panelY + 5.5, '#ff0', null, 'Kick Point');
+        addLineSample(panel3, panel3X + 18, panelY + 8, '#ff4444', '0.8,0.4', 'Blocked');
+        addLineSample(panel3, panel3X + 18, panelY + 10.5, '#ff44ff', null, 'Combo');
+        addLineSample(panel3, panel3X + 18, panelY + 13, '#00ffff', '0.8,0.4', 'Tangent');
+
+        exportSvg.appendChild(panel3);
+
+        return exportSvg;
+      }
+
+      // Export as PNG
+      async function exportPNG() {
+        const exportSvg = createExportSVG();
+
+        // Set explicit dimensions (viewBox is 116x88, aspect ratio ~1.32)
+        exportSvg.setAttribute('width', '1600');
+        exportSvg.setAttribute('height', '1214');
+
+        const svgData = new XMLSerializer().serializeToString(exportSvg);
         const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
         const url = URL.createObjectURL(svgBlob);
 
         const canvas = document.createElement('canvas');
         canvas.width = 1600;
-        canvas.height = 900;
+        canvas.height = 1214;
         const ctx = canvas.getContext('2d');
 
         const img = new Image();
         img.onload = () => {
-          // Draw background
-          ctx.fillStyle = '#1a1a2e';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          // Draw SVG
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          // Draw SVG (fills canvas)
+          ctx.drawImage(img, 0, 0, 1600, 1214);
           URL.revokeObjectURL(url);
 
           // Download
@@ -6265,24 +7198,23 @@
             showToast('PNG downloaded!');
           }, 'image/png');
         };
+        img.onerror = (e) => {
+          console.error('Failed to load SVG for PNG export:', e);
+          showToast('Export failed - try SVG instead');
+          URL.revokeObjectURL(url);
+        };
         img.src = url;
       }
 
       // Export as SVG
       function exportSVG() {
-        const svg = document.getElementById('pool-table-svg');
-        const svgClone = svg.cloneNode(true);
+        const exportSvg = createExportSVG();
 
-        // Remove pocket target interactivity styling
-        svgClone.querySelectorAll('.pocket-target').forEach(el => {
-          el.style.opacity = '0';
-        });
+        // Set explicit dimensions (viewBox is 116x88, aspect ratio ~1.32)
+        exportSvg.setAttribute('width', '800');
+        exportSvg.setAttribute('height', '607');
 
-        // Set explicit dimensions
-        svgClone.setAttribute('width', '800');
-        svgClone.setAttribute('height', '450');
-
-        const svgData = new XMLSerializer().serializeToString(svgClone);
+        const svgData = new XMLSerializer().serializeToString(exportSvg);
         const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
 
         const a = document.createElement('a');
@@ -6591,6 +7523,9 @@
       function calculateMakeProbability(shotData) {
         if (!shotData || !shotData.isReady) return null;
 
+        // If OB path is blocked, shot is impossible
+        if (shotData.obPathBlocked) return 0;
+
         // Base probability starts at 95% for straight-in shots
         let probability = 95;
 
@@ -6641,9 +7576,547 @@
         else display.style.color = '#f44';
       }
 
-      // ========== RANDOM RACK ==========
+      // ========== RANDOM RACK WITH BREAK ANIMATION ==========
 
-      function randomRack() {
+      // Physics constants for break simulation
+      const BREAK_PHYSICS = {
+        FRICTION: 0.985,           // Per-frame velocity decay (rolling friction)
+        RAIL_COR: 0.85,            // Coefficient of restitution for rail bounce
+        BALL_COR: 0.95,            // Coefficient of restitution for ball-ball collision
+        MIN_VELOCITY: 0.02,        // Minimum velocity before ball stops
+        BALL_DIAMETER: BALL_RADIUS * 2,
+        FRAME_RATE: 60,            // Target FPS
+        FORCE_MULTIPLIER: 0.8      // 3/4 force = 7.5 * 0.8 = 6 initial speed
+      };
+
+      // Ball state during animation
+      let breakBallStates = {};    // { ballId: { x, y, vx, vy } }
+      let breakAnimationId = null;
+      let isBreakAnimating = false;
+
+      // Cue stick element
+      let cueStickElement = null;
+
+      // Generate British-style rack positions
+      function generateRackPositions(gameBalls) {
+        const FOOT_SPOT = { x: 75, y: 25 };
+        const BALL_D = BREAK_PHYSICS.BALL_DIAMETER;
+        const ROW_SPACING = BALL_D * Math.sin(Math.PI / 3); // Equilateral triangle spacing
+        const positions = {};
+
+        if (gameBalls.length === 9) {
+          // 9-Ball diamond rack: 1-2-3-2-1 formation
+          // British style: 1 at apex, 9 in center, others random
+          const diamondPattern = [
+            [0],           // Row 0: 1 ball (apex)
+            [-0.5, 0.5],   // Row 1: 2 balls
+            [-1, 0, 1],    // Row 2: 3 balls (9 in center)
+            [-0.5, 0.5],   // Row 3: 2 balls
+            [0]            // Row 4: 1 ball
+          ];
+
+          const shuffledBalls = [...gameBalls].filter(b => b !== '1' && b !== '9');
+          shuffleArray(shuffledBalls);
+
+          let ballIndex = 0;
+          for (let row = 0; row < diamondPattern.length; row++) {
+            for (let col = 0; col < diamondPattern[row].length; col++) {
+              const x = FOOT_SPOT.x + row * ROW_SPACING;
+              const y = FOOT_SPOT.y + diamondPattern[row][col] * BALL_D;
+
+              let ballId;
+              if (row === 0) {
+                ballId = '1';  // 1-ball at apex
+              } else if (row === 2 && col === 1) {
+                ballId = '9';  // 9-ball in center
+              } else {
+                ballId = shuffledBalls[ballIndex++];
+              }
+
+              if (ballId && gameBalls.includes(ballId)) {
+                positions[ballId] = { x, y };
+              }
+            }
+          }
+        } else if (gameBalls.length === 10) {
+          // 10-Ball triangle rack: 1-2-3-4 formation
+          const trianglePattern = [
+            [0],                    // Row 0: 1 ball (apex)
+            [-0.5, 0.5],            // Row 1: 2 balls
+            [-1, 0, 1],             // Row 2: 3 balls (10 in center)
+            [-1.5, -0.5, 0.5, 1.5]  // Row 3: 4 balls
+          ];
+
+          const shuffledBalls = [...gameBalls].filter(b => b !== '1' && b !== '10');
+          shuffleArray(shuffledBalls);
+
+          let ballIndex = 0;
+          for (let row = 0; row < trianglePattern.length; row++) {
+            for (let col = 0; col < trianglePattern[row].length; col++) {
+              const x = FOOT_SPOT.x + row * ROW_SPACING;
+              const y = FOOT_SPOT.y + trianglePattern[row][col] * BALL_D;
+
+              let ballId;
+              if (row === 0) {
+                ballId = '1';   // 1-ball at apex
+              } else if (row === 2 && col === 1) {
+                ballId = '10';  // 10-ball in center
+              } else {
+                ballId = shuffledBalls[ballIndex++];
+              }
+
+              if (ballId && gameBalls.includes(ballId)) {
+                positions[ballId] = { x, y };
+              }
+            }
+          }
+        } else {
+          // 8-Ball/15-Ball triangle rack: 1-2-3-4-5 formation
+          // British style: 8 in center, solid+stripe on back corners, alternating
+          const trianglePattern = [
+            [0],                          // Row 0: 1 ball (apex)
+            [-0.5, 0.5],                  // Row 1: 2 balls
+            [-1, 0, 1],                   // Row 2: 3 balls (8 in center)
+            [-1.5, -0.5, 0.5, 1.5],       // Row 3: 4 balls
+            [-2, -1, 0, 1, 2]             // Row 4: 5 balls (corners: solid + stripe)
+          ];
+
+          // Separate solids and stripes
+          const solids = gameBalls.filter(b => parseInt(b) >= 1 && parseInt(b) <= 7);
+          const stripes = gameBalls.filter(b => parseInt(b) >= 9 && parseInt(b) <= 15);
+
+          shuffleArray(solids);
+          shuffleArray(stripes);
+
+          // Pick one random solid and stripe for back corners
+          const cornerSolid = solids.pop();
+          const cornerStripe = stripes.pop();
+
+          // Combine remaining balls and shuffle for the rest
+          const remainingBalls = [...solids, ...stripes];
+          shuffleArray(remainingBalls);
+
+          let ballIndex = 0;
+          for (let row = 0; row < trianglePattern.length; row++) {
+            for (let col = 0; col < trianglePattern[row].length; col++) {
+              const x = FOOT_SPOT.x + row * ROW_SPACING;
+              const y = FOOT_SPOT.y + trianglePattern[row][col] * BALL_D;
+
+              let ballId;
+              if (row === 0) {
+                // Apex: random from remaining
+                ballId = remainingBalls[ballIndex++];
+              } else if (row === 2 && col === 1) {
+                ballId = '8';  // 8-ball in center
+              } else if (row === 4 && col === 0) {
+                // Back left corner: solid
+                ballId = cornerSolid;
+              } else if (row === 4 && col === 4) {
+                // Back right corner: stripe
+                ballId = cornerStripe;
+              } else {
+                ballId = remainingBalls[ballIndex++];
+              }
+
+              if (ballId && gameBalls.includes(ballId)) {
+                positions[ballId] = { x, y };
+              }
+            }
+          }
+        }
+
+        return positions;
+      }
+
+      // Fisher-Yates shuffle
+      function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+      }
+
+      // Create or get cue stick SVG element
+      function getCueStick() {
+        if (!cueStickElement) {
+          const svg = document.getElementById('pool-table');
+          const cueGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          cueGroup.id = 'cue-stick';
+          cueGroup.style.visibility = 'hidden';
+
+          // Cue stick body (tapered)
+          const cueBody = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+          // Tip at origin, butt extends in negative x direction
+          cueBody.setAttribute('points', '0,-0.3 -50,-0.6 -50,0.6 0,0.3');
+          cueBody.setAttribute('fill', 'url(#cue-gradient)');
+          cueBody.setAttribute('stroke', '#654321');
+          cueBody.setAttribute('stroke-width', '0.1');
+
+          // Add gradient definition
+          const defs = svg.querySelector('defs') || document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+          if (!svg.querySelector('defs')) svg.insertBefore(defs, svg.firstChild);
+
+          const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+          gradient.id = 'cue-gradient';
+          gradient.setAttribute('x1', '0%');
+          gradient.setAttribute('x2', '100%');
+
+          const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+          stop1.setAttribute('offset', '0%');
+          stop1.setAttribute('style', 'stop-color:#f5deb3');
+
+          const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+          stop2.setAttribute('offset', '15%');
+          stop2.setAttribute('style', 'stop-color:#deb887');
+
+          const stop3 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+          stop3.setAttribute('offset', '100%');
+          stop3.setAttribute('style', 'stop-color:#8b4513');
+
+          gradient.appendChild(stop1);
+          gradient.appendChild(stop2);
+          gradient.appendChild(stop3);
+          defs.appendChild(gradient);
+
+          // Ferrule (white tip holder)
+          const ferrule = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          ferrule.setAttribute('x', '-2');
+          ferrule.setAttribute('y', '-0.35');
+          ferrule.setAttribute('width', '2');
+          ferrule.setAttribute('height', '0.7');
+          ferrule.setAttribute('fill', '#f5f5dc');
+          ferrule.setAttribute('rx', '0.1');
+
+          // Tip (blue chalk)
+          const tip = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+          tip.setAttribute('cx', '0');
+          tip.setAttribute('cy', '0');
+          tip.setAttribute('rx', '0.5');
+          tip.setAttribute('ry', '0.3');
+          tip.setAttribute('fill', '#4169e1');
+
+          cueGroup.appendChild(cueBody);
+          cueGroup.appendChild(ferrule);
+          cueGroup.appendChild(tip);
+
+          svg.appendChild(cueGroup);
+          cueStickElement = cueGroup;
+        }
+        return cueStickElement;
+      }
+
+      // Position and angle the cue stick
+      function positionCueStick(cuePos, targetPos, pullback = 0) {
+        const cue = getCueStick();
+        const dx = targetPos.x - cuePos.x;
+        const dy = targetPos.y - cuePos.y;
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+        // Position tip at cue ball position, offset by pullback
+        const offsetX = cuePos.x - pullback * Math.cos(angle * Math.PI / 180);
+        const offsetY = cuePos.y - pullback * Math.sin(angle * Math.PI / 180);
+
+        cue.setAttribute('transform', `translate(${offsetX}, ${offsetY}) rotate(${angle})`);
+        cue.style.visibility = 'visible';
+      }
+
+      // Hide cue stick
+      function hideCueStick() {
+        const cue = getCueStick();
+        cue.style.visibility = 'hidden';
+      }
+
+      // Ball-ball collision detection and response
+      function checkBallCollisions() {
+        const ballIds = Object.keys(breakBallStates);
+        const collisions = [];
+
+        for (let i = 0; i < ballIds.length; i++) {
+          for (let j = i + 1; j < ballIds.length; j++) {
+            const ball1 = breakBallStates[ballIds[i]];
+            const ball2 = breakBallStates[ballIds[j]];
+
+            if (!ball1 || !ball2 || ball1.pocketed || ball2.pocketed) continue;
+
+            const dx = ball2.x - ball1.x;
+            const dy = ball2.y - ball1.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < BREAK_PHYSICS.BALL_DIAMETER && dist > 0) {
+              collisions.push({
+                ball1: ballIds[i],
+                ball2: ballIds[j],
+                dx, dy, dist
+              });
+            }
+          }
+        }
+
+        // Resolve collisions
+        for (const collision of collisions) {
+          const { ball1: id1, ball2: id2, dx, dy, dist } = collision;
+          const ball1 = breakBallStates[id1];
+          const ball2 = breakBallStates[id2];
+
+          // Normal vector (from ball1 to ball2)
+          const nx = dx / dist;
+          const ny = dy / dist;
+
+          // Relative velocity
+          const dvx = ball1.vx - ball2.vx;
+          const dvy = ball1.vy - ball2.vy;
+
+          // Relative velocity along collision normal
+          const dvn = dvx * nx + dvy * ny;
+
+          // Only resolve if balls are approaching
+          if (dvn > 0) {
+            // Impulse (assuming equal mass)
+            const impulse = dvn * BREAK_PHYSICS.BALL_COR;
+
+            ball1.vx -= impulse * nx;
+            ball1.vy -= impulse * ny;
+            ball2.vx += impulse * nx;
+            ball2.vy += impulse * ny;
+
+            // Apply english effect when cue ball first hits rack
+            // Top english (follow): cue ball continues forward
+            // Bottom english (draw): cue ball slows/reverses
+            // Center (stun): cue ball stops after contact
+            if (id1 === 'cue' && ball1.english !== undefined && ball1.english !== null) {
+              const english = ball1.english;
+              // English affects velocity retention in direction of travel
+              // Positive = follow (more forward momentum)
+              // Negative = draw (less forward momentum, can reverse)
+              const followFactor = 1 + english * 0.5;
+              ball1.vx *= followFactor;
+              ball1.vy *= followFactor;
+              // Only apply once
+              ball1.english = null;
+            } else if (id2 === 'cue' && ball2.english !== undefined && ball2.english !== null) {
+              const english = ball2.english;
+              const followFactor = 1 + english * 0.5;
+              ball2.vx *= followFactor;
+              ball2.vy *= followFactor;
+              ball2.english = null;
+            }
+
+            // Separate overlapping balls
+            const overlap = BREAK_PHYSICS.BALL_DIAMETER - dist;
+            const separationX = (overlap / 2 + 0.01) * nx;
+            const separationY = (overlap / 2 + 0.01) * ny;
+            ball1.x -= separationX;
+            ball1.y -= separationY;
+            ball2.x += separationX;
+            ball2.y += separationY;
+          }
+        }
+      }
+
+      // Rail collision detection and response
+      function checkRailCollisions() {
+        const RAIL_TOP = 2 + BALL_RADIUS;
+        const RAIL_BOTTOM = 48 - BALL_RADIUS;
+        const RAIL_LEFT = 2 + BALL_RADIUS;
+        const RAIL_RIGHT = 98 - BALL_RADIUS;
+
+        for (const ballId in breakBallStates) {
+          const ball = breakBallStates[ballId];
+          if (!ball) continue;
+
+          // Check pockets first (before rail bounce)
+          if (isBallInPocket(ball.x, ball.y)) {
+            // Ball is pocketed - remove from simulation
+            ball.pocketed = true;
+            ball.vx = 0;
+            ball.vy = 0;
+            continue;
+          }
+
+          // Top rail
+          if (ball.y < RAIL_TOP) {
+            ball.y = RAIL_TOP;
+            ball.vy = -ball.vy * BREAK_PHYSICS.RAIL_COR;
+          }
+          // Bottom rail
+          if (ball.y > RAIL_BOTTOM) {
+            ball.y = RAIL_BOTTOM;
+            ball.vy = -ball.vy * BREAK_PHYSICS.RAIL_COR;
+          }
+          // Left rail
+          if (ball.x < RAIL_LEFT) {
+            ball.x = RAIL_LEFT;
+            ball.vx = -ball.vx * BREAK_PHYSICS.RAIL_COR;
+          }
+          // Right rail
+          if (ball.x > RAIL_RIGHT) {
+            ball.x = RAIL_RIGHT;
+            ball.vx = -ball.vx * BREAK_PHYSICS.RAIL_COR;
+          }
+        }
+      }
+
+      // Check if ball is in a pocket
+      function isBallInPocket(x, y) {
+        const pockets = [
+          { x: 0, y: 0 },      // Top-left
+          { x: 50, y: 0 },     // Top-center
+          { x: 100, y: 0 },    // Top-right
+          { x: 0, y: 50 },     // Bottom-left
+          { x: 50, y: 50 },    // Bottom-center
+          { x: 100, y: 50 }    // Bottom-right
+        ];
+
+        const POCKET_RADIUS = 3.5; // Slightly smaller than visual pocket
+
+        for (const pocket of pockets) {
+          const dx = x - pocket.x;
+          const dy = y - pocket.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < POCKET_RADIUS) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      // Update ball positions each frame
+      function updateBreakPhysics() {
+        let anyMoving = false;
+
+        // Apply friction and update positions
+        for (const ballId in breakBallStates) {
+          const ball = breakBallStates[ballId];
+          if (!ball || ball.pocketed) continue;
+
+          // Apply velocity
+          ball.x += ball.vx;
+          ball.y += ball.vy;
+
+          // Apply friction
+          ball.vx *= BREAK_PHYSICS.FRICTION;
+          ball.vy *= BREAK_PHYSICS.FRICTION;
+
+          // Check if still moving
+          const speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
+          if (speed > BREAK_PHYSICS.MIN_VELOCITY) {
+            anyMoving = true;
+          } else {
+            ball.vx = 0;
+            ball.vy = 0;
+          }
+        }
+
+        // Check collisions
+        checkBallCollisions();
+        checkRailCollisions();
+
+        // Update visual positions
+        for (const ballId in breakBallStates) {
+          const ball = breakBallStates[ballId];
+          if (!ball) continue;
+
+          const ballEl = document.getElementById(`ball-${ballId}`);
+          if (ballEl) {
+            if (ball.pocketed) {
+              ballEl.style.display = 'none';
+            } else {
+              positionBallOnTable(ballEl, ball.x, ball.y);
+            }
+          }
+        }
+
+        return anyMoving;
+      }
+
+      // Animation loop for break
+      function animateBreak() {
+        if (!isBreakAnimating) return;
+
+        const stillMoving = updateBreakPhysics();
+
+        if (stillMoving) {
+          breakAnimationId = requestAnimationFrame(animateBreak);
+        } else {
+          // Animation complete - finalize positions
+          finalizeBreakPositions();
+        }
+      }
+
+      // Finalize ball positions after animation
+      function finalizeBreakPositions() {
+        isBreakAnimating = false;
+
+        for (const ballId in breakBallStates) {
+          const ball = breakBallStates[ballId];
+          if (!ball) continue;
+
+          if (ball.pocketed) {
+            ballPositions[ballId] = null;
+          } else {
+            ballPositions[ballId] = { x: ball.x, y: ball.y };
+          }
+        }
+
+        // Hide cue stick
+        hideCueStick();
+
+        // Clear selections
+        selectBall(null);
+        selectPocket(null);
+
+        // Update display
+        updateCueGhostLine();
+        showToast('Break complete!');
+      }
+
+      // Animate cue stroke
+      async function animateCueStroke(cuePos, targetPos, english) {
+        return new Promise(resolve => {
+          const pullbackDist = 8;
+          const strikeDist = 2;
+          const steps = 20;
+          let step = 0;
+
+          function animate() {
+            if (step <= steps / 2) {
+              // Pullback phase
+              const progress = step / (steps / 2);
+              const pullback = pullbackDist * progress + strikeDist;
+              positionCueStick(cuePos, targetPos, pullback);
+            } else if (step <= steps) {
+              // Strike phase
+              const progress = (step - steps / 2) / (steps / 2);
+              const pullback = pullbackDist * (1 - progress * 2) + strikeDist;
+              if (pullback < 0) {
+                // Contact! Start ball movement
+                resolve();
+                return;
+              }
+              positionCueStick(cuePos, targetPos, Math.max(0, pullback));
+            }
+
+            step++;
+            if (step <= steps) {
+              requestAnimationFrame(animate);
+            } else {
+              resolve();
+            }
+          }
+
+          animate();
+        });
+      }
+
+      // Main break and rack function
+      async function randomRack() {
+        // Cancel any existing animation
+        if (breakAnimationId) {
+          cancelAnimationFrame(breakAnimationId);
+        }
+        isBreakAnimating = false;
+
         // Get current game mode's balls
         const gameBalls = currentGameMode.ballIds || ['1','2','3','4','5','6','7','8','9'];
 
@@ -6656,9 +8129,24 @@
           }
         }
 
-        // Place cue ball in kitchen (head string area)
-        const cueX = 20 + Math.random() * 5;
-        const cueY = 10 + Math.random() * 30;
+        // Generate rack positions (British style)
+        const rackPositions = generateRackPositions(gameBalls);
+
+        // Place balls in rack
+        for (const ballId in rackPositions) {
+          const pos = rackPositions[ballId];
+          ballPositions[ballId] = { x: pos.x, y: pos.y };
+          const ball = document.getElementById(`ball-${ballId}`);
+          if (ball) {
+            positionBallOnTable(ball, pos.x, pos.y);
+            ball.style.display = '';
+          }
+        }
+
+        // Place cue ball behind second diamond (around x=20-23)
+        // Random vertical position with slight variance
+        const cueX = 20 + Math.random() * 3;
+        const cueY = 20 + Math.random() * 10; // Slightly random vertical
         ballPositions['cue'] = { x: cueX, y: cueY };
         const cueBall = document.getElementById('ball-cue');
         if (cueBall) {
@@ -6666,52 +8154,78 @@
           cueBall.style.display = '';
         }
 
-        // Place balls randomly on table (avoiding overlaps)
-        const placedPositions = [{ x: cueX, y: cueY }];
-        const minDist = 3; // Minimum distance between ball centers
+        // Determine target ball (1-ball or adjacent ball in row 1)
+        const apexBallId = gameBalls.includes('1') ? '1' : gameBalls[0];
+        const row1Balls = Object.entries(rackPositions)
+          .filter(([id, pos]) => {
+            const apexPos = rackPositions[apexBallId];
+            return apexPos && Math.abs(pos.x - apexPos.x - BREAK_PHYSICS.BALL_DIAMETER * Math.sin(Math.PI / 3)) < 0.5;
+          })
+          .map(([id]) => id);
 
-        for (const ballId of gameBalls) {
-          let placed = false;
-          let attempts = 0;
-          const maxAttempts = 100;
-
-          while (!placed && attempts < maxAttempts) {
-            // Random position on playing surface (with margin from rails)
-            const x = 5 + Math.random() * 90;
-            const y = 5 + Math.random() * 40;
-
-            // Check for overlaps
-            let overlaps = false;
-            for (const pos of placedPositions) {
-              const dist = Math.sqrt((x - pos.x) ** 2 + (y - pos.y) ** 2);
-              if (dist < minDist) {
-                overlaps = true;
-                break;
-              }
-            }
-
-            if (!overlaps) {
-              ballPositions[ballId] = { x, y };
-              placedPositions.push({ x, y });
-              const ball = document.getElementById(`ball-${ballId}`);
-              if (ball) {
-                positionBallOnTable(ball, x, y);
-                ball.style.display = '';
-              }
-              placed = true;
-            }
-
-            attempts++;
-          }
+        // Randomly choose apex or one of the adjacent balls
+        let targetBallId;
+        const targetChoice = Math.floor(Math.random() * 3);
+        if (targetChoice === 0 || row1Balls.length === 0) {
+          targetBallId = apexBallId;
+        } else {
+          targetBallId = row1Balls[Math.floor(Math.random() * row1Balls.length)];
         }
 
-        // Clear selections
-        selectBall(null);
-        selectPocket(null);
+        const targetPos = rackPositions[targetBallId] || rackPositions[apexBallId];
 
-        // Update display
-        updateCueGhostLine();
-        showToast('Random rack placed!');
+        // Random english: top (follow), bottom (draw), or center (stun)
+        const englishChoice = Math.floor(Math.random() * 3);
+        let english = 0;
+        if (englishChoice === 0) {
+          english = 0.5 + Math.random() * 0.5; // Top english (follow)
+        } else if (englishChoice === 1) {
+          english = -(0.5 + Math.random() * 0.5); // Bottom english (draw)
+        }
+        // englishChoice === 2: center (no english)
+
+        // Initialize break ball states
+        breakBallStates = {};
+        for (const ballId of gameBalls) {
+          if (rackPositions[ballId]) {
+            breakBallStates[ballId] = {
+              x: rackPositions[ballId].x,
+              y: rackPositions[ballId].y,
+              vx: 0,
+              vy: 0,
+              pocketed: false
+            };
+          }
+        }
+        breakBallStates['cue'] = {
+          x: cueX,
+          y: cueY,
+          vx: 0,
+          vy: 0,
+          pocketed: false
+        };
+
+        // Animate cue stroke
+        await animateCueStroke({ x: cueX, y: cueY }, targetPos, english);
+
+        // Calculate initial cue ball velocity (3/4 force)
+        const dx = targetPos.x - cueX;
+        const dy = targetPos.y - cueY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const speed = 7.5 * BREAK_PHYSICS.FORCE_MULTIPLIER; // 3/4 force
+
+        breakBallStates['cue'].vx = (dx / dist) * speed;
+        breakBallStates['cue'].vy = (dy / dist) * speed;
+
+        // Apply english effect (affects cue ball path after contact)
+        // Store english for later application during first collision
+        breakBallStates['cue'].english = english;
+
+        // Start physics simulation
+        isBreakAnimating = true;
+        animateBreak();
+
+        showToast('Breaking...');
       }
 
       // ========== SHAPE ZONE VISUALIZATION ==========
@@ -7093,20 +8607,19 @@
             • <strong>Follow/Draw Lines</strong> - CB path with spin<br>
             • <strong>Shape Zone</strong> - Area where CB can be to make next shot<br><br>
             These are essential for planning run-outs!`,
-          target: '#palette-share',
+          target: '#palette-aids',
           position: 'left',
           task: 'Enable the Tangent Line checkbox'
         },
         {
           id: 'share-export',
-          title: 'Share & Export',
-          content: `Save and share your diagrams:<br><br>
-            • <strong>Copy Link</strong> - Get a shareable URL<br>
-            • <strong>Export PNG</strong> - Download as image<br>
-            • <strong>Export SVG</strong> - Download as vector<br>
-            • <strong>Random Rack</strong> - Generate practice scenarios`,
-          target: '#palette-share',
-          position: 'left',
+          title: 'Save & Actions',
+          content: `Share your diagrams and try features:<br><br>
+            • <strong>Save</strong> (bottom) - Link, PNG, SVG export & saved diagrams<br>
+            • <strong>Actions</strong> (top) - Break rack animation & tour<br><br>
+            Try the Break button for a physics-simulated break shot!`,
+          target: '#palette-save',
+          position: 'top',
           task: null
         },
         {
@@ -7150,13 +8663,15 @@
         tourActive = true;
         tourCurrentStep = 0;
         tourCompletedSteps.clear();
-        showTourStep(0);
+        tourOverlay.style.display = 'block';
         tourOverlay.classList.add('active');
+        showTourStep(0);
       }
 
       function endTour(completed = false) {
         tourActive = false;
         tourOverlay.classList.remove('active');
+        tourOverlay.style.display = 'none';
         tourTooltip.classList.remove('active');
         tourSpotlight.style.display = 'none';
 
@@ -7567,6 +9082,34 @@
 
           await this.test('Save button element exists', () => {
             return document.getElementById('btnSaveDiagram') !== null;
+          });
+
+          // OB path blocking tests
+          await this.test('isPathBlockedByBall detects intersection', () => {
+            // Path from (25,35) to (98.5,1.5) should be blocked by ball at (70,15)
+            const start = { x: 25, y: 35 };
+            const end = { x: 98.5, y: 1.5 };
+            const ballCenter = { x: 70, y: 15 };
+            const ballRadius = BALL_RADIUS * 2.1;
+            return isPathBlockedByBall(start, end, ballCenter, ballRadius) === true;
+          });
+
+          await this.test('isPathBlockedByAnyBall finds blocking balls', () => {
+            // Temporarily set up test positions
+            const origPositions = { ...ballPositions };
+            ballPositions['testball'] = { x: 70, y: 15 };
+
+            const result = isPathBlockedByAnyBall(
+              { x: 25, y: 35 },  // start
+              { x: 98.5, y: 1.5 },  // end
+              ['cue', 'ghost', 'gray']  // exclude
+            );
+
+            // Restore original
+            delete ballPositions['testball'];
+            Object.assign(ballPositions, origPositions);
+
+            return result.blocked && result.blockingBalls.includes('testball');
           });
 
           // Print summary
