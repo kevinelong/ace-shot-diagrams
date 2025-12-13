@@ -5811,6 +5811,14 @@
 
       // Start drag (or prepare for potential drag)
       function startDrag(e) {
+        // Ignore clicks on palette elements or other UI controls
+        if (e.target.closest('.tool-palette') || 
+            e.target.closest('.palette-restore-btn') ||
+            e.target.closest('.tour-tooltip') ||
+            e.target.closest('.status-banner')) {
+          return;
+        }
+
         const ball = e.target.closest('.ball');
         const clientX = e.clientX || (e.touches && e.touches[0].clientX);
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
@@ -6331,7 +6339,10 @@
         cue: document.getElementById('palette-cue'),
         legend: document.getElementById('palette-legend'),
         game: document.getElementById('palette-game'),
-        shot: document.getElementById('palette-shot')
+        shot: document.getElementById('palette-shot'),
+        actions: document.getElementById('palette-actions'),
+        save: document.getElementById('palette-save'),
+        aids: document.getElementById('palette-aids')
       };
 
       const restoreButtons = {
@@ -6339,7 +6350,10 @@
         cue: document.getElementById('restore-cue'),
         legend: document.getElementById('restore-legend'),
         game: document.getElementById('restore-game'),
-        shot: document.getElementById('restore-shot')
+        shot: document.getElementById('restore-shot'),
+        actions: null,  // No restore button for actions palette
+        save: null,     // No restore button for save palette
+        aids: null      // No restore button for aids palette
       };
 
       // Balls are now created directly in palette by createBalls()

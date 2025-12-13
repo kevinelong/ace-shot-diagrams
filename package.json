@@ -17,11 +17,19 @@
     "report": "playwright show-report",
     "install": "playwright install"
   },
-  "keywords": ["playwright", "testing", "ux", "e2e", "pool", "billiards"],
+  "keywords": [
+    "playwright",
+    "testing",
+    "ux",
+    "e2e",
+    "pool",
+    "billiards"
+  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@playwright/test": "^1.41.0",
-    "@types/node": "^20.11.0"
+    "@playwright/test": "^1.57.0",
+    "@types/node": "^20.11.0",
+    "http-server": "^14.1.1"
   }
 }

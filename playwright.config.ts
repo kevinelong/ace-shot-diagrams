@@ -25,8 +25,8 @@ export default defineConfig({
   
   // Shared settings for all projects
   use: {
-    // Base URL for the application (single HTML file)
-    baseURL: 'file://' + process.cwd().replace(/\\/g, '/') + '/index.html',
+    // Base URL for the application
+    baseURL: 'http://localhost:8080',
     
     // Screenshot and video on failure
     screenshot: 'only-on-failure',
@@ -86,4 +86,12 @@ export default defineConfig({
       },
     },
   ],
+
+  // Web server to run during tests
+  webServer: {
+    command: 'npx http-server -p 8080 -c-1',
+    url: 'http://localhost:8080',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
+  },
 });
