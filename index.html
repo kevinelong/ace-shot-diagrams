@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ACE Shot Diagrams - Pool Table Preview</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #0d0d1a;
@@ -15,7 +21,10 @@
     }
 
     /* Hidden header in fullscreen mode */
-    h1, .version-info { display: none; }
+    h1,
+    .version-info {
+      display: none;
+    }
 
     /* Full-screen table container */
     .diagram-container {
@@ -62,7 +71,7 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 12px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-      z-index: 1000;
+      z-index: 2000;
       transition: opacity 0.3s, transform 0.2s, box-shadow 0.2s;
       user-select: none;
     }
@@ -127,11 +136,6 @@
       color: #fff;
     }
 
-    .palette-btn.close:hover {
-      background: rgba(255, 80, 80, 0.3);
-      color: #f66;
-    }
-
     /* Palette body */
     .palette-body {
       padding: 12px 14px;
@@ -171,12 +175,33 @@
     }
 
     .tool-palette.minimized {
-      border-radius: 8px;
+      border-radius: 50%;
+      min-width: auto;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      cursor: pointer;
     }
 
     .tool-palette.minimized .palette-header {
       border-bottom: none;
-      border-radius: 8px;
+      border-radius: 50%;
+      padding: 8px;
+      min-height: auto;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .tool-palette.minimized .palette-title {
+      font-size: 0;
+    }
+
+    .tool-palette.minimized .palette-title-icon {
+      font-size: 20px;
+    }
+
+    .tool-palette.minimized .palette-controls {
+      display: none;
     }
 
     /* Hidden state */
@@ -185,20 +210,47 @@
     }
 
     /* Palette anchor positions */
-    #palette-balls { top: 30px; left: 30px; }
-    #palette-cue { bottom: 30px; left: 30px; }
-    #palette-legend { left: 30px; top: 50%; transform: translateY(-50%); }
-    #palette-game { top: 30px; right: 30px; }
-    #palette-shot { bottom: 30px; right: 30px; }
-    #palette-aids { right: 30px; top: 50%; transform: translateY(-50%); }
-    #palette-actions { top: 30px; left: 50%; transform: translateX(-50%); }
-    #palette-save { bottom: 30px; left: 50%; transform: translateX(-50%); }
+    #palette-balls {
+      top: 30px;
+      left: 30px;
+    }
+
+    #palette-cue {
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      min-width: 600px;
+    }
+
+    #palette-game {
+      top: 30px;
+      right: 30px;
+    }
+
+    #palette-aids {
+      right: 30px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    #palette-actions {
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    /* Legend and Shot Info removed - merged into other palettes */
+    #palette-legend,
+    #palette-shot,
+    #palette-save {
+      display: none;
+    }
 
     /* Dragging state */
     .tool-palette.dragging {
       opacity: 0.9;
       box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
-      z-index: 1001;
+      z-index: 2001;
     }
 
     /* Idle state - slightly dimmed */
@@ -232,6 +284,12 @@
 
     /* Cue Controls Palette */
     #palette-cue .cue-controls-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    #palette-cue .control-column {
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -483,7 +541,7 @@
       accent-color: #0fa;
     }
 
-    #palette-aids .toggle-row input[type="checkbox"]:checked + span {
+    #palette-aids .toggle-row input[type="checkbox"]:checked+span {
       color: #0fa;
     }
 
@@ -667,8 +725,15 @@
     }
 
     @keyframes tour-pulse {
-      0%, 100% { box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75), 0 0 0 0 rgba(0, 255, 136, 0.4); }
-      50% { box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75), 0 0 0 8px rgba(0, 255, 136, 0.2); }
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75), 0 0 0 0 rgba(0, 255, 136, 0.4);
+      }
+
+      50% {
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75), 0 0 0 8px rgba(0, 255, 136, 0.2);
+      }
     }
 
     /* Tour tooltip */
@@ -947,11 +1012,31 @@
       display: flex;
     }
 
-    #restore-balls { top: 20px; left: 20px; }
-    #restore-cue { bottom: 20px; left: 20px; }
-    #restore-legend { left: 20px; top: 50%; transform: translateY(-50%); }
-    #restore-game { top: 20px; right: 20px; }
-    #restore-shot { bottom: 20px; right: 20px; }
+    #restore-balls {
+      top: 20px;
+      left: 20px;
+    }
+
+    #restore-cue {
+      bottom: 20px;
+      left: 20px;
+    }
+
+    #restore-legend {
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    #restore-game {
+      top: 20px;
+      right: 20px;
+    }
+
+    #restore-shot {
+      bottom: 20px;
+      right: 20px;
+    }
 
     /* Allow pocket targets to receive clicks */
     #pocket-targets {
@@ -962,6 +1047,7 @@
     .ball-rack {
       display: none !important;
     }
+
     .rack-label {
       display: none;
     }
@@ -992,7 +1078,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 2px 2px 4px rgba(0,0,0,0.5), inset -2px -2px 3px rgba(0,0,0,0.3), inset 2px 2px 3px rgba(255,255,255,0.2);
+      box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5), inset -2px -2px 3px rgba(0, 0, 0, 0.3), inset 2px 2px 3px rgba(255, 255, 255, 0.2);
       transition: transform 0.1s;
       flex-shrink: 0;
       position: relative;
@@ -1029,31 +1115,87 @@
     /* Ghost/AIM ball label */
     .ball-label-ghost {
       font-size: 32px;
-      fill: rgba(255,255,255,0.85);
+      fill: rgba(255, 255, 255, 0.85);
       stroke: none;
     }
-    .ball:hover { transform: scale(1.1); }
-    .ball.dragging { cursor: grabbing; z-index: 200; transform: scale(1.15); box-shadow: 0 6px 12px rgba(0,0,0,0.5); }
-    .ball.on-table { position: absolute; z-index: 100; }
+
+    .ball:hover {
+      transform: scale(1.1);
+    }
+
+    .ball.dragging {
+      cursor: grabbing;
+      z-index: 200;
+      transform: scale(1.15);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    .ball.on-table {
+      position: absolute;
+      z-index: 100;
+    }
 
     /* Solid balls - white number circle (larger to fit text at same size as stripes) */
-    .ball-1 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #ffe44d, #ffd700, #c9a600); }
-    .ball-2 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #4d8fcc, #0066cc, #004c99); }
-    .ball-3 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #ff6666, #ff4444, #cc0000); }
-    .ball-4 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #9955bb, #6b2d8b, #4a1f61); }
-    .ball-5 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #ff8833, #ff6600, #cc5200); }
-    .ball-6 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #339955, #006633, #004422); }
-    .ball-7 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #cc3333, #8b0000, #5c0000); }
-    .ball-8 { background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #444, #111, #000); }
+    .ball-1 {
+      background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #ffe44d, #ffd700, #c9a600);
+    }
+
+    .ball-2 {
+      background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #4d8fcc, #0066cc, #004c99);
+    }
+
+    .ball-3 {
+      background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #ff6666, #ff4444, #cc0000);
+    }
+
+    .ball-4 {
+      background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #9955bb, #6b2d8b, #4a1f61);
+    }
+
+    .ball-5 {
+      background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #ff8833, #ff6600, #cc5200);
+    }
+
+    .ball-6 {
+      background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #339955, #006633, #004422);
+    }
+
+    .ball-7 {
+      background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #cc3333, #8b0000, #5c0000);
+    }
+
+    .ball-8 {
+      background: radial-gradient(circle, #fff 0%, #fff 33%, transparent 33%), radial-gradient(circle at 30% 30%, #444, #111, #000);
+    }
 
     /* Striped balls - white band in middle */
-    .ball-9 { background: linear-gradient(180deg, #ffd700 0%, #ffd700 25%, #fff 25%, #fff 75%, #ffd700 75%); }
-    .ball-10 { background: linear-gradient(180deg, #0066cc 0%, #0066cc 25%, #fff 25%, #fff 75%, #0066cc 75%); }
-    .ball-11 { background: linear-gradient(180deg, #ff4444 0%, #ff4444 25%, #fff 25%, #fff 75%, #ff4444 75%); }
-    .ball-12 { background: linear-gradient(180deg, #6b2d8b 0%, #6b2d8b 25%, #fff 25%, #fff 75%, #6b2d8b 75%); }
-    .ball-13 { background: linear-gradient(180deg, #ff6600 0%, #ff6600 25%, #fff 25%, #fff 75%, #ff6600 75%); }
-    .ball-14 { background: linear-gradient(180deg, #006633 0%, #006633 25%, #fff 25%, #fff 75%, #006633 75%); }
-    .ball-15 { background: linear-gradient(180deg, #8b0000 0%, #8b0000 25%, #fff 25%, #fff 75%, #8b0000 75%); }
+    .ball-9 {
+      background: linear-gradient(180deg, #ffd700 0%, #ffd700 25%, #fff 25%, #fff 75%, #ffd700 75%);
+    }
+
+    .ball-10 {
+      background: linear-gradient(180deg, #0066cc 0%, #0066cc 25%, #fff 25%, #fff 75%, #0066cc 75%);
+    }
+
+    .ball-11 {
+      background: linear-gradient(180deg, #ff4444 0%, #ff4444 25%, #fff 25%, #fff 75%, #ff4444 75%);
+    }
+
+    .ball-12 {
+      background: linear-gradient(180deg, #6b2d8b 0%, #6b2d8b 25%, #fff 25%, #fff 75%, #6b2d8b 75%);
+    }
+
+    .ball-13 {
+      background: linear-gradient(180deg, #ff6600 0%, #ff6600 25%, #fff 25%, #fff 75%, #ff6600 75%);
+    }
+
+    .ball-14 {
+      background: linear-gradient(180deg, #006633 0%, #006633 25%, #fff 25%, #fff 75%, #006633 75%);
+    }
+
+    .ball-15 {
+      background: linear-gradient(180deg, #8b0000 0%, #8b0000 25%, #fff 25%, #fff 75%, #8b0000 75%);
+    }
 
     /* Cue ball */
     .ball-cue {
@@ -1063,7 +1205,7 @@
     /* Ghost ball - transparent with dashed outline */
     .ball-ghost {
       background: transparent;
-      border: 2px dashed rgba(255,255,255,0.6);
+      border: 2px dashed rgba(255, 255, 255, 0.6);
       box-shadow: none;
     }
 
@@ -1081,33 +1223,58 @@
     }
 
     .instructions {
-      display: none; /* Hidden in fullscreen mode */
+      display: none;
+      /* Hidden in fullscreen mode */
     }
 
     /* Shot info panel - now inside palette */
     .shot-info {
-      display: none; /* Hidden - info now in palette */
+      display: none;
+      /* Hidden - info now in palette */
     }
-    .info-row { display: flex; gap: 8px; }
-    .info-label { color: #888; font-size: 11px; }
-    .info-row span:last-child { color: #0fa; font-weight: bold; }
+
+    .info-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .info-label {
+      color: #888;
+      font-size: 11px;
+    }
+
+    .info-row span:last-child {
+      color: #0fa;
+      font-weight: bold;
+    }
 
     /* Pocket targets */
     .pocket-target {
       cursor: pointer;
       pointer-events: all;
-      fill: rgba(255,215,0,0);
+      fill: rgba(255, 215, 0, 0);
       transition: fill 0.2s;
     }
-    .pocket-target:hover { fill: rgba(255,215,0,0.3); }
-    .pocket-target.selected { fill: rgba(0,255,170,0.4); stroke: #0fa; stroke-width: 0.5; }
+
+    .pocket-target:hover {
+      fill: rgba(255, 215, 0, 0.3);
+    }
+
+    .pocket-target.selected {
+      fill: rgba(0, 255, 170, 0.4);
+      stroke: #0fa;
+      stroke-width: 0.5;
+    }
 
     /* Selected ball highlight - uses CSS variable for responsive sizing */
-    .ball.selected { box-shadow: 0 0 0 var(--selection-ring, 2px) #0fa, 2px 2px 4px rgba(0,0,0,0.5); }
+    .ball.selected {
+      box-shadow: 0 0 0 var(--selection-ring, 2px) #0fa, 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
 
     /* Cue Controls Panel - now inside palette */
     .cue-controls-panel {
-      display: none; /* Hidden - controls now in palettes */
+      display: none;
+      /* Hidden - controls now in palettes */
     }
 
     .control-label {
@@ -1179,7 +1346,7 @@
     #contact-diagram {
       background: #1a1a2e;
       border-radius: 8px;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
     }
 
     /* Large contact diagram container */
@@ -1202,6 +1369,7 @@
     #contact-point {
       transition: fill 0.15s;
     }
+
     #contact-point:hover {
       fill: #0088ff;
     }
@@ -1242,7 +1410,7 @@
       border-radius: 50%;
       background: #fff;
       border: 2px solid #333;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     }
 
     #forceSlider::-moz-range-thumb {
@@ -1251,7 +1419,7 @@
       border-radius: 50%;
       background: #fff;
       border: 2px solid #333;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     }
 
     .force-labels {
@@ -1300,14 +1468,14 @@
     }
 
     .solver-radio-group label:hover {
-      background: rgba(255,255,255,0.1);
+      background: rgba(255, 255, 255, 0.1);
     }
 
     .solver-radio-group input[type="radio"] {
       accent-color: #0fa;
     }
 
-    .solver-radio-group input[type="radio"]:checked + span {
+    .solver-radio-group input[type="radio"]:checked+span {
       color: #0fa;
       font-weight: bold;
     }
@@ -1328,7 +1496,7 @@
       accent-color: #0fa;
     }
 
-    .simple-view-toggle input[type="checkbox"]:checked + span {
+    .simple-view-toggle input[type="checkbox"]:checked+span {
       color: #0fa;
     }
 
@@ -1367,14 +1535,16 @@
       font-style: italic;
     }
 
-    .suit-selector, .pocket-selector {
+    .suit-selector,
+    .pocket-selector {
       margin-top: 8px;
       padding: 8px;
-      background: rgba(0,0,0,0.2);
+      background: rgba(0, 0, 0, 0.2);
       border-radius: 6px;
     }
 
-    .suit-selector label, .pocket-selector label {
+    .suit-selector label,
+    .pocket-selector label {
       display: flex;
       align-items: center;
       gap: 6px;
@@ -1384,12 +1554,13 @@
       cursor: pointer;
     }
 
-    .suit-selector input[type="radio"], .pocket-selector input[type="radio"] {
+    .suit-selector input[type="radio"],
+    .pocket-selector input[type="radio"] {
       accent-color: #0fa;
     }
 
-    .suit-selector input[type="radio"]:checked + span,
-    .pocket-selector input[type="radio"]:checked + span {
+    .suit-selector input[type="radio"]:checked+span,
+    .pocket-selector input[type="radio"]:checked+span {
       color: #0fa;
       font-weight: bold;
     }
@@ -1512,8 +1683,15 @@
     }
 
     @keyframes foul-pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.7;
+      }
     }
 
     /* Foul warning banner - prominent alert at top of instructions */
@@ -1530,8 +1708,17 @@
     }
 
     @keyframes foul-banner-pulse {
-      0%, 100% { transform: scale(1); border-color: #ff4444; }
-      50% { transform: scale(1.02); border-color: #ff6666; }
+
+      0%,
+      100% {
+        transform: scale(1);
+        border-color: #ff4444;
+      }
+
+      50% {
+        transform: scale(1.02);
+        border-color: #ff6666;
+      }
     }
 
     .foul-icon {
@@ -1647,11 +1834,31 @@
       transition: width 0.3s, background 0.3s;
     }
 
-    .difficulty-fill.easy { background: linear-gradient(90deg, #4f8, #2a6); width: 25%; }
-    .difficulty-fill.medium { background: linear-gradient(90deg, #fa0, #c80); width: 50%; }
-    .difficulty-fill.hard { background: linear-gradient(90deg, #f80, #c40); width: 75%; }
-    .difficulty-fill.very-hard { background: linear-gradient(90deg, #f44, #c00); width: 100%; }
-    .difficulty-fill.foul { background: linear-gradient(90deg, #f44, #900); width: 100%; animation: foul-pulse 1s ease-in-out infinite; }
+    .difficulty-fill.easy {
+      background: linear-gradient(90deg, #4f8, #2a6);
+      width: 25%;
+    }
+
+    .difficulty-fill.medium {
+      background: linear-gradient(90deg, #fa0, #c80);
+      width: 50%;
+    }
+
+    .difficulty-fill.hard {
+      background: linear-gradient(90deg, #f80, #c40);
+      width: 75%;
+    }
+
+    .difficulty-fill.very-hard {
+      background: linear-gradient(90deg, #f44, #c00);
+      width: 100%;
+    }
+
+    .difficulty-fill.foul {
+      background: linear-gradient(90deg, #f44, #900);
+      width: 100%;
+      animation: foul-pulse 1s ease-in-out infinite;
+    }
 
     .difficulty-text {
       font-size: 11px;
@@ -1660,42 +1867,77 @@
       text-align: right;
     }
 
-    .difficulty-text.easy { color: #4f8; }
-    .difficulty-text.medium { color: #fa0; }
-    .difficulty-text.hard { color: #f80; }
-    .difficulty-text.very-hard { color: #f44; }
-    .difficulty-text.foul { color: #ff4444; }
+    .difficulty-text.easy {
+      color: #4f8;
+    }
+
+    .difficulty-text.medium {
+      color: #fa0;
+    }
+
+    .difficulty-text.hard {
+      color: #f80;
+    }
+
+    .difficulty-text.very-hard {
+      color: #f44;
+    }
+
+    .difficulty-text.foul {
+      color: #ff4444;
+    }
 
     /* Print styles - preserve ball positions */
     @media print {
-      body { background: #fff; padding: 10px; overflow: visible; }
-      h1, .version-info, .instructions { display: none; }
-      .tool-palette { display: none !important; }
-      .palette-restore-btn { display: none !important; }
+      body {
+        background: #fff;
+        padding: 10px;
+        overflow: visible;
+      }
+
+      h1,
+      .version-info,
+      .instructions {
+        display: none;
+      }
+
+      .tool-palette {
+        display: none !important;
+      }
+
+      .palette-restore-btn {
+        display: none !important;
+      }
+
       .diagram-container {
         position: static;
         width: 100%;
         height: auto;
       }
+
       .table-wrapper {
         background: none;
         padding: 0;
         max-width: 100%;
         max-height: none;
       }
+
       .ball {
         print-color-adjust: exact;
         -webkit-print-color-adjust: exact;
       }
+
       .ball-ghost {
         border-color: #666;
       }
+
       #connection-overlay line {
         stroke: #333;
       }
     }
   </style>
 </head>
+
 <body>
   <h1>ACE Shot Diagrams</h1>
   <p class="version-info">Pool Table Template v009 - Drag balls to create shot diagrams</p>
@@ -1707,284 +1949,309 @@
         <defs>
           <!-- Cue stick gradient - maple wood shaft with darker butt -->
           <linearGradient id="cue-shaft-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#f4e4c1"/>
-            <stop offset="70%" stop-color="#e8d4a8"/>
-            <stop offset="85%" stop-color="#8b4513"/>
-            <stop offset="100%" stop-color="#5d3a1a"/>
+            <stop offset="0%" stop-color="#f4e4c1" />
+            <stop offset="70%" stop-color="#e8d4a8" />
+            <stop offset="85%" stop-color="#8b4513" />
+            <stop offset="100%" stop-color="#5d3a1a" />
           </linearGradient>
           <!-- Ferrule (white part near tip) -->
           <linearGradient id="cue-ferrule-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#4a90d9"/>
-            <stop offset="100%" stop-color="#f5f5f5"/>
+            <stop offset="0%" stop-color="#4a90d9" />
+            <stop offset="100%" stop-color="#f5f5f5" />
           </linearGradient>
         </defs>
 
         <!-- Cue stick visualization (semi-transparent, behind other elements) -->
         <g id="cue-stick" visibility="hidden" opacity="0.7">
           <!-- Main shaft - tapered rectangle -->
-          <polygon id="cue-shaft" points="0,0 0,0 0,0 0,0" fill="url(#cue-shaft-gradient)"/>
+          <polygon id="cue-shaft" points="0,0 0,0 0,0 0,0" fill="url(#cue-shaft-gradient)" />
           <!-- Ferrule (white/ivory section near tip) -->
-          <polygon id="cue-ferrule" points="0,0 0,0 0,0 0,0" fill="url(#cue-ferrule-gradient)"/>
+          <polygon id="cue-ferrule" points="0,0 0,0 0,0 0,0" fill="url(#cue-ferrule-gradient)" />
           <!-- Tip (blue chalk) -->
-          <circle id="cue-tip" cx="0" cy="0" r="0.3" fill="#4a90d9"/>
+          <circle id="cue-tip" cx="0" cy="0" r="0.3" fill="#4a90d9" />
         </g>
 
         <!-- Cue to Ghost aiming line (path to support kick shots with bounces) -->
-        <path id="cue-ghost-line" d=""
-              stroke="#fff" stroke-width="0.3" stroke-dasharray="1,1"
-              fill="none" visibility="hidden"/>
+        <path id="cue-ghost-line" d="" stroke="#fff" stroke-width="0.3" stroke-dasharray="1,1" fill="none"
+          visibility="hidden" />
         <!-- Actual kick path (where CB really goes with current english - differs from ideal) -->
-        <path id="actual-kick-path" d=""
-              stroke="#ff4444" stroke-width="0.25" stroke-dasharray="0.8,0.4"
-              fill="none" opacity="0.7" visibility="hidden"/>
+        <path id="actual-kick-path" d="" stroke="#ff4444" stroke-width="0.25" stroke-dasharray="0.8,0.4" fill="none"
+          opacity="0.7" visibility="hidden" />
         <!-- Object ball to Pocket target line -->
-        <line id="target-line" x1="0" y1="0" x2="0" y2="0"
-              stroke="#ffd700" stroke-width="0.25"
-              visibility="hidden"/>
+        <line id="target-line" x1="0" y1="0" x2="0" y2="0" stroke="#ffd700" stroke-width="0.25" visibility="hidden" />
         <!-- Object ball path (where OB actually travels - can be multi-segment for banks) -->
-        <path id="obj-ball-path" d=""
-              stroke="#ff6b35" stroke-width="0.3" fill="none"
-              visibility="hidden"/>
+        <path id="obj-ball-path" d="" stroke="#ff6b35" stroke-width="0.3" fill="none" visibility="hidden" />
         <!-- Bank shot indicator (diamond on rail where OB bounces) -->
         <g id="bank-point-indicator" visibility="hidden">
-          <polygon points="0,-0.7 0.7,0 0,0.7 -0.7,0" fill="#ff6b35" stroke="#cc4400" stroke-width="0.1"/>
+          <polygon points="0,-0.7 0.7,0 0,0.7 -0.7,0" fill="#ff6b35" stroke="#cc4400" stroke-width="0.1" />
           <text id="bank-point-label" x="0" y="-1.3" text-anchor="middle" font-size="0.9" fill="#ff6b35">BANK</text>
         </g>
         <!-- Cue ball deflection path (tangent line + curve for spin) -->
-        <path id="cue-ball-path" d=""
-              stroke="#00bfff" stroke-width="0.3" fill="none"
-              visibility="hidden"/>
+        <path id="cue-ball-path" d="" stroke="#00bfff" stroke-width="0.3" fill="none" visibility="hidden" />
 
         <!-- Tangent line - shows where CB goes with stop shot (90° from contact) -->
         <g id="tangent-line-group" visibility="hidden">
-          <line id="tangent-line" x1="0" y1="0" x2="0" y2="0"
-                stroke="#00ffff" stroke-width="0.25" stroke-dasharray="0.8,0.4"
-                opacity="0.7"/>
-          <text id="tangent-label" x="0" y="0" text-anchor="middle" font-size="1" fill="#00ffff" opacity="0.8">STOP</text>
+          <line id="tangent-line" x1="0" y1="0" x2="0" y2="0" stroke="#00ffff" stroke-width="0.25"
+            stroke-dasharray="0.8,0.4" opacity="0.7" />
+          <text id="tangent-label" x="0" y="0" text-anchor="middle" font-size="1" fill="#00ffff"
+            opacity="0.8">STOP</text>
         </g>
 
         <!-- Follow line - shows where CB goes with follow/top english -->
         <g id="follow-line-group" visibility="hidden">
-          <line id="follow-line" x1="0" y1="0" x2="0" y2="0"
-                stroke="#00ff00" stroke-width="0.25" stroke-dasharray="0.8,0.4"
-                opacity="0.6"/>
-          <text id="follow-label" x="0" y="0" text-anchor="middle" font-size="1" fill="#00ff00" opacity="0.8">FOLLOW</text>
+          <line id="follow-line" x1="0" y1="0" x2="0" y2="0" stroke="#00ff00" stroke-width="0.25"
+            stroke-dasharray="0.8,0.4" opacity="0.6" />
+          <text id="follow-label" x="0" y="0" text-anchor="middle" font-size="1" fill="#00ff00"
+            opacity="0.8">FOLLOW</text>
         </g>
 
         <!-- Draw line - shows where CB goes with draw/bottom english -->
         <g id="draw-line-group" visibility="hidden">
-          <line id="draw-line" x1="0" y1="0" x2="0" y2="0"
-                stroke="#ff6600" stroke-width="0.25" stroke-dasharray="0.8,0.4"
-                opacity="0.6"/>
+          <line id="draw-line" x1="0" y1="0" x2="0" y2="0" stroke="#ff6600" stroke-width="0.25"
+            stroke-dasharray="0.8,0.4" opacity="0.6" />
           <text id="draw-label" x="0" y="0" text-anchor="middle" font-size="1" fill="#ff6600" opacity="0.8">DRAW</text>
         </g>
 
         <!-- Shape zone - triangular area showing where CB can be for next shot -->
         <g id="shape-zone-group" visibility="hidden">
-          <path id="shape-zone-path" d=""
-                fill="#00ff88" fill-opacity="0.12"
-                stroke="#00ff88" stroke-width="0.2" stroke-opacity="0.4"/>
-          <text id="shape-zone-label" x="0" y="0" text-anchor="middle" font-size="1.2" fill="#00ff88" opacity="0.6">SHAPE ZONE</text>
+          <path id="shape-zone-path" d="" fill="#00ff88" fill-opacity="0.12" stroke="#00ff88" stroke-width="0.2"
+            stroke-opacity="0.4" />
+          <text id="shape-zone-label" x="0" y="0" text-anchor="middle" font-size="1.2" fill="#00ff88"
+            opacity="0.6">SHAPE ZONE</text>
         </g>
 
         <!-- Ghost ball position indicator - THE AIM TARGET -->
         <g id="ghost-ball-indicator" visibility="hidden">
           <!-- Outer glow ring -->
-          <circle cx="0" cy="0" r="1.8" fill="none" stroke="rgba(255,215,0,0.3)" stroke-width="0.4"/>
+          <circle cx="0" cy="0" r="1.8" fill="none" stroke="rgba(255,215,0,0.3)" stroke-width="0.4" />
           <!-- Main target circle (ball size) -->
-          <circle cx="0" cy="0" r="1.125" fill="rgba(255,215,0,0.15)" stroke="#ffd700" stroke-width="0.2"/>
+          <circle cx="0" cy="0" r="1.125" fill="rgba(255,215,0,0.15)" stroke="#ffd700" stroke-width="0.2" />
           <!-- Crosshair lines -->
-          <line x1="-2.2" y1="0" x2="-1.4" y2="0" stroke="#ffd700" stroke-width="0.15"/>
-          <line x1="1.4" y1="0" x2="2.2" y2="0" stroke="#ffd700" stroke-width="0.15"/>
-          <line x1="0" y1="-2.2" x2="0" y2="-1.4" stroke="#ffd700" stroke-width="0.15"/>
-          <line x1="0" y1="1.4" x2="0" y2="2.2" stroke="#ffd700" stroke-width="0.15"/>
+          <line x1="-2.2" y1="0" x2="-1.4" y2="0" stroke="#ffd700" stroke-width="0.15" />
+          <line x1="1.4" y1="0" x2="2.2" y2="0" stroke="#ffd700" stroke-width="0.15" />
+          <line x1="0" y1="-2.2" x2="0" y2="-1.4" stroke="#ffd700" stroke-width="0.15" />
+          <line x1="0" y1="1.4" x2="0" y2="2.2" stroke="#ffd700" stroke-width="0.15" />
           <!-- Center dot -->
-          <circle cx="0" cy="0" r="0.2" fill="#ffd700"/>
+          <circle cx="0" cy="0" r="0.2" fill="#ffd700" />
           <!-- AIM label -->
           <text x="0" y="-2.8" text-anchor="middle" font-size="1.2" font-weight="bold" fill="#ffd700">AIM</text>
         </g>
         <!-- Kick shot aim point indicator (diamond on rail) -->
         <g id="kick-aim-indicator" visibility="hidden">
-          <polygon points="0,-0.8 0.8,0 0,0.8 -0.8,0" fill="#ff0" stroke="#cc0" stroke-width="0.1"/>
+          <polygon points="0,-0.8 0.8,0 0,0.8 -0.8,0" fill="#ff0" stroke="#cc0" stroke-width="0.1" />
           <text id="kick-aim-label" x="0" y="-1.5" text-anchor="middle" font-size="1" fill="#ff0">AIM</text>
         </g>
         <!-- Mirror system visualization for kick shots -->
         <g id="mirror-system-overlay" visibility="hidden">
           <!-- Mirror ghost ball (ghost mirrored across the kick rail) -->
           <g id="mirror-ghost">
-            <circle cx="0" cy="0" r="1.125" fill="none" stroke="#ff00ff" stroke-width="0.15" stroke-dasharray="0.4,0.2" opacity="0.7"/>
-            <line x1="-0.8" y1="0" x2="0.8" y2="0" stroke="#ff00ff" stroke-width="0.1" opacity="0.7"/>
-            <line x1="0" y1="-0.8" x2="0" y2="0.8" stroke="#ff00ff" stroke-width="0.1" opacity="0.7"/>
+            <circle cx="0" cy="0" r="1.125" fill="none" stroke="#ff00ff" stroke-width="0.15" stroke-dasharray="0.4,0.2"
+              opacity="0.7" />
+            <line x1="-0.8" y1="0" x2="0.8" y2="0" stroke="#ff00ff" stroke-width="0.1" opacity="0.7" />
+            <line x1="0" y1="-0.8" x2="0" y2="0.8" stroke="#ff00ff" stroke-width="0.1" opacity="0.7" />
             <text x="0" y="-1.8" text-anchor="middle" font-size="0.9" fill="#ff00ff" opacity="0.8">MIRROR</text>
           </g>
           <!-- Aim line from CB through mirror ghost (shows true aim direction) -->
-          <line id="mirror-aim-line" x1="0" y1="0" x2="0" y2="0" stroke="#ff00ff" stroke-width="0.12" stroke-dasharray="0.6,0.3" opacity="0.5"/>
+          <line id="mirror-aim-line" x1="0" y1="0" x2="0" y2="0" stroke="#ff00ff" stroke-width="0.12"
+            stroke-dasharray="0.6,0.3" opacity="0.5" />
           <!-- Midpoint marker (for equal-distance visualization) -->
           <g id="midpoint-marker">
-            <circle cx="0" cy="0" r="0.4" fill="#00ffff" opacity="0.6"/>
+            <circle cx="0" cy="0" r="0.4" fill="#00ffff" opacity="0.6" />
             <text x="0" y="-0.8" text-anchor="middle" font-size="0.7" fill="#00ffff" opacity="0.8">MID</text>
           </g>
           <!-- Incoming angle arc (CB to rail) -->
-          <path id="incoming-angle-arc" d="" fill="none" stroke="#00ff00" stroke-width="0.12" opacity="0.7"/>
+          <path id="incoming-angle-arc" d="" fill="none" stroke="#00ff00" stroke-width="0.12" opacity="0.7" />
           <text id="incoming-angle-text" x="0" y="0" font-size="0.8" fill="#00ff00" opacity="0.9"></text>
           <!-- Outgoing angle arc (rail to ghost) -->
-          <path id="outgoing-angle-arc" d="" fill="none" stroke="#ffaa00" stroke-width="0.12" opacity="0.7"/>
+          <path id="outgoing-angle-arc" d="" fill="none" stroke="#ffaa00" stroke-width="0.12" opacity="0.7" />
           <text id="outgoing-angle-text" x="0" y="0" font-size="0.8" fill="#ffaa00" opacity="0.9"></text>
           <!-- English effect indicator (shows angle adjustment from spin) -->
           <g id="english-effect-indicator" visibility="hidden">
-            <path id="english-effect-arc" d="" fill="none" stroke="#ff4444" stroke-width="0.15" opacity="0.8"/>
+            <path id="english-effect-arc" d="" fill="none" stroke="#ff4444" stroke-width="0.15" opacity="0.8" />
             <text id="english-effect-text" x="0" y="0" font-size="0.7" fill="#ff4444" opacity="0.9"></text>
           </g>
         </g>
         <!-- Cue ball final resting position indicator (circle with X) - scaled to 1/3 ball size -->
         <g id="cb-final-position" visibility="hidden">
-          <circle cx="0" cy="0" r="0.375" fill="none" stroke="#00bfff" stroke-width="0.08"/>
-          <line x1="-0.25" y1="-0.25" x2="0.25" y2="0.25" stroke="#00bfff" stroke-width="0.08"/>
-          <line x1="0.25" y1="-0.25" x2="-0.25" y2="0.25" stroke="#00bfff" stroke-width="0.08"/>
+          <circle cx="0" cy="0" r="0.375" fill="none" stroke="#00bfff" stroke-width="0.08" />
+          <line x1="-0.25" y1="-0.25" x2="0.25" y2="0.25" stroke="#00bfff" stroke-width="0.08" />
+          <line x1="0.25" y1="-0.25" x2="-0.25" y2="0.25" stroke="#00bfff" stroke-width="0.08" />
         </g>
         <!-- Object ball final resting position indicator (circle with X) - scaled to 1/3 ball size -->
         <g id="ob-final-position" visibility="hidden">
-          <circle cx="0" cy="0" r="0.375" fill="none" stroke="#ff6b35" stroke-width="0.08"/>
-          <line x1="-0.25" y1="-0.25" x2="0.25" y2="0.25" stroke="#ff6b35" stroke-width="0.08"/>
-          <line x1="0.25" y1="-0.25" x2="-0.25" y2="0.25" stroke="#ff6b35" stroke-width="0.08"/>
+          <circle cx="0" cy="0" r="0.375" fill="none" stroke="#ff6b35" stroke-width="0.08" />
+          <line x1="-0.25" y1="-0.25" x2="0.25" y2="0.25" stroke="#ff6b35" stroke-width="0.08" />
+          <line x1="0.25" y1="-0.25" x2="-0.25" y2="0.25" stroke="#ff6b35" stroke-width="0.08" />
         </g>
         <!-- Combination shot indicator -->
         <g id="combo-shot-indicator" visibility="hidden">
           <!-- Path 1: Cue → Helper ball (dashed cyan - distinct from other paths) -->
-          <path id="combo-path-1" d="" stroke="#00ddff" stroke-width="0.35" stroke-dasharray="0.8,0.4" fill="none"/>
+          <path id="combo-path-1" d="" stroke="#00ddff" stroke-width="0.35" stroke-dasharray="0.8,0.4" fill="none" />
           <!-- Path 2: Helper → Target ball (solid magenta - very distinct) -->
-          <path id="combo-path-2" d="" stroke="#ff44ff" stroke-width="0.4" fill="none"/>
+          <path id="combo-path-2" d="" stroke="#ff44ff" stroke-width="0.4" fill="none" />
           <!-- Path 3: Target → Pocket (solid yellow-green) -->
-          <path id="combo-path-3" d="" stroke="#aaff00" stroke-width="0.35" fill="none"/>
+          <path id="combo-path-3" d="" stroke="#aaff00" stroke-width="0.35" fill="none" />
           <!-- Helper ghost position indicator -->
           <g id="combo-helper-ghost">
-            <circle r="1.125" fill="rgba(0,221,255,0.25)" stroke="#00ddff" stroke-width="0.2" stroke-dasharray="0.4,0.2"/>
+            <circle r="1.125" fill="rgba(0,221,255,0.25)" stroke="#00ddff" stroke-width="0.2"
+              stroke-dasharray="0.4,0.2" />
           </g>
           <!-- COMBO label -->
           <text id="combo-label" font-size="1.4" font-weight="bold" fill="#ff44ff" text-anchor="middle">COMBO</text>
         </g>
         <!-- Pocket click targets (invisible hit areas) -->
         <g id="pocket-targets">
-          <circle class="pocket-target" data-pocket="corner-tl" cx="1.5" cy="1.5" r="4"/>
-          <circle class="pocket-target" data-pocket="corner-tr" cx="98.5" cy="1.5" r="4"/>
-          <circle class="pocket-target" data-pocket="corner-bl" cx="1.5" cy="48.5" r="4"/>
-          <circle class="pocket-target" data-pocket="corner-br" cx="98.5" cy="48.5" r="4"/>
-          <ellipse class="pocket-target" data-pocket="side-top" cx="50" cy="0" rx="4" ry="3"/>
-          <ellipse class="pocket-target" data-pocket="side-bottom" cx="50" cy="50" rx="4" ry="3"/>
+          <circle class="pocket-target" data-pocket="corner-tl" cx="1.5" cy="1.5" r="4" />
+          <circle class="pocket-target" data-pocket="corner-tr" cx="98.5" cy="1.5" r="4" />
+          <circle class="pocket-target" data-pocket="corner-bl" cx="1.5" cy="48.5" r="4" />
+          <circle class="pocket-target" data-pocket="corner-br" cx="98.5" cy="48.5" r="4" />
+          <ellipse class="pocket-target" data-pocket="side-top" cx="50" cy="0" rx="4" ry="3" />
+          <ellipse class="pocket-target" data-pocket="side-bottom" cx="50" cy="50" rx="4" ry="3" />
         </g>
       </svg>
 
       <!-- Pool Table SVG embedded inline (v009) -->
-      <svg id="pool-table-svg" xmlns="http://www.w3.org/2000/svg" viewBox="-8 -8 116 66" role="img" aria-label="Pool table diagram">
+      <svg id="pool-table-svg" xmlns="http://www.w3.org/2000/svg" viewBox="-8 -8 116 66" role="img"
+        aria-label="Pool table diagram">
         <title>Pool Table - Top Down View</title>
         <defs>
           <pattern id="wood-grain" patternUnits="userSpaceOnUse" width="4" height="4">
-            <rect width="4" height="4" fill="#5a3825"/>
-            <path d="M0 2 Q1 1.5 2 2 T4 2" stroke="#4a2c2a" stroke-width="0.3" fill="none" opacity="0.5"/>
-            <path d="M0 3.5 Q1 3 2 3.5 T4 3.5" stroke="#6b4332" stroke-width="0.2" fill="none" opacity="0.3"/>
+            <rect width="4" height="4" fill="#5a3825" />
+            <path d="M0 2 Q1 1.5 2 2 T4 2" stroke="#4a2c2a" stroke-width="0.3" fill="none" opacity="0.5" />
+            <path d="M0 3.5 Q1 3 2 3.5 T4 3.5" stroke="#6b4332" stroke-width="0.2" fill="none" opacity="0.3" />
           </pattern>
           <pattern id="cloth-texture" patternUnits="userSpaceOnUse" width="2" height="2">
-            <rect width="2" height="2" fill="#50a6c2"/>
-            <circle cx="0.5" cy="0.5" r="0.1" fill="#5ab0cc" opacity="0.3"/>
-            <circle cx="1.5" cy="1.5" r="0.1" fill="#4596b2" opacity="0.3"/>
+            <rect width="2" height="2" fill="#50a6c2" />
+            <circle cx="0.5" cy="0.5" r="0.1" fill="#5ab0cc" opacity="0.3" />
+            <circle cx="1.5" cy="1.5" r="0.1" fill="#4596b2" opacity="0.3" />
           </pattern>
           <!-- ClipPaths for inside-only cushion strokes -->
-          <clipPath id="clip-cushion-head"><polygon points="0,3.5 0,46.5 2,44.5 2,5.5"/></clipPath>
-          <clipPath id="clip-cushion-foot"><polygon points="100,3.5 100,46.5 98,44.5 98,5.5"/></clipPath>
-          <clipPath id="clip-cushion-top-left"><polygon points="3.5,0 47,0 45,2 5.5,2"/></clipPath>
-          <clipPath id="clip-cushion-top-right"><polygon points="53,0 96.5,0 94.5,2 55,2"/></clipPath>
-          <clipPath id="clip-cushion-bottom-left"><polygon points="3.5,50 47,50 45,48 5.5,48"/></clipPath>
-          <clipPath id="clip-cushion-bottom-right"><polygon points="53,50 96.5,50 94.5,48 55,48"/></clipPath>
+          <clipPath id="clip-cushion-head">
+            <polygon points="0,3.5 0,46.5 2,44.5 2,5.5" />
+          </clipPath>
+          <clipPath id="clip-cushion-foot">
+            <polygon points="100,3.5 100,46.5 98,44.5 98,5.5" />
+          </clipPath>
+          <clipPath id="clip-cushion-top-left">
+            <polygon points="3.5,0 47,0 45,2 5.5,2" />
+          </clipPath>
+          <clipPath id="clip-cushion-top-right">
+            <polygon points="53,0 96.5,0 94.5,2 55,2" />
+          </clipPath>
+          <clipPath id="clip-cushion-bottom-left">
+            <polygon points="3.5,50 47,50 45,48 5.5,48" />
+          </clipPath>
+          <clipPath id="clip-cushion-bottom-right">
+            <polygon points="53,50 96.5,50 94.5,48 55,48" />
+          </clipPath>
         </defs>
 
         <!-- Layer 1: Rails (Wood with rounded corners) -->
         <g id="layer-rails">
-          <path id="rail-frame" d="M -2,-6 L 102,-6 A 4,4 0 0,1 106,-2 L 106,52 A 4,4 0 0,1 102,56 L -2,56 A 4,4 0 0,1 -6,52 L -6,-2 A 4,4 0 0,1 -2,-6 Z M 0,0 L 0,50 L 100,50 L 100,0 Z" fill="url(#wood-grain)" fill-rule="evenodd"/>
+          <path id="rail-frame"
+            d="M -2,-6 L 102,-6 A 4,4 0 0,1 106,-2 L 106,52 A 4,4 0 0,1 102,56 L -2,56 A 4,4 0 0,1 -6,52 L -6,-2 A 4,4 0 0,1 -2,-6 Z M 0,0 L 0,50 L 100,50 L 100,0 Z"
+            fill="url(#wood-grain)" fill-rule="evenodd" />
         </g>
 
         <!-- Layer 3: Pocket Voids -->
         <g id="layer-pocket-voids">
           <!-- Corner pockets: circles at corners -->
-          <circle cx="0" cy="0" r="4" fill="#050505"/>
-          <circle cx="100" cy="0" r="4" fill="#050505"/>
-          <circle cx="0" cy="50" r="4" fill="#050505"/>
-          <circle cx="100" cy="50" r="4" fill="#050505"/>
+          <circle cx="0" cy="0" r="4" fill="#050505" />
+          <circle cx="100" cy="0" r="4" fill="#050505" />
+          <circle cx="0" cy="50" r="4" fill="#050505" />
+          <circle cx="100" cy="50" r="4" fill="#050505" />
           <!-- Side pockets: circles shifted outward for deeper, rounder pockets -->
           <!-- Center shifted so inner edge stays at same position, outer edge reaches ~same as corners -->
-          <circle cx="50" cy="-0.75" r="3.25" fill="#050505"/>
-          <circle cx="50" cy="50.75" r="3.25" fill="#050505"/>
+          <circle cx="50" cy="-0.75" r="3.25" fill="#050505" />
+          <circle cx="50" cy="50.75" r="3.25" fill="#050505" />
         </g>
 
         <!-- Layer 4: Slate/Cloth -->
         <g id="layer-slate-cloth">
-          <path id="slate-surface" d="M 0,3.5 A 3.5,3.5 0 0,0 3.5,0 L 47,0 L 47,0.3 A 3,0.3 0 0,0 53,0.3 L 53,0 L 96.5,0 A 3.5,3.5 0 0,0 100,3.5 L 100,46.5 A 3.5,3.5 0 0,0 96.5,50 L 53,50 L 53,49.7 A 3,0.3 0 0,0 47,49.7 L 47,50 L 3.5,50 A 3.5,3.5 0 0,0 0,46.5 Z" fill="#50a6c2"/>
-          <path d="M 0,3.5 A 3.5,3.5 0 0,0 3.5,0 L 47,0 L 47,0.3 A 3,0.3 0 0,0 53,0.3 L 53,0 L 96.5,0 A 3.5,3.5 0 0,0 100,3.5 L 100,46.5 A 3.5,3.5 0 0,0 96.5,50 L 53,50 L 53,49.7 A 3,0.3 0 0,0 47,49.7 L 47,50 L 3.5,50 A 3.5,3.5 0 0,0 0,46.5 Z" fill="url(#cloth-texture)" opacity="0.1"/>
+          <path id="slate-surface"
+            d="M 0,3.5 A 3.5,3.5 0 0,0 3.5,0 L 47,0 L 47,0.3 A 3,0.3 0 0,0 53,0.3 L 53,0 L 96.5,0 A 3.5,3.5 0 0,0 100,3.5 L 100,46.5 A 3.5,3.5 0 0,0 96.5,50 L 53,50 L 53,49.7 A 3,0.3 0 0,0 47,49.7 L 47,50 L 3.5,50 A 3.5,3.5 0 0,0 0,46.5 Z"
+            fill="#50a6c2" />
+          <path
+            d="M 0,3.5 A 3.5,3.5 0 0,0 3.5,0 L 47,0 L 47,0.3 A 3,0.3 0 0,0 53,0.3 L 53,0 L 96.5,0 A 3.5,3.5 0 0,0 100,3.5 L 100,46.5 A 3.5,3.5 0 0,0 96.5,50 L 53,50 L 53,49.7 A 3,0.3 0 0,0 47,49.7 L 47,50 L 3.5,50 A 3.5,3.5 0 0,0 0,46.5 Z"
+            fill="url(#cloth-texture)" opacity="0.1" />
         </g>
 
         <!-- Layer 5: Cushions with inside-only strokes -->
         <g id="layer-cushions">
-          <polygon points="0,3.5 0,46.5 2,44.5 2,5.5" fill="#50a6c2"/>
-          <polygon points="0,3.5 0,46.5 2,44.5 2,5.5" fill="none" stroke="#a8d3e1" stroke-width="0.35" clip-path="url(#clip-cushion-head)"/>
-          <polygon points="100,3.5 100,46.5 98,44.5 98,5.5" fill="#50a6c2"/>
-          <polygon points="100,3.5 100,46.5 98,44.5 98,5.5" fill="none" stroke="#a8d3e1" stroke-width="0.35" clip-path="url(#clip-cushion-foot)"/>
-          <polygon points="3.5,0 47,0 45,2 5.5,2" fill="#50a6c2"/>
-          <polygon points="3.5,0 47,0 45,2 5.5,2" fill="none" stroke="#a8d3e1" stroke-width="0.35" clip-path="url(#clip-cushion-top-left)"/>
-          <polygon points="53,0 96.5,0 94.5,2 55,2" fill="#50a6c2"/>
-          <polygon points="53,0 96.5,0 94.5,2 55,2" fill="none" stroke="#a8d3e1" stroke-width="0.35" clip-path="url(#clip-cushion-top-right)"/>
-          <polygon points="3.5,50 47,50 45,48 5.5,48" fill="#50a6c2"/>
-          <polygon points="3.5,50 47,50 45,48 5.5,48" fill="none" stroke="#a8d3e1" stroke-width="0.35" clip-path="url(#clip-cushion-bottom-left)"/>
-          <polygon points="53,50 96.5,50 94.5,48 55,48" fill="#50a6c2"/>
-          <polygon points="53,50 96.5,50 94.5,48 55,48" fill="none" stroke="#a8d3e1" stroke-width="0.35" clip-path="url(#clip-cushion-bottom-right)"/>
+          <polygon points="0,3.5 0,46.5 2,44.5 2,5.5" fill="#50a6c2" />
+          <polygon points="0,3.5 0,46.5 2,44.5 2,5.5" fill="none" stroke="#a8d3e1" stroke-width="0.35"
+            clip-path="url(#clip-cushion-head)" />
+          <polygon points="100,3.5 100,46.5 98,44.5 98,5.5" fill="#50a6c2" />
+          <polygon points="100,3.5 100,46.5 98,44.5 98,5.5" fill="none" stroke="#a8d3e1" stroke-width="0.35"
+            clip-path="url(#clip-cushion-foot)" />
+          <polygon points="3.5,0 47,0 45,2 5.5,2" fill="#50a6c2" />
+          <polygon points="3.5,0 47,0 45,2 5.5,2" fill="none" stroke="#a8d3e1" stroke-width="0.35"
+            clip-path="url(#clip-cushion-top-left)" />
+          <polygon points="53,0 96.5,0 94.5,2 55,2" fill="#50a6c2" />
+          <polygon points="53,0 96.5,0 94.5,2 55,2" fill="none" stroke="#a8d3e1" stroke-width="0.35"
+            clip-path="url(#clip-cushion-top-right)" />
+          <polygon points="3.5,50 47,50 45,48 5.5,48" fill="#50a6c2" />
+          <polygon points="3.5,50 47,50 45,48 5.5,48" fill="none" stroke="#a8d3e1" stroke-width="0.35"
+            clip-path="url(#clip-cushion-bottom-left)" />
+          <polygon points="53,50 96.5,50 94.5,48 55,48" fill="#50a6c2" />
+          <polygon points="53,50 96.5,50 94.5,48 55,48" fill="none" stroke="#a8d3e1" stroke-width="0.35"
+            clip-path="url(#clip-cushion-bottom-right)" />
         </g>
 
         <!-- Layer 6: Diamonds -->
         <g id="layer-diamonds">
           <g id="diamonds-top">
-            <polygon points="12.5,-3 13,-3.5 13.5,-3 13,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
-            <polygon points="25,-3 25.5,-3.5 26,-3 25.5,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
-            <polygon points="37.5,-3 38,-3.5 38.5,-3 38,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
-            <polygon points="62.5,-3 63,-3.5 63.5,-3 63,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
-            <polygon points="75,-3 75.5,-3.5 76,-3 75.5,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
-            <polygon points="87.5,-3 88,-3.5 88.5,-3 88,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+            <polygon points="12.5,-3 13,-3.5 13.5,-3 13,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1" />
+            <polygon points="25,-3 25.5,-3.5 26,-3 25.5,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1" />
+            <polygon points="37.5,-3 38,-3.5 38.5,-3 38,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1" />
+            <polygon points="62.5,-3 63,-3.5 63.5,-3 63,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1" />
+            <polygon points="75,-3 75.5,-3.5 76,-3 75.5,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1" />
+            <polygon points="87.5,-3 88,-3.5 88.5,-3 88,-2.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1" />
           </g>
           <g id="diamonds-bottom">
-            <polygon points="12.5,53 13,52.5 13.5,53 13,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
-            <polygon points="25,53 25.5,52.5 26,53 25.5,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
-            <polygon points="37.5,53 38,52.5 38.5,53 38,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
-            <polygon points="62.5,53 63,52.5 63.5,53 63,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
-            <polygon points="75,53 75.5,52.5 76,53 75.5,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
-            <polygon points="87.5,53 88,52.5 88.5,53 88,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+            <polygon points="12.5,53 13,52.5 13.5,53 13,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1" />
+            <polygon points="25,53 25.5,52.5 26,53 25.5,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1" />
+            <polygon points="37.5,53 38,52.5 38.5,53 38,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1" />
+            <polygon points="62.5,53 63,52.5 63.5,53 63,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1" />
+            <polygon points="75,53 75.5,52.5 76,53 75.5,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1" />
+            <polygon points="87.5,53 88,52.5 88.5,53 88,53.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1" />
           </g>
           <g id="diamonds-head">
-            <polygon points="-3,12.5 -3.5,13 -3,13.5 -2.5,13" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
-            <polygon points="-3,25 -3.5,25.5 -3,26 -2.5,25.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
-            <polygon points="-3,37.5 -3.5,38 -3,38.5 -2.5,38" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+            <polygon points="-3,12.5 -3.5,13 -3,13.5 -2.5,13" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1" />
+            <polygon points="-3,25 -3.5,25.5 -3,26 -2.5,25.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1" />
+            <polygon points="-3,37.5 -3.5,38 -3,38.5 -2.5,38" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1" />
           </g>
           <g id="diamonds-foot">
-            <polygon points="103,12.5 102.5,13 103,13.5 103.5,13" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
-            <polygon points="103,25 102.5,25.5 103,26 103.5,25.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
-            <polygon points="103,37.5 102.5,38 103,38.5 103.5,38" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1"/>
+            <polygon points="103,12.5 102.5,13 103,13.5 103.5,13" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1" />
+            <polygon points="103,25 102.5,25.5 103,26 103.5,25.5" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1" />
+            <polygon points="103,37.5 102.5,38 103,38.5 103.5,38" fill="#f5f5dc" stroke="#b5a642" stroke-width="0.1" />
           </g>
         </g>
 
         <!-- Layer 8: Spots -->
         <g id="layer-spots">
-          <g id="head-spot"><circle cx="25" cy="25" r="0.8" fill="#1a1a1a"/><circle cx="25" cy="25" r="0.25" fill="#ffffff"/></g>
-          <g id="foot-spot"><circle cx="75" cy="25" r="0.8" fill="#1a1a1a"/><circle cx="75" cy="25" r="0.25" fill="#ffffff"/></g>
+          <g id="head-spot">
+            <circle cx="25" cy="25" r="0.8" fill="#1a1a1a" />
+            <circle cx="25" cy="25" r="0.25" fill="#ffffff" />
+          </g>
+          <g id="foot-spot">
+            <circle cx="75" cy="25" r="0.8" fill="#1a1a1a" />
+            <circle cx="75" cy="25" r="0.25" fill="#ffffff" />
+          </g>
         </g>
 
         <!-- Layer 9: Grid (hidden by default) -->
         <g id="layer-grid" opacity="0.15" visibility="visible">
-          <line x1="12.5" y1="2" x2="12.5" y2="48" stroke="#ffffff" stroke-width="0.15"/>
-          <line x1="25" y1="2" x2="25" y2="48" stroke="#ffffff" stroke-width="0.15"/>
-          <line x1="37.5" y1="2" x2="37.5" y2="48" stroke="#ffffff" stroke-width="0.15"/>
-          <line x1="50" y1="2" x2="50" y2="48" stroke="#ffffff" stroke-width="0.15"/>
-          <line x1="62.5" y1="2" x2="62.5" y2="48" stroke="#ffffff" stroke-width="0.15"/>
-          <line x1="75" y1="2" x2="75" y2="48" stroke="#ffffff" stroke-width="0.15"/>
-          <line x1="87.5" y1="2" x2="87.5" y2="48" stroke="#ffffff" stroke-width="0.15"/>
-          <line x1="2" y1="12.5" x2="98" y2="12.5" stroke="#ffffff" stroke-width="0.15"/>
-          <line x1="2" y1="25" x2="98" y2="25" stroke="#ffffff" stroke-width="0.15"/>
-          <line x1="2" y1="37.5" x2="98" y2="37.5" stroke="#ffffff" stroke-width="0.15"/>
+          <line x1="12.5" y1="2" x2="12.5" y2="48" stroke="#ffffff" stroke-width="0.15" />
+          <line x1="25" y1="2" x2="25" y2="48" stroke="#ffffff" stroke-width="0.15" />
+          <line x1="37.5" y1="2" x2="37.5" y2="48" stroke="#ffffff" stroke-width="0.15" />
+          <line x1="50" y1="2" x2="50" y2="48" stroke="#ffffff" stroke-width="0.15" />
+          <line x1="62.5" y1="2" x2="62.5" y2="48" stroke="#ffffff" stroke-width="0.15" />
+          <line x1="75" y1="2" x2="75" y2="48" stroke="#ffffff" stroke-width="0.15" />
+          <line x1="87.5" y1="2" x2="87.5" y2="48" stroke="#ffffff" stroke-width="0.15" />
+          <line x1="2" y1="12.5" x2="98" y2="12.5" stroke="#ffffff" stroke-width="0.15" />
+          <line x1="2" y1="25" x2="98" y2="25" stroke="#ffffff" stroke-width="0.15" />
+          <line x1="2" y1="37.5" x2="98" y2="37.5" stroke="#ffffff" stroke-width="0.15" />
         </g>
       </svg>
     </div>
@@ -1994,7 +2261,8 @@
       <div class="rack-label">Drag balls onto the table - positions are preserved when printing</div>
     </div>
 
-    <p class="instructions">Drag balls from rack to table. Balls return to rack if dropped outside. Cue-Ghost line appears when both are placed. Click a pocket to set target.</p>
+    <p class="instructions">Drag balls from rack to table. Balls return to rack if dropped outside. Cue-Ghost line
+      appears when both are placed. Click a pocket to set target.</p>
 
     <!-- Shot Info Panel -->
     <div class="shot-info" id="shotInfo">
@@ -2009,20 +2277,23 @@
         <div class="overlap-diagram-wrapper">
           <svg id="overlap-diagram" viewBox="-3 -1.5 6 3" width="200" height="100">
             <!-- Background -->
-            <rect x="-3" y="-1.5" width="6" height="3" fill="#1a1a2e"/>
+            <rect x="-3" y="-1.5" width="6" height="3" fill="#1a1a2e" />
             <!-- Object Ball (solid, slightly right) -->
-            <circle id="overlap-obj-ball" cx="0.5" cy="0" r="1" fill="none" stroke="#ff6b35" stroke-width="0.06"/>
+            <circle id="overlap-obj-ball" cx="0.5" cy="0" r="1" fill="none" stroke="#ff6b35" stroke-width="0.06" />
             <text x="0.5" y="0.05" text-anchor="middle" font-size="0.28" fill="#ff6b35">OB</text>
             <!-- Ghost Ball (dashed, position based on overlap) -->
-            <circle id="overlap-ghost-ball" cx="-0.5" cy="0" r="1" fill="rgba(255,215,0,0.15)" stroke="#ffd700" stroke-width="0.06" stroke-dasharray="0.12,0.08"/>
-            <text id="overlap-ghost-label" x="-0.5" y="0.05" text-anchor="middle" font-size="0.28" fill="#ffd700">GB</text>
+            <circle id="overlap-ghost-ball" cx="-0.5" cy="0" r="1" fill="rgba(255,215,0,0.15)" stroke="#ffd700"
+              stroke-width="0.06" stroke-dasharray="0.12,0.08" />
+            <text id="overlap-ghost-label" x="-0.5" y="0.05" text-anchor="middle" font-size="0.28"
+              fill="#ffd700">GB</text>
             <!-- Overlap region highlight -->
             <clipPath id="clip-obj-ball">
-              <circle cx="0.5" cy="0" r="1"/>
+              <circle cx="0.5" cy="0" r="1" />
             </clipPath>
-            <circle id="overlap-region" cx="-0.5" cy="0" r="1" fill="rgba(0,255,170,0.25)" clip-path="url(#clip-obj-ball)"/>
+            <circle id="overlap-region" cx="-0.5" cy="0" r="1" fill="rgba(0,255,170,0.25)"
+              clip-path="url(#clip-obj-ball)" />
             <!-- Center line reference -->
-            <line x1="-3" y1="0" x2="3" y2="0" stroke="#333" stroke-width="0.02" stroke-dasharray="0.08,0.08"/>
+            <line x1="-3" y1="0" x2="3" y2="0" stroke="#333" stroke-width="0.02" stroke-dasharray="0.08,0.08" />
           </svg>
         </div>
         <div class="overlap-info">
@@ -2038,21 +2309,23 @@
         <div class="control-label">Cue Tip Contact</div>
         <svg id="contact-diagram-hidden" viewBox="-1.5 -1.5 3 3" width="100" height="100">
           <!-- Ball outline -->
-          <circle cx="0" cy="0" r="1.125" fill="#e8e8e8" stroke="#999" stroke-width="0.05"/>
+          <circle cx="0" cy="0" r="1.125" fill="#e8e8e8" stroke="#999" stroke-width="0.05" />
           <!-- Miscue zone (outer ring) -->
-          <circle cx="0" cy="0" r="1.125" fill="none" stroke="#ff4444" stroke-width="0.1" stroke-dasharray="0.15,0.1" opacity="0.3"/>
+          <circle cx="0" cy="0" r="1.125" fill="none" stroke="#ff4444" stroke-width="0.1" stroke-dasharray="0.15,0.1"
+            opacity="0.3" />
           <!-- Safe zone boundary -->
-          <circle cx="0" cy="0" r="0.56" fill="none" stroke="#4a4a4a" stroke-width="0.02" stroke-dasharray="0.1,0.05"/>
+          <circle cx="0" cy="0" r="0.56" fill="none" stroke="#4a4a4a" stroke-width="0.02" stroke-dasharray="0.1,0.05" />
           <!-- Crosshairs -->
-          <line x1="-0.8" y1="0" x2="0.8" y2="0" stroke="#ccc" stroke-width="0.03"/>
-          <line x1="0" y1="-0.8" x2="0" y2="0.8" stroke="#ccc" stroke-width="0.03"/>
+          <line x1="-0.8" y1="0" x2="0.8" y2="0" stroke="#ccc" stroke-width="0.03" />
+          <line x1="0" y1="-0.8" x2="0" y2="0.8" stroke="#ccc" stroke-width="0.03" />
           <!-- Zone labels -->
           <text x="0" y="-0.95" text-anchor="middle" font-size="0.18" fill="#666">Follow</text>
           <text x="0" y="1.05" text-anchor="middle" font-size="0.18" fill="#666">Draw</text>
           <text x="-0.95" y="0.05" text-anchor="middle" font-size="0.15" fill="#666">L</text>
           <text x="0.95" y="0.05" text-anchor="middle" font-size="0.15" fill="#666">R</text>
           <!-- Cue tip contact point (draggable) -->
-          <circle id="contact-point-hidden" cx="0" cy="0" r="0.15" fill="#0066cc" stroke="#003366" stroke-width="0.03" cursor="move"/>
+          <circle id="contact-point-hidden" cx="0" cy="0" r="0.15" fill="#0066cc" stroke="#003366" stroke-width="0.03"
+            cursor="move" />
         </svg>
         <div class="spin-display">
           <span id="spinType-hidden">Center</span>
@@ -2063,7 +2336,7 @@
       <div class="force-container">
         <div class="control-label">Power</div>
         <div class="force-slider-wrapper">
-          <input type="range" id="forceSlider" min="1" max="10" value="5" step="0.5"/>
+          <input type="range" id="forceSlider" min="1" max="10" value="5" step="0.5" />
           <div class="force-labels">
             <span>Soft</span>
             <span>Medium</span>
@@ -2100,7 +2373,8 @@
       <!-- Solver Options -->
       <div class="solver-options">
         <div class="control-label">Shot Preference:</div>
-        <div class="solver-instructions" style="font-size:12px;color:#666;margin-bottom:8px;">Select an object ball and pocket</div>
+        <div class="solver-instructions" style="font-size:12px;color:#666;margin-bottom:8px;">Select an object ball and
+          pocket</div>
         <div class="solver-radio-group">
           <label>
             <input type="radio" name="solver-mode" value="auto" checked>
@@ -2184,7 +2458,6 @@
       <span class="palette-title"><span class="palette-title-icon">🎱</span> Balls</span>
       <div class="palette-controls">
         <button class="palette-btn minimize" title="Minimize">−</button>
-        <button class="palette-btn close" title="Hide">×</button>
       </div>
     </div>
     <div class="palette-body">
@@ -2203,12 +2476,12 @@
       <span class="palette-title"><span class="palette-title-icon">🎯</span> Cue Control</span>
       <div class="palette-controls">
         <button class="palette-btn minimize" title="Minimize">−</button>
-        <button class="palette-btn close" title="Hide">×</button>
       </div>
     </div>
     <div class="palette-body">
       <div class="cue-controls-grid">
-        <div class="control-row">
+        <!-- Left Column: Spin, Power, Shoot -->
+        <div class="control-column">
           <!-- Contact Diagram with Guide Circles - 4x size with left legend -->
           <div class="contact-diagram-container contact-diagram-large">
             <div class="control-label">English / Spin</div>
@@ -2229,92 +2502,95 @@
               </g>
 
               <!-- Ball outline (1/3 smaller: 1.125 * 0.667 = 0.75) -->
-              <circle cx="0" cy="0" r="0.75" fill="#e8e8e8" stroke="#999" stroke-width="0.03"/>
+              <circle cx="0" cy="0" r="0.75" fill="#e8e8e8" stroke="#999" stroke-width="0.03" />
 
               <!-- Miscue zone boundary (scaled) -->
-              <circle cx="0" cy="0" r="0.75" fill="none" stroke="#ff4444" stroke-width="0.05" stroke-dasharray="0.08,0.05" opacity="0.4"/>
-              <circle cx="0" cy="0" r="0.42" fill="none" stroke="#ff4444" stroke-width="0.015" stroke-dasharray="0.04,0.03" opacity="0.3"/>
+              <circle cx="0" cy="0" r="0.75" fill="none" stroke="#ff4444" stroke-width="0.05"
+                stroke-dasharray="0.08,0.05" opacity="0.4" />
+              <circle cx="0" cy="0" r="0.42" fill="none" stroke="#ff4444" stroke-width="0.015"
+                stroke-dasharray="0.04,0.03" opacity="0.3" />
 
               <!-- Outer ring: All 12 clock positions (0.42 radius - moved out 2/3 circle) -->
               <g class="guide-clock" opacity="0.8">
                 <!-- 12 o'clock (top) -->
-                <circle cx="0" cy="-0.42" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <circle cx="0" cy="-0.42" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
                 <text x="0" y="-0.393" text-anchor="middle" font-size="0.09" fill="#f90" font-weight="bold">12</text>
                 <!-- 1 o'clock -->
-                <circle cx="0.21" cy="-0.364" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <circle cx="0.21" cy="-0.364" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
                 <text x="0.21" y="-0.337" text-anchor="middle" font-size="0.07" fill="#f90">1</text>
                 <!-- 2 o'clock -->
-                <circle cx="0.364" cy="-0.21" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <circle cx="0.364" cy="-0.21" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
                 <text x="0.364" y="-0.183" text-anchor="middle" font-size="0.07" fill="#f90">2</text>
                 <!-- 3 o'clock (right) -->
-                <circle cx="0.42" cy="0" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <circle cx="0.42" cy="0" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
                 <text x="0.42" y="0.027" text-anchor="middle" font-size="0.09" fill="#f90" font-weight="bold">3</text>
                 <!-- 4 o'clock -->
-                <circle cx="0.364" cy="0.21" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <circle cx="0.364" cy="0.21" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
                 <text x="0.364" y="0.237" text-anchor="middle" font-size="0.07" fill="#f90">4</text>
                 <!-- 5 o'clock -->
-                <circle cx="0.21" cy="0.364" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <circle cx="0.21" cy="0.364" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
                 <text x="0.21" y="0.391" text-anchor="middle" font-size="0.07" fill="#f90">5</text>
                 <!-- 6 o'clock (bottom) -->
-                <circle cx="0" cy="0.42" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <circle cx="0" cy="0.42" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
                 <text x="0" y="0.447" text-anchor="middle" font-size="0.09" fill="#f90" font-weight="bold">6</text>
                 <!-- 7 o'clock -->
-                <circle cx="-0.21" cy="0.364" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <circle cx="-0.21" cy="0.364" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
                 <text x="-0.21" y="0.391" text-anchor="middle" font-size="0.07" fill="#f90">7</text>
                 <!-- 8 o'clock -->
-                <circle cx="-0.364" cy="0.21" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <circle cx="-0.364" cy="0.21" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
                 <text x="-0.364" y="0.237" text-anchor="middle" font-size="0.07" fill="#f90">8</text>
                 <!-- 9 o'clock (left) -->
-                <circle cx="-0.42" cy="0" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <circle cx="-0.42" cy="0" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
                 <text x="-0.42" y="0.027" text-anchor="middle" font-size="0.09" fill="#f90" font-weight="bold">9</text>
                 <!-- 10 o'clock -->
-                <circle cx="-0.364" cy="-0.21" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <circle cx="-0.364" cy="-0.21" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
                 <text x="-0.364" y="-0.183" text-anchor="middle" font-size="0.07" fill="#f90">10</text>
                 <!-- 11 o'clock -->
-                <circle cx="-0.21" cy="-0.364" r="0.08" fill="none" stroke="#f90" stroke-width="0.02"/>
+                <circle cx="-0.21" cy="-0.364" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
                 <text x="-0.21" y="-0.337" text-anchor="middle" font-size="0.07" fill="#f90">11</text>
               </g>
 
               <!-- Inner ring: 8 compass positions (0.24 radius - moved in half circle) -->
               <g class="guide-inner" opacity="0.8">
                 <!-- N (North - top) -->
-                <circle cx="0" cy="-0.24" r="0.08" fill="none" stroke="#0af" stroke-width="0.02"/>
+                <circle cx="0" cy="-0.24" r="0.08" fill="none" stroke="#0af" stroke-width="0.02" />
                 <text x="0" y="-0.215" text-anchor="middle" font-size="0.07" fill="#0af" font-weight="bold">N</text>
                 <!-- NE (Northeast) -->
-                <circle cx="0.17" cy="-0.17" r="0.08" fill="none" stroke="#0af" stroke-width="0.02"/>
+                <circle cx="0.17" cy="-0.17" r="0.08" fill="none" stroke="#0af" stroke-width="0.02" />
                 <text x="0.17" y="-0.145" text-anchor="middle" font-size="0.06" fill="#0af">NE</text>
                 <!-- E (East - right) -->
-                <circle cx="0.24" cy="0" r="0.08" fill="none" stroke="#0af" stroke-width="0.02"/>
+                <circle cx="0.24" cy="0" r="0.08" fill="none" stroke="#0af" stroke-width="0.02" />
                 <text x="0.24" y="0.025" text-anchor="middle" font-size="0.07" fill="#0af" font-weight="bold">E</text>
                 <!-- SE (Southeast) -->
-                <circle cx="0.17" cy="0.17" r="0.08" fill="none" stroke="#0af" stroke-width="0.02"/>
+                <circle cx="0.17" cy="0.17" r="0.08" fill="none" stroke="#0af" stroke-width="0.02" />
                 <text x="0.17" y="0.195" text-anchor="middle" font-size="0.06" fill="#0af">SE</text>
                 <!-- S (South - bottom) -->
-                <circle cx="0" cy="0.24" r="0.08" fill="none" stroke="#0af" stroke-width="0.02"/>
+                <circle cx="0" cy="0.24" r="0.08" fill="none" stroke="#0af" stroke-width="0.02" />
                 <text x="0" y="0.265" text-anchor="middle" font-size="0.07" fill="#0af" font-weight="bold">S</text>
                 <!-- SW (Southwest) -->
-                <circle cx="-0.17" cy="0.17" r="0.08" fill="none" stroke="#0af" stroke-width="0.02"/>
+                <circle cx="-0.17" cy="0.17" r="0.08" fill="none" stroke="#0af" stroke-width="0.02" />
                 <text x="-0.17" y="0.195" text-anchor="middle" font-size="0.06" fill="#0af">SW</text>
                 <!-- W (West - left) -->
-                <circle cx="-0.24" cy="0" r="0.08" fill="none" stroke="#0af" stroke-width="0.02"/>
+                <circle cx="-0.24" cy="0" r="0.08" fill="none" stroke="#0af" stroke-width="0.02" />
                 <text x="-0.24" y="0.025" text-anchor="middle" font-size="0.07" fill="#0af" font-weight="bold">W</text>
                 <!-- NW (Northwest) -->
-                <circle cx="-0.17" cy="-0.17" r="0.08" fill="none" stroke="#0af" stroke-width="0.02"/>
+                <circle cx="-0.17" cy="-0.17" r="0.08" fill="none" stroke="#0af" stroke-width="0.02" />
                 <text x="-0.17" y="-0.145" text-anchor="middle" font-size="0.06" fill="#0af">NW</text>
               </g>
 
               <!-- Center marker (r=0.08, same as all others) -->
-              <circle cx="0" cy="0" r="0.08" fill="none" stroke="#0fa" stroke-width="0.02"/>
+              <circle cx="0" cy="0" r="0.08" fill="none" stroke="#0fa" stroke-width="0.02" />
               <text x="0" y="0.025" text-anchor="middle" font-size="0.08" fill="#0fa" font-weight="bold">C</text>
 
               <!-- Crosshairs for alignment (between inner and outer rings) -->
-              <line x1="-0.52" y1="0" x2="-0.32" y2="0" stroke="#555" stroke-width="0.01" opacity="0.4"/>
-              <line x1="0.32" y1="0" x2="0.52" y2="0" stroke="#555" stroke-width="0.01" opacity="0.4"/>
-              <line x1="0" y1="-0.52" x2="0" y2="-0.32" stroke="#555" stroke-width="0.01" opacity="0.4"/>
-              <line x1="0" y1="0.32" x2="0" y2="0.52" stroke="#555" stroke-width="0.01" opacity="0.4"/>
+              <line x1="-0.52" y1="0" x2="-0.32" y2="0" stroke="#555" stroke-width="0.01" opacity="0.4" />
+              <line x1="0.32" y1="0" x2="0.52" y2="0" stroke="#555" stroke-width="0.01" opacity="0.4" />
+              <line x1="0" y1="-0.52" x2="0" y2="-0.32" stroke="#555" stroke-width="0.01" opacity="0.4" />
+              <line x1="0" y1="0.32" x2="0" y2="0.52" stroke="#555" stroke-width="0.01" opacity="0.4" />
 
               <!-- Cue tip contact point (draggable, r=0.08 same as guides) -->
-              <circle id="contact-point" cx="0" cy="0" r="0.08" fill="#0066cc" stroke="#003366" stroke-width="0.02" cursor="move"/>
+              <circle id="contact-point" cx="0" cy="0" r="0.08" fill="#0066cc" stroke="#003366" stroke-width="0.02"
+                cursor="move" />
             </svg>
             <div class="spin-display"><span id="spinType">Center</span></div>
           </div>
@@ -2322,9 +2598,69 @@
           <div class="force-container">
             <div class="control-label">Power</div>
             <div class="force-slider-wrapper">
-              <input type="range" id="forceSlider-palette" min="1" max="10" value="5" step="0.5"/>
+              <input type="range" id="forceSlider-palette" min="1" max="10" value="5" step="0.5" />
             </div>
             <div class="force-value"><span id="forceValue-palette">5</span>/10</div>
+          </div>
+          <!-- Shoot Button -->
+          <div class="shoot-button-container" style="margin-top: 16px;">
+            <button class="action-btn primary" id="btnShoot" title="Execute the shot"
+              style="width: 100%; padding: 14px; font-size: 15px;">
+              <span class="btn-icon">🎯</span>
+              <span>Shoot</span>
+            </button>
+          </div>
+        </div>
+        <!-- Right Column: Shot Info -->
+        <div class="control-column">
+          <!-- Shooter's View Diagram -->
+          <div class="overlap-diagram-container" style="margin-bottom:12px;">
+            <div class="overlap-diagram-wrapper">
+              <svg id="overlap-diagram-palette" viewBox="-3 -1.5 6 3" width="160" height="80">
+                <rect x="-3" y="-1.5" width="6" height="3" fill="#1a1a2e" />
+                <circle id="overlap-obj-ball-palette" cx="0.5" cy="0" r="1" fill="none" stroke="#ff6b35"
+                  stroke-width="0.06" />
+                <text x="0.5" y="0.05" text-anchor="middle" font-size="0.28" fill="#ff6b35">OB</text>
+                <circle id="overlap-ghost-ball-palette" cx="-0.5" cy="0" r="1" fill="rgba(255,215,0,0.15)"
+                  stroke="#ffd700" stroke-width="0.06" stroke-dasharray="0.12,0.08" />
+                <text id="overlap-ghost-label-palette" x="-0.5" y="0.05" text-anchor="middle" font-size="0.28"
+                  fill="#ffd700">GB</text>
+                <clipPath id="clip-obj-ball-palette">
+                  <circle cx="0.5" cy="0" r="1" />
+                </clipPath>
+                <circle id="overlap-region-palette" cx="-0.5" cy="0" r="1" fill="rgba(0,255,170,0.25)"
+                  clip-path="url(#clip-obj-ball-palette)" />
+                <line x1="-3" y1="0" x2="3" y2="0" stroke="#333" stroke-width="0.02" stroke-dasharray="0.08,0.08" />
+              </svg>
+            </div>
+            <div class="overlap-info">
+              <div class="overlap-fraction-english" id="overlapEnglish-palette">Half ball</div>
+              <div class="overlap-fraction-slash" id="overlapSlash-palette">1/2</div>
+            </div>
+          </div>
+          <!-- Shot Stats -->
+          <div class="shot-stats" style="display:flex;flex-direction:column;gap:6px;font-size:12px;">
+            <div class="info-row"><span class="info-label">Cut Angle:</span> <span
+                id="cutAngleDisplay-palette">--</span>
+            </div>
+            <div class="info-row"><span class="info-label">Shot Type:</span> <span
+                id="shotTypeDisplay-palette">--</span>
+            </div>
+            <div class="info-row"><span class="info-label">Make %:</span> <span id="makeProbabilityDisplay"
+                style="font-weight:bold;color:#0f8;">--</span></div>
+          </div>
+          <!-- Difficulty Bar -->
+          <div class="difficulty-bar" style="margin-top:12px;padding-top:10px;">
+            <span class="difficulty-label">Difficulty</span>
+            <div class="difficulty-meter">
+              <div class="difficulty-fill" id="difficultyFill-palette"></div>
+            </div>
+            <span class="difficulty-text" id="difficultyText-palette">--</span>
+          </div>
+          <!-- Instructions -->
+          <div class="shot-mini-instructions" id="shotMiniInstructions"
+            style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);font-size:11px;color:#9ab;">
+            Place balls and select a pocket
           </div>
         </div>
       </div>
@@ -2337,7 +2673,6 @@
       <span class="palette-title"><span class="palette-title-icon">🎮</span> Game</span>
       <div class="palette-controls">
         <button class="palette-btn minimize" title="Minimize">−</button>
-        <button class="palette-btn close" title="Hide">×</button>
       </div>
     </div>
     <div class="palette-body">
@@ -2365,12 +2700,42 @@
         <!-- Solver Options -->
         <div class="solver-options" style="min-width:0;">
           <div class="control-label">Shot Preference:</div>
-          <div class="solver-instructions" style="font-size:12px;color:#666;margin-bottom:8px;">Select an object ball and pocket</div>
+          <div class="solver-instructions" style="font-size:12px;color:#666;margin-bottom:8px;">Select an object ball
+            and pocket</div>
           <div class="solver-radio-group">
             <label><input type="radio" name="solver-mode-palette" value="auto" checked><span>Standard</span></label>
             <label><input type="radio" name="solver-mode-palette" value="kick"><span>Kick</span></label>
             <label><input type="radio" name="solver-mode-palette" value="bank"><span>Bank</span></label>
             <label><input type="radio" name="solver-mode-palette" value="combo"><span>Combo</span></label>
+          </div>
+        </div>
+        <!-- Export/Save Section -->
+        <div class="export-save-section"
+          style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.1);">
+          <div class="export-buttons">
+            <button class="export-btn primary" id="btnCopyLink" title="Copy shareable link to clipboard">
+              <span class="btn-icon">🔗</span>
+              <span>Link</span>
+            </button>
+            <button class="export-btn" id="btnExportPNG" title="Download as PNG image">
+              <span class="btn-icon">🖼️</span>
+              <span>PNG</span>
+            </button>
+            <button class="export-btn" id="btnExportSVG" title="Download as SVG vector">
+              <span class="btn-icon">📐</span>
+              <span>SVG</span>
+            </button>
+          </div>
+          <!-- Saved Diagrams -->
+          <div class="saved-diagrams">
+            <div class="section-label">Saved Diagrams</div>
+            <div class="save-input-row">
+              <input type="text" id="saveDiagramName" placeholder="Name..." maxlength="50">
+              <button id="btnSaveDiagram" title="Save current diagram">Save</button>
+            </div>
+            <div class="saved-list" id="savedDiagramsList">
+              <div class="no-saved">No saved diagrams</div>
+            </div>
           </div>
         </div>
       </div>
@@ -2383,7 +2748,6 @@
       <span class="palette-title"><span class="palette-title-icon">🎨</span> Legend</span>
       <div class="palette-controls">
         <button class="palette-btn minimize" title="Minimize">−</button>
-        <button class="palette-btn close" title="Hide">×</button>
       </div>
     </div>
     <div class="palette-body">
@@ -2405,7 +2769,6 @@
       <span class="palette-title"><span class="palette-title-icon">📊</span> Shot Info</span>
       <div class="palette-controls">
         <button class="palette-btn minimize" title="Minimize">−</button>
-        <button class="palette-btn close" title="Hide">×</button>
       </div>
     </div>
     <div class="palette-body">
@@ -2413,16 +2776,20 @@
       <div class="overlap-diagram-container" style="margin-bottom:12px;">
         <div class="overlap-diagram-wrapper">
           <svg id="overlap-diagram-palette" viewBox="-3 -1.5 6 3" width="160" height="80">
-            <rect x="-3" y="-1.5" width="6" height="3" fill="#1a1a2e"/>
-            <circle id="overlap-obj-ball-palette" cx="0.5" cy="0" r="1" fill="none" stroke="#ff6b35" stroke-width="0.06"/>
+            <rect x="-3" y="-1.5" width="6" height="3" fill="#1a1a2e" />
+            <circle id="overlap-obj-ball-palette" cx="0.5" cy="0" r="1" fill="none" stroke="#ff6b35"
+              stroke-width="0.06" />
             <text x="0.5" y="0.05" text-anchor="middle" font-size="0.28" fill="#ff6b35">OB</text>
-            <circle id="overlap-ghost-ball-palette" cx="-0.5" cy="0" r="1" fill="rgba(255,215,0,0.15)" stroke="#ffd700" stroke-width="0.06" stroke-dasharray="0.12,0.08"/>
-            <text id="overlap-ghost-label-palette" x="-0.5" y="0.05" text-anchor="middle" font-size="0.28" fill="#ffd700">GB</text>
+            <circle id="overlap-ghost-ball-palette" cx="-0.5" cy="0" r="1" fill="rgba(255,215,0,0.15)" stroke="#ffd700"
+              stroke-width="0.06" stroke-dasharray="0.12,0.08" />
+            <text id="overlap-ghost-label-palette" x="-0.5" y="0.05" text-anchor="middle" font-size="0.28"
+              fill="#ffd700">GB</text>
             <clipPath id="clip-obj-ball-palette">
-              <circle cx="0.5" cy="0" r="1"/>
+              <circle cx="0.5" cy="0" r="1" />
             </clipPath>
-            <circle id="overlap-region-palette" cx="-0.5" cy="0" r="1" fill="rgba(0,255,170,0.25)" clip-path="url(#clip-obj-ball-palette)"/>
-            <line x1="-3" y1="0" x2="3" y2="0" stroke="#333" stroke-width="0.02" stroke-dasharray="0.08,0.08"/>
+            <circle id="overlap-region-palette" cx="-0.5" cy="0" r="1" fill="rgba(0,255,170,0.25)"
+              clip-path="url(#clip-obj-ball-palette)" />
+            <line x1="-3" y1="0" x2="3" y2="0" stroke="#333" stroke-width="0.02" stroke-dasharray="0.08,0.08" />
           </svg>
         </div>
         <div class="overlap-info">
@@ -2432,9 +2799,12 @@
       </div>
       <!-- Shot Stats -->
       <div class="shot-stats" style="display:flex;flex-direction:column;gap:6px;font-size:12px;">
-        <div class="info-row"><span class="info-label">Cut Angle:</span> <span id="cutAngleDisplay-palette">--</span></div>
-        <div class="info-row"><span class="info-label">Shot Type:</span> <span id="shotTypeDisplay-palette">--</span></div>
-        <div class="info-row"><span class="info-label">Make %:</span> <span id="makeProbabilityDisplay" style="font-weight:bold;color:#0f8;">--</span></div>
+        <div class="info-row"><span class="info-label">Cut Angle:</span> <span id="cutAngleDisplay-palette">--</span>
+        </div>
+        <div class="info-row"><span class="info-label">Shot Type:</span> <span id="shotTypeDisplay-palette">--</span>
+        </div>
+        <div class="info-row"><span class="info-label">Make %:</span> <span id="makeProbabilityDisplay"
+            style="font-weight:bold;color:#0f8;">--</span></div>
       </div>
       <!-- Difficulty Bar -->
       <div class="difficulty-bar" style="margin-top:12px;padding-top:10px;">
@@ -2445,7 +2815,8 @@
         <span class="difficulty-text" id="difficultyText-palette">--</span>
       </div>
       <!-- Instructions -->
-      <div class="shot-mini-instructions" id="shotMiniInstructions" style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);font-size:11px;color:#9ab;">
+      <div class="shot-mini-instructions" id="shotMiniInstructions"
+        style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);font-size:11px;color:#9ab;">
         Place balls and select a pocket
       </div>
     </div>
@@ -2457,14 +2828,13 @@
       <span class="palette-title"><span class="palette-title-icon">⚡</span> Actions</span>
       <div class="palette-controls">
         <button class="palette-btn minimize" title="Minimize">−</button>
-        <button class="palette-btn close" title="Hide">×</button>
       </div>
     </div>
     <div class="palette-body">
       <div class="action-buttons">
         <button class="action-btn primary" id="btnRandomRack" title="Rack balls and animate break shot">
           <span class="btn-icon">🎱</span>
-          <span>Break</span>
+          <span>Rack</span>
         </button>
         <button class="action-btn" id="btnStartTour" title="Learn how to use this tool">
           <span class="btn-icon">📚</span>
@@ -2480,7 +2850,6 @@
       <span class="palette-title"><span class="palette-title-icon">💾</span> Save</span>
       <div class="palette-controls">
         <button class="palette-btn minimize" title="Minimize">−</button>
-        <button class="palette-btn close" title="Hide">×</button>
       </div>
     </div>
     <div class="palette-body">
@@ -2518,7 +2887,6 @@
       <span class="palette-title"><span class="palette-title-icon">📍</span> Aids</span>
       <div class="palette-controls">
         <button class="palette-btn minimize" title="Minimize">−</button>
-        <button class="palette-btn close" title="Hide">×</button>
       </div>
     </div>
     <div class="palette-body">
@@ -2540,6 +2908,18 @@
           <input type="checkbox" id="toggleShapeZone">
           <span>Shape Zone</span>
         </label>
+      </div>
+      <!-- Legend Section -->
+      <div class="legend-section" style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.1);">
+        <div class="legend-content">
+          <div class="legend-item"><span class="legend-line aim-line"></span> Aim Line</div>
+          <div class="legend-item"><span class="legend-line target-line"></span> Target Line</div>
+          <div class="legend-item"><span class="legend-line obj-path"></span> Object Ball</div>
+          <div class="legend-item"><span class="legend-line cb-path"></span> Cue Ball</div>
+          <div class="legend-item"><span class="legend-line kick-path"></span> Kick Shot</div>
+          <div class="legend-item"><span class="legend-line blocked-path"></span> Blocked</div>
+          <div class="legend-item"><span class="legend-line combo-path"></span> Combo</div>
+        </div>
       </div>
     </div>
   </div>
@@ -2589,7 +2969,7 @@
   <button class="palette-restore-btn" id="restore-share" title="Show Share">📤</button>
 
   <script>
-    (function() {
+    (function () {
       const container = document.getElementById('diagramContainer');
       const tableWrapper = document.getElementById('tableWrapper');
       const ballRack = document.getElementById('ballRack');
@@ -2678,7 +3058,7 @@
           id: '9ball',
           name: '9-Ball',
           balls: 9,
-          ballIds: ['1','2','3','4','5','6','7','8','9'],
+          ballIds: ['1', '2', '3', '4', '5', '6', '7', '8', '9'],
           targetRule: 'rotation',   // Must hit lowest ball first
           callPocket: false,        // Slop counts
           comboAllowed: true,
@@ -2689,11 +3069,11 @@
           id: '8ball',
           name: '8-Ball',
           balls: 15,
-          ballIds: ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'],
+          ballIds: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15'],
           targetRule: 'suit',       // Must hit your suit first
           suitGroups: {
-            solids: ['1','2','3','4','5','6','7'],
-            stripes: ['9','10','11','12','13','14','15'],
+            solids: ['1', '2', '3', '4', '5', '6', '7'],
+            stripes: ['9', '10', '11', '12', '13', '14', '15'],
             eight: ['8']
           },
           callPocket: true,
@@ -2705,7 +3085,7 @@
           id: '10ball',
           name: '10-Ball',
           balls: 10,
-          ballIds: ['1','2','3','4','5','6','7','8','9','10'],
+          ballIds: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
           targetRule: 'rotation',
           callPocket: true,
           comboAllowed: true,
@@ -2716,7 +3096,7 @@
           id: '14.1',
           name: 'Straight Pool',
           balls: 15,
-          ballIds: ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'],
+          ballIds: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15'],
           targetRule: 'any',        // Any ball is legal
           callPocket: true,
           comboAllowed: true,
@@ -2727,7 +3107,7 @@
           id: '1pocket',
           name: 'One Pocket',
           balls: 15,
-          ballIds: ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'],
+          ballIds: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15'],
           targetRule: 'any',
           callPocket: false,
           pocketRestriction: true,  // Only your designated pocket scores
@@ -2739,9 +3119,9 @@
       };
 
       // Current game state
-      let currentGameMode = GAME_MODES.NINE_BALL;  // Default to 9-ball
-      let playerSuit = 'solids';                    // For 8-ball: 'solids' or 'stripes'
-      let playerPocket = 'corner-bl';               // For One Pocket: player's scoring pocket
+      let currentGameMode = GAME_MODES.EIGHT_BALL;  // Default to 8-ball
+      let playerSuit = 'solids';                     // For 8-ball: 'solids' or 'stripes'
+      let playerPocket = 'corner-bl';                // For One Pocket: player's scoring pocket
 
       // Find lowest numbered ball currently on table
       function findLowestBallOnTable() {
@@ -2825,7 +3205,7 @@
       let selectedPocket = null;  // Clicked pocket
 
       // Cue ball contact state (offset from center, in ball radii)
-      let contactOffset = { x: 0, y: 0 };  // x: english (+ = right), y: spin (- = follow, + = draw)
+      let contactOffset = { x: 0, y: -0.7 };  // x: english (+ = right), y: spin (- = follow, + = draw)
       let shotForce = 5;  // 1-10 scale
       let isDraggingContact = false;
 
@@ -3655,9 +4035,9 @@
               if (rail1 === rail2) continue;
               // Skip opposite rails (usually not useful)
               if ((rail1 === 'top' && rail2 === 'bottom') ||
-                  (rail1 === 'bottom' && rail2 === 'top') ||
-                  (rail1 === 'left' && rail2 === 'right') ||
-                  (rail1 === 'right' && rail2 === 'left')) continue;
+                (rail1 === 'bottom' && rail2 === 'top') ||
+                (rail1 === 'left' && rail2 === 'right') ||
+                (rail1 === 'right' && rail2 === 'left')) continue;
 
               // Double mirror: first across rail2, then across rail1
               const mirror1 = mirrorAcrossRail(ghostPos, rail2);
@@ -3779,9 +4159,9 @@
 
                   // Check for scratches
                   const scratches = pathCrossesPocket(cuePos, bounce1) ||
-                                   pathCrossesPocket(bounce1, bounce2) ||
-                                   pathCrossesPocket(bounce2, bounce3) ||
-                                   pathCrossesPocket(bounce3, ghostPos);
+                    pathCrossesPocket(bounce1, bounce2) ||
+                    pathCrossesPocket(bounce2, bounce3) ||
+                    pathCrossesPocket(bounce3, ghostPos);
 
                   const kickPath = {
                     rails: [rail1, rail2, rail3],
@@ -5739,6 +6119,9 @@
       // Places it exactly one ball diameter behind the object ball, along the pocket line
       // So ghost ball and object ball are just touching (not overlapping)
       function autoPositionGhostBall() {
+        // Don't auto-position during break setup - ghost ball is manually positioned
+        if (isBreakSetup) return;
+
         const objBallPos = selectedBallId ? ballPositions[selectedBallId] : null;
         const pocketPos = selectedPocket ? pocketCenters[selectedPocket] : null;
 
@@ -5812,10 +6195,10 @@
       // Start drag (or prepare for potential drag)
       function startDrag(e) {
         // Ignore clicks on palette elements or other UI controls
-        if (e.target.closest('.tool-palette') || 
-            e.target.closest('.palette-restore-btn') ||
-            e.target.closest('.tour-tooltip') ||
-            e.target.closest('.status-banner')) {
+        if (e.target.closest('.tool-palette') ||
+          e.target.closest('.palette-restore-btn') ||
+          e.target.closest('.tour-tooltip') ||
+          e.target.closest('.status-banner')) {
           return;
         }
 
@@ -6238,79 +6621,87 @@
       // Different rails give different approach angles to the ghost ball
       // The solver should pick the rail that best aligns with the pocket direction
       function setupDemoShot() {
-        // SCENARIO: Test that the solver picks the rail with best approach angle
-        //
-        // Object ball in lower-left, pocket is top-left corner
-        // This means OB needs to travel UP and LEFT
-        // The ghost ball is positioned BELOW and RIGHT of OB
-        //
-        // For CB to push OB toward the pocket, CB should approach from BELOW-RIGHT
-        // - BOTTOM rail kick: CB approaches from BELOW - good alignment!
-        // - LEFT rail kick: CB approaches from LEFT - pushes OB right (bad!)
-        // - RIGHT rail kick: CB approaches from RIGHT - pushes OB left (partially aligned)
-        // - TOP rail kick: CB approaches from ABOVE - pushes OB down (bad!)
-        //
-        // The solver should prefer BOTTOM rail for best pocket alignment
+        // Initial 8-ball rack setup - British style
+        // Rack at foot spot, cue ball in kitchen, aiming at head ball
 
-        // Object ball - lower-left area, needs to go to top-left pocket
-        const objBallX = 25;
-        const objBallY = 35;
+        const FOOT_SPOT = { x: 75, y: 25 };
+        const BALL_D = BALL_RADIUS * 2;
+        const ROW_SPACING = BALL_D * Math.sin(Math.PI / 3);
 
-        // Target: top-left corner pocket
-        const pocketId = 'corner-tl';
-        const pocket = pocketCenters[pocketId];
+        // Generate British-style 8-ball rack
+        const trianglePattern = [
+          [0],                          // Row 0: 1 ball (apex)
+          [-0.5, 0.5],                  // Row 1: 2 balls
+          [-1, 0, 1],                   // Row 2: 3 balls (8 in center)
+          [-1.5, -0.5, 0.5, 1.5],       // Row 3: 4 balls
+          [-2, -1, 0, 1, 2]             // Row 4: 5 balls
+        ];
 
-        // Calculate ghost ball position (opposite pocket direction from OB)
-        const objToPocket = vectorNormalize(vectorSubtract(pocket, { x: objBallX, y: objBallY }));
-        const ghostBallX = objBallX - objToPocket.x * GHOST_BALL_OFFSET;
-        const ghostBallY = objBallY - objToPocket.y * GHOST_BALL_OFFSET;
+        // British 8-ball rack rules:
+        // - 8-ball in center (row 2, position 1)
+        // - Solid on one back corner, stripe on other back corner
+        // - Alternating pattern for visual appeal
+        const solids = ['1', '2', '3', '4', '5', '6', '7'];
+        const stripes = ['9', '10', '11', '12', '13', '14', '15'];
 
-        // Cue ball - positioned so direct shot is blocked, multiple kicks possible
-        const cueBallX = 50;
-        const cueBallY = 20;
+        // Define specific positions for proper rack
+        const rackLayout = [
+          '1',          // Row 0: apex (1-ball)
+          '9', '2',     // Row 1: stripe, solid
+          '3', '8', '10', // Row 2: solid, 8-ball, stripe
+          '11', '4', '5', '12', // Row 3: stripe, solid, solid, stripe
+          '6', '13', '7', '14', '15'  // Row 4: solid, stripe, solid, stripe, stripe
+        ];
 
-        // BLOCKER: 1-ball blocks the direct path
-        const blocker1X = 38;
-        const blocker1Y = 27;
+        // Calculate positions
+        const rackPositions = {};
+        let layoutIndex = 0;
+        for (let row = 0; row < trianglePattern.length; row++) {
+          for (let col = 0; col < trianglePattern[row].length; col++) {
+            const x = FOOT_SPOT.x + row * ROW_SPACING;
+            const y = FOOT_SPOT.y + trianglePattern[row][col] * BALL_D;
+            const ballId = rackLayout[layoutIndex++];
+            rackPositions[ballId] = { x, y };
+          }
+        }
 
-        // Other balls for context (not blocking kicks)
-        const ball2X = 70;
-        const ball2Y = 15;
-
-        const ball3X = 80;
-        const ball3Y = 40;
-
-        // Place the balls
-        const positions = {
-          'cue': { x: cueBallX, y: cueBallY },
-          'ghost': { x: ghostBallX, y: ghostBallY },
-          'gray': { x: objBallX, y: objBallY },
-          '1': { x: blocker1X, y: blocker1Y },  // Main blocker
-          '2': { x: ball2X, y: ball2Y },
-          '3': { x: ball3X, y: ball3Y }
-        };
-
-        // Set positions and move balls to table
-        Object.keys(positions).forEach(ballId => {
-          ballPositions[ballId] = positions[ballId];
+        // Place racked balls on table
+        for (const ballId in rackPositions) {
+          ballPositions[ballId] = rackPositions[ballId];
           const ball = document.getElementById(`ball-${ballId}`);
           if (ball) {
-            positionBallOnTable(ball, positions[ballId].x, positions[ballId].y);
+            positionBallOnTable(ball, rackPositions[ballId].x, rackPositions[ballId].y);
+            ball.style.display = '';
           }
-        });
+        }
 
-        // Select the gray ball and pocket
-        selectBall('gray');
-        selectPocket(pocketId);
+        // Place cue ball in kitchen break area (behind head string, center-ish)
+        const cueBallX = 20;  // Behind second diamond
+        const cueBallY = 25;  // Center of table
+        ballPositions['cue'] = { x: cueBallX, y: cueBallY };
+        const cueBall = document.getElementById('ball-cue');
+        if (cueBall) {
+          positionBallOnTable(cueBall, cueBallX, cueBallY);
+          cueBall.style.display = '';
+        }
 
-        // Set center hit - no english to see natural kick preference
-        contactOffset = { x: 0, y: 0 };
+        // Calculate ghost ball position for aiming at head ball (1-ball at apex)
+        const headBallPos = rackPositions['1'];
+        const ghostBallX = headBallPos.x - BALL_D - 0.1;  // Just in front of head ball
+        const ghostBallY = headBallPos.y;
+        ballPositions['ghost'] = { x: ghostBallX, y: ghostBallY };
+
+        // Don't select a ball initially - leave them all in the rack/tray
+        selectedBallId = null;
+        selectedPocket = null;
+
+        // Set top spin (12 o'clock / follow) - already set as default
         contactPoint.setAttribute('cx', contactOffset.x);
         contactPoint.setAttribute('cy', contactOffset.y);
         spinTypeDisplay.textContent = getSpinType(contactOffset);
 
-        // Set medium force
-        shotForce = 6;
+        // Set medium-high force for break
+        shotForce = 7;
         forceSlider.value = shotForce;
         forceValueDisplay.textContent = shotForce;
 
@@ -6326,8 +6717,10 @@
       createBalls();
       setupPocketHandlers();
 
-      // Set up demo shot after a brief delay (to ensure DOM is ready)
-      setTimeout(setupDemoShot, 100);
+      // Set up initial 8-ball rack
+      setTimeout(() => {
+        randomRack();  // Use the simplified rack function
+      }, 100);
 
       // ============================================
       // FLOATING PALETTE MANAGEMENT
@@ -6378,6 +6771,19 @@
               e.stopPropagation();
               palette.classList.toggle('minimized');
               minimizeBtn.textContent = palette.classList.contains('minimized') ? '+' : '−';
+            });
+          }
+
+          // Click on minimized palette header to restore
+          const header = palette.querySelector('.palette-header');
+          if (header) {
+            header.addEventListener('click', (e) => {
+              // Only restore if palette is minimized and not clicking buttons
+              if (palette.classList.contains('minimized') && !e.target.closest('.palette-btn')) {
+                e.stopPropagation();
+                palette.classList.remove('minimized');
+                if (minimizeBtn) minimizeBtn.textContent = '−';
+              }
             });
           }
 
@@ -6579,7 +6985,7 @@
 
       // Hook into existing updateShotInstructions
       const originalUpdateShotInstructions = updateShotInstructions;
-      updateShotInstructions = function(shotData) {
+      updateShotInstructions = function (shotData) {
         originalUpdateShotInstructions(shotData);
         updatePaletteDisplays(shotData);
       };
@@ -7608,6 +8014,14 @@
       let breakAnimationId = null;
       let isBreakAnimating = false;
 
+      // Shot animation state (for regular shots)
+      let shotBallStates = {};
+      let shotAnimationId = null;
+      let isShotAnimating = false;
+      let shotAnimationFrames = 0;
+      const MAX_SHOT_FRAMES = 120; // ~2 seconds at 60fps - ensures completion in tests
+      let isBreakSetup = false;  // Flag to prevent ghost ball clearing during break setup
+
       // Cue stick element
       let cueStickElement = null;
 
@@ -7754,7 +8168,7 @@
       // Create or get cue stick SVG element
       function getCueStick() {
         if (!cueStickElement) {
-          const svg = document.getElementById('pool-table');
+          const svg = document.getElementById('pool-table-svg');
           const cueGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
           cueGroup.id = 'cue-stick';
           cueGroup.style.visibility = 'hidden';
@@ -8085,6 +8499,343 @@
         showToast('Break complete!');
       }
 
+      // ========== REGULAR SHOT ANIMATION SYSTEM ==========
+      // Adapts break physics for controlled single-ball shots
+
+      // Execute a regular shot with current settings
+      async function executeShot() {
+        console.log('executeShot() called');
+        // Only validate cue ball and ghost ball - no need for selection
+        const cuePos = ballPositions['cue'];
+        const ghostPos = ballPositions['ghost'];
+
+        console.log('Cue position:', cuePos);
+        console.log('Ghost position:', ghostPos);
+
+        if (!cuePos) {
+          console.log('Validation failed: No cue ball');
+          showToast('⚠️ Place cue ball on table first');
+          return;
+        }
+
+        if (!ghostPos) {
+          console.log('Validation failed: No ghost ball');
+          showToast('⚠️ No aim point - position cue ball to aim');
+          return;
+        }
+
+        console.log('Validation passed - proceeding with shot');
+
+        // Clear break setup mode
+        isBreakSetup = false;
+
+        // Cancel any existing animation
+        if (shotAnimationId) {
+          cancelAnimationFrame(shotAnimationId);
+        }
+        if (breakAnimationId) {
+          cancelAnimationFrame(breakAnimationId);
+        }
+        isShotAnimating = false;
+        isBreakAnimating = false;
+
+        // Determine aim target (kick point or ghost ball)
+        const aimTarget = currentKickPath ? currentKickPath.aimPoint : ghostPos;
+
+        // Show toast immediately so user knows shot is executing
+        showToast('🎯 Shot in progress...');
+
+        // Show cue stroke animation
+        await animateCueStroke(cuePos, aimTarget, contactOffset.y);
+
+        // Initialize shot physics state - cue ball only initially
+        shotBallStates = {
+          'cue': {
+            x: cuePos.x,
+            y: cuePos.y,
+            vx: 0,
+            vy: 0,
+            pocketed: false,
+            english: { x: contactOffset.x, y: contactOffset.y }  // Store for collision
+          }
+        };
+
+        // Add all other balls on table to physics simulation
+        for (const ballId in ballPositions) {
+          if (ballId === 'cue' || ballId === 'ghost' || !ballPositions[ballId]) continue;
+
+          shotBallStates[ballId] = {
+            x: ballPositions[ballId].x,
+            y: ballPositions[ballId].y,
+            vx: 0,
+            vy: 0,
+            pocketed: false
+          };
+        }
+
+        // Calculate initial cue ball velocity toward aim target
+        const dx = aimTarget.x - cuePos.x;
+        const dy = aimTarget.y - cuePos.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const speed = shotForce * 0.75;  // Scale 1-10 to physics units
+
+        shotBallStates['cue'].vx = (dx / dist) * speed;
+        shotBallStates['cue'].vy = (dy / dist) * speed;
+
+        // Start physics simulation
+        shotAnimationFrames = 0;
+        isShotAnimating = true;
+        animateShot();
+      }
+
+      // Update physics for shot animation (similar to updateBreakPhysics)
+      function updateShotPhysics() {
+        let anyMoving = false;
+
+        // Apply friction and update positions
+        for (const ballId in shotBallStates) {
+          const ball = shotBallStates[ballId];
+          if (!ball || ball.pocketed) continue;
+
+          // Apply velocity
+          ball.x += ball.vx;
+          ball.y += ball.vy;
+
+          // Apply friction
+          ball.vx *= BREAK_PHYSICS.FRICTION;
+          ball.vy *= BREAK_PHYSICS.FRICTION;
+
+          // Check if still moving
+          const speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
+          if (speed > BREAK_PHYSICS.MIN_VELOCITY) {
+            anyMoving = true;
+          } else {
+            ball.vx = 0;
+            ball.vy = 0;
+          }
+        }
+
+        // Check collisions (reuse break physics functions)
+        checkShotCollisions();
+        checkShotRailCollisions();
+
+        // Update visual positions
+        for (const ballId in shotBallStates) {
+          const ball = shotBallStates[ballId];
+          if (!ball) continue;
+
+          const ballEl = document.getElementById(`ball-${ballId}`);
+          if (ballEl) {
+            if (ball.pocketed) {
+              ballEl.style.display = 'none';
+            } else {
+              positionBallOnTable(ballEl, ball.x, ball.y);
+            }
+          }
+        }
+
+        return anyMoving;
+      }
+
+      // Check ball-to-ball collisions for shot
+      function checkShotCollisions() {
+        const ballIds = Object.keys(shotBallStates);
+        const collisions = [];
+
+        // Detect collisions
+        for (let i = 0; i < ballIds.length; i++) {
+          for (let j = i + 1; j < ballIds.length; j++) {
+            const ball1 = shotBallStates[ballIds[i]];
+            const ball2 = shotBallStates[ballIds[j]];
+
+            if (!ball1 || !ball2 || ball1.pocketed || ball2.pocketed) continue;
+
+            const dx = ball2.x - ball1.x;
+            const dy = ball2.y - ball1.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < BREAK_PHYSICS.BALL_DIAMETER && dist > 0) {
+              collisions.push([ballIds[i], ballIds[j]]);
+            }
+          }
+        }
+
+        // Resolve collisions
+        for (const [id1, id2] of collisions) {
+          const ball1 = shotBallStates[id1];
+          const ball2 = shotBallStates[id2];
+
+          const dx = ball2.x - ball1.x;
+          const dy = ball2.y - ball1.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist === 0) continue;
+
+          const nx = dx / dist;
+          const ny = dy / dist;
+
+          // Relative velocity
+          const dvx = ball1.vx - ball2.vx;
+          const dvy = ball1.vy - ball2.vy;
+          const dvn = dvx * nx + dvy * ny;
+
+          // Only resolve if balls are approaching
+          if (dvn > 0) {
+            const impulse = dvn * BREAK_PHYSICS.BALL_COR;
+
+            ball1.vx -= impulse * nx;
+            ball1.vy -= impulse * ny;
+            ball2.vx += impulse * nx;
+            ball2.vy += impulse * ny;
+
+            // Apply english/throw effect if cue ball collision
+            if (id1 === 'cue' && ball1.english) {
+              // Side english causes throw
+              const throwAngle = ball1.english.x * 0.05;  // Radians
+              const speed2 = Math.sqrt(ball2.vx * ball2.vx + ball2.vy * ball2.vy);
+              const angle2 = Math.atan2(ball2.vy, ball2.vx);
+              ball2.vx = Math.cos(angle2 + throwAngle) * speed2;
+              ball2.vy = Math.sin(angle2 + throwAngle) * speed2;
+
+              // Top/bottom english affects cue ball after collision
+              if (ball1.english.y < 0) {
+                // Follow (top spin) - maintain more forward motion
+                ball1.vx *= 0.8;
+                ball1.vy *= 0.8;
+              } else if (ball1.english.y > 0) {
+                // Draw (bottom spin) - reverse or stop
+                ball1.vx *= -0.3;
+                ball1.vy *= -0.3;
+              } else {
+                // Stun (center) - stop dead
+                ball1.vx *= 0.1;
+                ball1.vy *= 0.1;
+              }
+
+              ball1.english = null;  // English applied, clear it
+            }
+
+            // Separate overlapping balls
+            const overlap = BREAK_PHYSICS.BALL_DIAMETER - dist;
+            const separationX = nx * (overlap / 2 + 0.01);
+            const separationY = ny * (overlap / 2 + 0.01);
+            ball1.x -= separationX;
+            ball1.y -= separationY;
+            ball2.x += separationX;
+            ball2.y += separationY;
+          }
+        }
+      }
+
+      // Check rail collisions for shot
+      function checkShotRailCollisions() {
+        for (const ballId in shotBallStates) {
+          const ball = shotBallStates[ballId];
+          if (!ball || ball.pocketed) continue;
+
+          const ballR = BALL_RADIUS;
+
+          // Check pockets first
+          for (const pocketName in pocketCenters) {
+            const pocket = pocketCenters[pocketName];
+            const dx = ball.x - pocket.x;
+            const dy = ball.y - pocket.y;
+            const distToPocket = Math.sqrt(dx * dx + dy * dy);
+
+            if (distToPocket < ballR * 1.5) {
+              ball.pocketed = true;
+              ball.vx = 0;
+              ball.vy = 0;
+              break;
+            }
+          }
+
+          if (ball.pocketed) continue;
+
+          // Rail bounces
+          if (ball.y - ballR <= RAILS.top.y) {
+            ball.y = RAILS.top.y + ballR;
+            ball.vy = -ball.vy * BREAK_PHYSICS.RAIL_COR;
+          }
+
+          if (ball.y + ballR >= RAILS.bottom.y) {
+            ball.y = RAILS.bottom.y - ballR;
+            ball.vy = -ball.vy * BREAK_PHYSICS.RAIL_COR;
+          }
+
+          if (ball.x - ballR <= RAILS.left.x) {
+            ball.x = RAILS.left.x + ballR;
+            ball.vx = -ball.vx * BREAK_PHYSICS.RAIL_COR;
+          }
+
+          if (ball.x + ballR >= RAILS.right.x) {
+            ball.x = RAILS.right.x - ballR;
+            ball.vx = -ball.vx * BREAK_PHYSICS.RAIL_COR;
+          }
+        }
+      }
+
+      // Animation loop for regular shot
+      function animateShot() {
+        if (!isShotAnimating) return;
+
+        shotAnimationFrames++;
+        const stillMoving = updateShotPhysics();
+
+        if (stillMoving && shotAnimationFrames < MAX_SHOT_FRAMES) {
+          shotAnimationId = requestAnimationFrame(animateShot);
+        } else {
+          // Animation complete - finalize positions
+          finalizeShotPositions();
+        }
+      }
+
+      // Finalize ball positions after shot animation
+      function finalizeShotPositions() {
+        isShotAnimating = false;
+
+        let anyBallMade = false;
+        let cueBallScratched = false;
+        const pocketedBalls = [];
+
+        for (const ballId in shotBallStates) {
+          const ball = shotBallStates[ballId];
+          if (!ball) continue;
+
+          if (ball.pocketed) {
+            ballPositions[ballId] = null;
+            if (ballId === 'cue') {
+              cueBallScratched = true;
+            } else {
+              anyBallMade = true;
+              pocketedBalls.push(ballId);
+            }
+          } else {
+            ballPositions[ballId] = { x: ball.x, y: ball.y };
+          }
+        }
+
+        // Hide cue stick
+        hideCueStick();
+
+        // Clear selections
+        selectBall(null);
+        selectPocket(null);
+
+        // Update display
+        updateCueGhostLine();
+
+        // Show result
+        if (cueBallScratched) {
+          showToast('❌ Scratch! Cue ball pocketed');
+        } else if (anyBallMade) {
+          const ballList = pocketedBalls.join(', ');
+          showToast(`✅ Pocketed: ${ballList}`);
+        } else {
+          showToast('⭕ No balls pocketed');
+        }
+      }
+
       // Animate cue stroke
       async function animateCueStroke(cuePos, targetPos, english) {
         return new Promise(resolve => {
@@ -8124,15 +8875,12 @@
       }
 
       // Main break and rack function
-      async function randomRack() {
-        // Cancel any existing animation
-        if (breakAnimationId) {
-          cancelAnimationFrame(breakAnimationId);
-        }
-        isBreakAnimating = false;
+      function randomRack() {
+        // Rack button: Just arrange balls, no animation
+        // User will click Shoot button to animate the break
 
         // Get current game mode's balls
-        const gameBalls = currentGameMode.ballIds || ['1','2','3','4','5','6','7','8','9'];
+        const gameBalls = currentGameMode.ballIds || ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
         // Clear all ball positions first
         for (const ballId of gameBalls) {
@@ -8157,10 +8905,9 @@
           }
         }
 
-        // Place cue ball behind second diamond (around x=20-23)
-        // Random vertical position with slight variance
-        const cueX = 20 + Math.random() * 3;
-        const cueY = 20 + Math.random() * 10; // Slightly random vertical
+        // Place cue ball in kitchen break area
+        const cueX = 20;  // Behind head string
+        const cueY = 25;  // Center
         ballPositions['cue'] = { x: cueX, y: cueY };
         const cueBall = document.getElementById('ball-cue');
         if (cueBall) {
@@ -8168,35 +8915,39 @@
           cueBall.style.display = '';
         }
 
-        // Determine target ball (1-ball or adjacent ball in row 1)
+        // Position ghost ball to aim at head ball (apex of rack)
         const apexBallId = gameBalls.includes('1') ? '1' : gameBalls[0];
-        const row1Balls = Object.entries(rackPositions)
-          .filter(([id, pos]) => {
-            const apexPos = rackPositions[apexBallId];
-            return apexPos && Math.abs(pos.x - apexPos.x - BREAK_PHYSICS.BALL_DIAMETER * Math.sin(Math.PI / 3)) < 0.5;
-          })
-          .map(([id]) => id);
+        const headBallPos = rackPositions[apexBallId];
 
-        // Randomly choose apex or one of the adjacent balls
-        let targetBallId;
-        const targetChoice = Math.floor(Math.random() * 3);
-        if (targetChoice === 0 || row1Balls.length === 0) {
-          targetBallId = apexBallId;
-        } else {
-          targetBallId = row1Balls[Math.floor(Math.random() * row1Balls.length)];
+        if (headBallPos) {
+          // Ghost ball positioned for proper contact point on head ball
+          const dx = headBallPos.x - cueX;
+          const dy = headBallPos.y - cueY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          // Place ghost ball one ball-diameter behind head ball (on the line from cue to head ball)
+          const ghostX = headBallPos.x - (dx / dist) * BALL_RADIUS * 2;
+          const ghostY = headBallPos.y - (dy / dist) * BALL_RADIUS * 2;
+
+          ballPositions['ghost'] = { x: ghostX, y: ghostY };
+
+          // Show ghost ball visually
+          const ghostBall = document.getElementById('ball-ghost');
+          if (ghostBall) {
+            positionBallOnTable(ghostBall, ghostX, ghostY);
+            ghostBall.style.display = '';
+          }
         }
 
-        const targetPos = rackPositions[targetBallId] || rackPositions[apexBallId];
+        // Set break-appropriate english and power
+        contactOffset = { x: 0, y: -0.7 };  // Top spin for follow-through
+        contactPoint.setAttribute('cx', 0);
+        contactPoint.setAttribute('cy', -0.7);
+        spinTypeDisplay.textContent = getSpinType(contactOffset);
 
-        // Random english: top (follow), bottom (draw), or center (stun)
-        const englishChoice = Math.floor(Math.random() * 3);
-        let english = 0;
-        if (englishChoice === 0) {
-          english = 0.5 + Math.random() * 0.5; // Top english (follow)
-        } else if (englishChoice === 1) {
-          english = -(0.5 + Math.random() * 0.5); // Bottom english (draw)
-        }
-        // englishChoice === 2: center (no english)
+        shotForce = 7;  // Moderate break power (7/10)
+        forceSlider.value = shotForce;
+        forceValueDisplay.textContent = shotForce;
 
         // Initialize break ball states
         breakBallStates = {};
@@ -8211,35 +8962,31 @@
             };
           }
         }
-        breakBallStates['cue'] = {
-          x: cueX,
-          y: cueY,
-          vx: 0,
-          vy: 0,
-          pocketed: false
-        };
 
-        // Animate cue stroke
-        await animateCueStroke({ x: cueX, y: cueY }, targetPos, english);
+        // Add cue ball to break states
+        if (ballPositions['cue']) {
+          breakBallStates['cue'] = {
+            x: ballPositions['cue'].x,
+            y: ballPositions['cue'].y,
+            vx: 0,
+            vy: 0,
+            pocketed: false
+          };
+        }
 
-        // Calculate initial cue ball velocity (3/4 force)
-        const dx = targetPos.x - cueX;
-        const dy = targetPos.y - cueY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const speed = 7.5 * BREAK_PHYSICS.FORCE_MULTIPLIER; // 3/4 force
+        // Clear selections
+        selectedBallId = null;
+        selectedPocket = null;
 
-        breakBallStates['cue'].vx = (dx / dist) * speed;
-        breakBallStates['cue'].vy = (dy / dist) * speed;
+        // Set break mode to preserve ghost ball position
+        isBreakSetup = true;
 
-        // Apply english effect (affects cue ball path after contact)
-        // Store english for later application during first collision
-        breakBallStates['cue'].english = english;
+        // Update visualizations
+        updateCueGhostLine();
+        // DON'T call updateShotGeometry() here - it would hide the ghost ball we just set!
+        // updateShotGeometry();
 
-        // Start physics simulation
-        isBreakAnimating = true;
-        animateBreak();
-
-        showToast('Breaking...');
+        showToast('✅ Rack set - Click Shoot to break!');
       }
 
       // ========== SHAPE ZONE VISUALIZATION ==========
@@ -8402,6 +9149,12 @@
           btnRandomRack.addEventListener('click', randomRack);
         }
 
+        // Shoot button
+        const btnShoot = document.getElementById('btnShoot');
+        if (btnShoot) {
+          btnShoot.addEventListener('click', executeShot);
+        }
+
         // Save diagram button
         const btnSaveDiagram = document.getElementById('btnSaveDiagram');
         const saveDiagramName = document.getElementById('saveDiagramName');
@@ -8490,7 +9243,7 @@
 
       // Hook into updateShotGeometry to also update position aids
       const origUpdateShotGeometry = updateShotGeometry;
-      updateShotGeometry = function() {
+      updateShotGeometry = function () {
         origUpdateShotGeometry();
         updateTangentLine();
         updateFollowDrawLines();
@@ -8500,7 +9253,7 @@
 
       // Hook into updatePaletteDisplays to also update make probability
       const origUpdatePaletteDisplays = updatePaletteDisplays;
-      updatePaletteDisplays = function(shotData) {
+      updatePaletteDisplays = function (shotData) {
         origUpdatePaletteDisplays(shotData);
         updateMakeProbability(shotData);
       };
@@ -8896,23 +9649,23 @@
 
           // Core function tests
           await this.test('vectorSubtract calculates correctly', () => {
-            const result = vectorSubtract({x: 10, y: 20}, {x: 3, y: 5});
+            const result = vectorSubtract({ x: 10, y: 20 }, { x: 3, y: 5 });
             return result.x === 7 && result.y === 15;
           });
 
           await this.test('vectorNormalize produces unit vector', () => {
-            const result = vectorNormalize({x: 3, y: 4});
+            const result = vectorNormalize({ x: 3, y: 4 });
             const length = Math.sqrt(result.x * result.x + result.y * result.y);
             return Math.abs(length - 1) < 0.0001;
           });
 
           await this.test('dotProduct calculates correctly', () => {
-            const result = dotProduct({x: 1, y: 0}, {x: 0, y: 1});
+            const result = dotProduct({ x: 1, y: 0 }, { x: 0, y: 1 });
             return result === 0; // Perpendicular vectors
           });
 
           await this.test('rotateVector rotates 90 degrees', () => {
-            const result = rotateVector({x: 1, y: 0}, 90);
+            const result = rotateVector({ x: 1, y: 0 }, 90);
             return Math.abs(result.x) < 0.0001 && Math.abs(result.y - 1) < 0.0001;
           });
 
@@ -8920,12 +9673,12 @@
           await this.test('encodeState produces valid string', () => {
             const state = {
               v: 1,
-              balls: { cue: {x: 25, y: 25}, '1': {x: 50, y: 25} },
+              balls: { cue: { x: 25, y: 25 }, '1': { x: 50, y: 25 } },
               pocket: 'corner-br',
               ball: '1',
               mode: '9ball',
               power: 5,
-              english: {x: 0, y: 0},
+              english: { x: 0, y: 0 },
               solver: 'auto'
             };
             const encoded = encodeState(state);
@@ -8935,12 +9688,12 @@
           await this.test('decodeState reverses encodeState', () => {
             const original = {
               v: 1,
-              balls: { cue: {x: 25.0, y: 25.0} },
+              balls: { cue: { x: 25.0, y: 25.0 } },
               pocket: 'corner-br',
               ball: '1',
               mode: '9ball',
               power: 5,
-              english: {x: 0.0, y: 0.0},
+              english: { x: 0.0, y: 0.0 },
               solver: 'auto'
             };
             const encoded = encodeState(original);
@@ -9165,7 +9918,71 @@
       // Initialize tour
       setTimeout(setupTour, 200);
 
+      // ========== DEBUG TOOLS ==========
+      // Expose internal state for browser console debugging
+      window.DEBUG = {
+        // State inspection
+        state: () => ({
+          ballPositions: { ...ballPositions },
+          selectedBallId,
+          selectedPocket,
+          isBreakSetup,
+          isShotAnimating,
+          isBreakAnimating
+        }),
+        ghost: () => ballPositions['ghost'],
+        cue: () => ballPositions['cue'],
+        balls: () => ({ ...ballPositions }),
+
+        // Shot validation
+        testShot: () => {
+          const cue = ballPositions['cue'];
+          const ghost = ballPositions['ghost'];
+          console.log('Cue:', cue);
+          console.log('Ghost:', ghost);
+          console.log('isBreakSetup:', isBreakSetup);
+          console.log('Valid shot:', !!(cue && ghost));
+          return { cue, ghost, isBreakSetup, valid: !!(cue && ghost) };
+        },
+
+        // Watch ghost ball changes
+        watchGhost: () => {
+          const originalValue = ballPositions['ghost'];
+          Object.defineProperty(ballPositions, 'ghost', {
+            get() { return this._ghost; },
+            set(val) {
+              console.log('%c[Ghost Changed]', 'color: #ff6b6b; font-weight: bold',
+                val ? `{x: ${val.x?.toFixed(1)}, y: ${val.y?.toFixed(1)}}` : 'null/undefined');
+              console.trace('Ghost ball set from:');
+              this._ghost = val;
+            },
+            configurable: true
+          });
+          ballPositions._ghost = originalValue;
+          console.log('%c🔍 Now watching ghost ball changes', 'color: #4CAF50; font-weight: bold');
+        },
+
+        // Help
+        help: () => {
+          console.log(`
+%cDEBUG Commands:%c
+─────────────────────────────────
+DEBUG.state()     - Full state snapshot
+DEBUG.ghost()     - Ghost ball position
+DEBUG.cue()       - Cue ball position
+DEBUG.balls()     - All ball positions
+DEBUG.testShot()  - Validate shot setup
+DEBUG.watchGhost() - Watch ghost ball changes (logs on set)
+DEBUG.help()      - This help message
+          `, 'color: #4CAF50; font-weight: bold; font-size: 14px;', '');
+        }
+      };
+
+      console.log('%c🎱 DEBUG tools loaded - Type DEBUG.help() for commands',
+                  'color: #4CAF50; font-weight: bold; font-size: 14px;');
+
     })();
   </script>
 </body>
+
 </html>

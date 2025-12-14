@@ -12,8 +12,12 @@
     "test:safari": "playwright test --project=webkit",
     "test:critical": "playwright test tests/critical-path",
     "test:features": "playwright test tests/features",
+    "test:animation": "playwright test tests/features/shot-animation.spec.ts --headed",
+    "test:animation:video": "playwright test tests/features/shot-animation.spec.ts --project=chromium",
     "test:visual": "playwright test tests/visual",
     "test:update-snapshots": "playwright test --update-snapshots",
+    "test:unit": "node --test tests/unit/physics.test.js tests/unit/gameState.test.js",
+    "test:unit:watch": "node --test --watch tests/unit/physics.test.js tests/unit/gameState.test.js",
     "report": "playwright show-report",
     "install": "playwright install"
   },
@@ -28,8 +32,9 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@playwright/test": "^1.57.0",
+    "@playwright/test": "1.57.0",
     "@types/node": "^20.11.0",
     "http-server": "^14.1.1"
-  }
+  },
+  "type": "module"
 }

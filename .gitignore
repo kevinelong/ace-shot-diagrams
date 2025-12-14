@@ -1,11 +1,38 @@
 # OS files
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # Editor
 *.swp
 *.swo
 *~
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 
 # Backup files
 *.bak
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Test outputs
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Videos and screenshots (from tests)
+*.webm
+test-results/**/*.webm
+test-results/**/*.png
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary files
+.tmp/
+tmp/
+*.tmp

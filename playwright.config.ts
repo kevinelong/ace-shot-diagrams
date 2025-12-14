@@ -6,39 +6,40 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests',
-  
+
   // Maximum time one test can run
   timeout: 30 * 1000,
-  
+
   // Test execution settings
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  
+
   // Reporter to use
   reporter: [
-    ['html', { outputFolder: 'test-results/html' }],
+    ['html', { outputFolder: 'playwright-report', open: 'never' }],
     ['list'],
     ['json', { outputFile: 'test-results/results.json' }]
   ],
-  
+
   // Shared settings for all projects
   use: {
     // Base URL for the application
     baseURL: 'http://localhost:8080',
-    
-    // Screenshot and video on failure
+
+    // Screenshot and video settings
+    // Videos will be recorded for animation tests
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
-    trace: 'retain-on-failure',
-    
+    video: 'on',  // Record all test videos
+    trace: 'on',  // Record all test traces
+
     // Viewport size (desktop)
     viewport: { width: 1920, height: 1080 },
-    
+
     // Emulate user preferences
     colorScheme: 'dark', // App uses dark theme
-    
+
     // Timeouts
     actionTimeout: 10 * 1000,
     navigationTimeout: 30 * 1000,
@@ -48,7 +49,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { 
+      use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1920, height: 1080 },
       },
@@ -56,7 +57,7 @@ export default defineConfig({
 
     {
       name: 'firefox',
-      use: { 
+      use: {
         ...devices['Desktop Firefox'],
         viewport: { width: 1920, height: 1080 },
       },
@@ -64,7 +65,7 @@ export default defineConfig({
 
     {
       name: 'webkit',
-      use: { 
+      use: {
         ...devices['Desktop Safari'],
         viewport: { width: 1920, height: 1080 },
       },
