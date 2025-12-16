@@ -30,9 +30,9 @@ export default defineConfig({
 
     // Screenshot and video settings
     // Videos will be recorded for animation tests
-    screenshot: 'only-on-failure',
-    video: 'on',  // Record all test videos
-    trace: 'on',  // Record all test traces
+    screenshot: 'on',  // Capture screenshots for all tests
+    video: 'on',       // Record all test videos
+    trace: 'on',       // Record all test traces
 
     // Viewport size (desktop)
     viewport: { width: 1920, height: 1080 },

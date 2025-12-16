@@ -213,24 +213,27 @@
     }
 
     .tool-palette.minimized .palette-title {
-      font-size: 0 !important;
-      line-height: 0 !important;
+      font-size: 0px !important;  /* Hide text */
+      line-height: 1 !important;
       color: transparent !important;
-      overflow: hidden;
-      width: auto;
-      height: auto;
-      display: inline-flex;
+      overflow: visible !important;
+      width: 28px !important;  /* Just wide enough for icon */
+      height: 28px !important;
+      display: flex !important;
       align-items: center;
       justify-content: center;
-      gap: 0;
     }
 
+    /* Show just the icon at full size */
     .tool-palette.minimized .palette-title-icon {
       font-size: 22px !important;
       line-height: 1 !important;
-      width: auto;
-      height: auto;
-      display: inline-block;
+      width: 28px !important;
+      height: 28px !important;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      color: #fff !important;  /* Make icon white */
     }
 
     .tool-palette.minimized .palette-controls {
@@ -2841,25 +2844,36 @@
               <circle cx="0" cy="0" r="0.5" fill="none" stroke="#ff4444" stroke-width="0.015"
                 stroke-dasharray="0.04,0.03" opacity="0.2" />
 
-              <!-- Outer ring: Cardinal directions (0.55 radius) -->
+              <!-- Outer ring: All 12 clock positions (0.55 radius) -->
               <g class="guide-outer" opacity="0.8">
-                <!-- Top (12 - Follow) -->
-                <circle cx="0" cy="-0.55" r="0.1" fill="none" stroke="#f90" stroke-width="0.02" />
-                <text x="0" y="-0.52" text-anchor="middle" font-size="0.12" fill="#f90" font-weight="bold">12</text>
-                <!-- Bottom (6 - Draw) -->
-                <circle cx="0" cy="0.55" r="0.1" fill="none" stroke="#f90" stroke-width="0.02" />
-                <text x="0" y="0.58" text-anchor="middle" font-size="0.12" fill="#f90" font-weight="bold">6</text>
-                <!-- Left (9) -->
-                <circle cx="-0.55" cy="0" r="0.1" fill="none" stroke="#f90" stroke-width="0.02" />
-                <text x="-0.55" y="0.04" text-anchor="middle" font-size="0.12" fill="#f90" font-weight="bold">9</text>
-                <!-- Right (3) -->
-                <circle cx="0.55" cy="0" r="0.1" fill="none" stroke="#f90" stroke-width="0.02" />
-                <text x="0.55" y="0.04" text-anchor="middle" font-size="0.12" fill="#f90" font-weight="bold">3</text>
-                <!-- Diagonals -->
-                <circle cx="0.39" cy="-0.39" r="0.08" fill="none" stroke="#f90" stroke-width="0.015" opacity="0.6" />
-                <circle cx="-0.39" cy="-0.39" r="0.08" fill="none" stroke="#f90" stroke-width="0.015" opacity="0.6" />
-                <circle cx="0.39" cy="0.39" r="0.08" fill="none" stroke="#f90" stroke-width="0.015" opacity="0.6" />
-                <circle cx="-0.39" cy="0.39" r="0.08" fill="none" stroke="#f90" stroke-width="0.015" opacity="0.6" />
+                <!-- 12 o'clock (Follow) -->
+                <circle cx="0" cy="-0.55" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
+                <text x="0" y="-0.48" text-anchor="middle" font-size="0.09" fill="#f90" font-weight="bold">12</text>
+                <!-- 1 o'clock -->
+                <circle cx="0.275" cy="-0.476" r="0.06" fill="none" stroke="#f90" stroke-width="0.015" opacity="0.7" />
+                <!-- 2 o'clock -->
+                <circle cx="0.476" cy="-0.275" r="0.06" fill="none" stroke="#f90" stroke-width="0.015" opacity="0.7" />
+                <!-- 3 o'clock -->
+                <circle cx="0.55" cy="0" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
+                <text x="0.55" y="0.035" text-anchor="middle" font-size="0.09" fill="#f90" font-weight="bold">3</text>
+                <!-- 4 o'clock -->
+                <circle cx="0.476" cy="0.275" r="0.06" fill="none" stroke="#f90" stroke-width="0.015" opacity="0.7" />
+                <!-- 5 o'clock -->
+                <circle cx="0.275" cy="0.476" r="0.06" fill="none" stroke="#f90" stroke-width="0.015" opacity="0.7" />
+                <!-- 6 o'clock (Draw) -->
+                <circle cx="0" cy="0.55" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
+                <text x="0" y="0.6" text-anchor="middle" font-size="0.09" fill="#f90" font-weight="bold">6</text>
+                <!-- 7 o'clock -->
+                <circle cx="-0.275" cy="0.476" r="0.06" fill="none" stroke="#f90" stroke-width="0.015" opacity="0.7" />
+                <!-- 8 o'clock -->
+                <circle cx="-0.476" cy="0.275" r="0.06" fill="none" stroke="#f90" stroke-width="0.015" opacity="0.7" />
+                <!-- 9 o'clock -->
+                <circle cx="-0.55" cy="0" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
+                <text x="-0.55" y="0.035" text-anchor="middle" font-size="0.09" fill="#f90" font-weight="bold">9</text>
+                <!-- 10 o'clock -->
+                <circle cx="-0.476" cy="-0.275" r="0.06" fill="none" stroke="#f90" stroke-width="0.015" opacity="0.7" />
+                <!-- 11 o'clock -->
+                <circle cx="-0.275" cy="-0.476" r="0.06" fill="none" stroke="#f90" stroke-width="0.015" opacity="0.7" />
               </g>
 
               <!-- Inner ring: Compass positions (0.3 radius) -->
@@ -7119,6 +7133,19 @@
               }
             });
           }
+
+          // Also allow clicking entire minimized panel to expand
+          palette.addEventListener('click', (e) => {
+            if (palette.classList.contains('minimized')) {
+              // Only respond if clicking on the minimized panel itself
+              if (e.target.closest('.palette-btn')) return;
+              e.stopPropagation();
+              palette.classList.remove('minimized');
+              if (minimizeBtn) {
+                minimizeBtn.textContent = '−';
+              }
+            }
+          });
 
           // Close (hide) palette
           if (closeBtn) {

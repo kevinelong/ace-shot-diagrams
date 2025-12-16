@@ -1,0 +1,48 @@
+{
+    // Prevent file watching permission prompts
+    "files.watcherExclude": {
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true,
+        "**/node_modules/**": true,
+        "**/test-results/**": true,
+        "**/playwright-report/**": true
+    },
+    // Auto-save to prevent "unsaved changes" prompts
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000,
+    // Git settings to reduce prompts
+    "git.autofetch": false,
+    "git.confirmSync": false,
+    "git.confirmEmptyCommits": false,
+    "git.confirmNoVerifyCommit": false,
+    "git.enableSmartCommit": true,
+    "git.postCommitCommand": "none",
+    "git.allowNoVerifyCommit": true,
+    "git.suppressNoStagedChangesWarning": true,
+    "scm.alwaysShowActions": false,
+    "scm.defaultViewMode": "tree",
+    // Terminal settings
+    "terminal.integrated.confirmOnExit": "never",
+    "terminal.integrated.confirmOnKill": "never",
+    // TypeScript/JavaScript settings
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    "javascript.updateImportsOnFileMove.enabled": "always",
+    // Playwright settings
+    "playwright.reuseBrowser": true,
+    // Editor settings
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit"
+    },
+    // Search exclusions to improve performance
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/test-results": true,
+        "**/playwright-report": true,
+        "**/.git": true
+    },
+    // File associations
+    "files.associations": {
+        "*.spec.ts": "typescript"
+    }
+}

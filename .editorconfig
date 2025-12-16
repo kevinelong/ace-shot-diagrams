@@ -1,0 +1,19 @@
+# EditorConfig helps maintain consistent coding styles
+# Prevents "inconsistent formatting" warnings
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{js,ts,json,html,css,md}]
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[package.json]
+indent_size = 2

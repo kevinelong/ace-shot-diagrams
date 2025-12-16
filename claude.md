@@ -192,4 +192,4 @@ calculateMakeProbability(shotData) // returns 5-95%
 - [ ] Safety shot mode (snooker zones, defensive positions)
 - [ ] Multi-shot sequences (run-out planning)
 - [x] ~~Mobile responsiveness (@media queries)~~ (Implemented)
-- [ ] ARIA labels for accessibility
+- [x] ~~ARIA labels for accessibility~~ (Implemented)
