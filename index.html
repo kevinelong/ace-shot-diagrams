@@ -119,21 +119,37 @@
     .palette-btn {
       width: 20px;
       height: 20px;
+      min-width: 20px;
+      min-height: 20px;
+      max-width: 20px;
+      max-height: 20px;
       border-radius: 4px;
       border: none;
+      outline: none;
       background: rgba(255, 255, 255, 0.1);
       color: #888;
-      font-size: 12px;
+      font-size: 14px;
+      font-weight: bold;
+      line-height: 1;
+      padding: 0;
+      margin: 0;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
+      box-sizing: border-box;
       transition: background 0.2s, color 0.2s;
     }
 
     .palette-btn:hover {
       background: rgba(255, 255, 255, 0.2);
       color: #fff;
+    }
+
+    .palette-btn:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(100, 150, 255, 0.5);
     }
 
     /* Palette body */
@@ -169,39 +185,56 @@
       padding: 16px 18px;
     }
 
-    /* Minimized state */
+    /* Minimized state - compact icon-only display */
     .tool-palette.minimized .palette-body {
-      display: none;
+      display: none !important;
     }
 
     .tool-palette.minimized {
-      border-radius: 50%;
-      min-width: auto;
-      width: 44px;
-      height: 44px;
-      padding: 0;
+      border-radius: 10px !important;
+      min-width: 0 !important;
+      width: fit-content !important;
+      height: fit-content !important;
+      max-width: fit-content !important;
+      padding: 0 !important;
       cursor: pointer;
     }
 
     .tool-palette.minimized .palette-header {
-      border-bottom: none;
-      border-radius: 50%;
-      padding: 8px;
-      min-height: auto;
+      border-bottom: none !important;
+      border-radius: 10px;
+      padding: 8px 12px !important;
+      min-height: 0 !important;
+      height: auto !important;
+      display: flex;
+      align-items: center;
       justify-content: center;
       cursor: pointer;
     }
 
     .tool-palette.minimized .palette-title {
-      font-size: 0;
+      font-size: 0 !important;
+      line-height: 0 !important;
+      color: transparent !important;
+      overflow: hidden;
+      width: auto;
+      height: auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
     }
 
     .tool-palette.minimized .palette-title-icon {
-      font-size: 20px;
+      font-size: 22px !important;
+      line-height: 1 !important;
+      width: auto;
+      height: auto;
+      display: inline-block;
     }
 
     .tool-palette.minimized .palette-controls {
-      display: none;
+      display: none !important;
     }
 
     /* Hidden state */
@@ -282,7 +315,98 @@
       justify-content: center;
     }
 
-    /* Cue Controls Palette */
+    /* Cue Controls Palette - Minimalist Horizontal Layout */
+    #palette-cue {
+      min-width: 280px;
+      max-width: 320px;
+    }
+
+    #palette-cue .palette-body {
+      padding: 10px 12px;
+    }
+
+    #palette-cue .cue-controls-compact {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #palette-cue .cue-top-row {
+      display: flex;
+      align-items: stretch;  /* Stretch to fill height so shoot button goes to bottom */
+      gap: 12px;
+    }
+
+    #palette-cue .spin-diagram-compact {
+      flex-shrink: 0;
+      height: 100px;  /* Match SVG height explicitly */
+    }
+
+    #palette-cue .spin-diagram-compact svg {
+      display: block;
+    }
+
+    #palette-cue .power-shoot-column {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 100px;  /* Match spin diagram */
+      position: relative;  /* For absolute positioning of shoot button */
+    }
+
+    #palette-cue .power-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #palette-cue .power-row .control-label {
+      font-size: 11px;
+      color: #888;
+      min-width: 40px;
+    }
+
+    #palette-cue .power-row input[type="range"] {
+      flex: 1;
+      height: 6px;
+    }
+
+    #palette-cue .power-row .force-value {
+      font-size: 12px;
+      font-weight: bold;
+      color: #0af;
+      min-width: 35px;
+      text-align: right;
+    }
+
+    #palette-cue .shoot-row {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+    }
+
+    #palette-cue .shoot-btn-compact {
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: bold;
+      background: linear-gradient(135deg, #0066cc, #0044aa);
+      border: none;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    #palette-cue .shoot-btn-compact:hover {
+      background: linear-gradient(135deg, #0077dd, #0055bb);
+      transform: scale(1.02);
+    }
+
+    /* Legacy grid layout - keep for compatibility */
     #palette-cue .cue-controls-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -1243,6 +1367,19 @@
       font-size: 11px;
     }
 
+    /* Screen reader only - visually hidden but accessible */
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     .info-row span:last-child {
       color: #0fa;
       font-weight: bold;
@@ -1982,10 +2119,10 @@
         z-index: 2003;
       }
 
-      /* Minimized palettes become pill-shaped */
+      /* Minimized palettes - auto size to fit icon */
       .tool-palette.minimized {
-        width: 44px !important;
-        height: 44px !important;
+        width: auto !important;
+        height: auto !important;
         left: auto !important;
         right: auto !important;
         padding: 0;
@@ -1995,7 +2132,12 @@
       .palette-btn {
         width: 32px;
         height: 32px;
-        font-size: 16px;
+        min-width: 32px;
+        min-height: 32px;
+        max-width: 32px;
+        max-height: 32px;
+        font-size: 18px;
+        border-radius: 6px;
       }
 
       .action-btn {
@@ -2538,14 +2680,14 @@
       <div class="force-container">
         <div class="control-label">Power</div>
         <div class="force-slider-wrapper">
-          <input type="range" id="forceSlider" min="1" max="10" value="5" step="0.5" />
+          <input type="range" id="forceSlider" min="1" max="10" value="10" step="0.5" />
           <div class="force-labels">
             <span>Soft</span>
             <span>Medium</span>
             <span>Hard</span>
           </div>
         </div>
-        <div class="force-value"><span id="forceValue">5</span>/10</div>
+        <div class="force-value"><span id="forceValue">10</span>/10</div>
       </div>
 
       <!-- Game Mode Selector -->
@@ -2655,11 +2797,11 @@
        ============================================ -->
 
   <!-- Palette: Ball Rack (Top-Left) -->
-  <div class="tool-palette" id="palette-balls">
+  <div class="tool-palette" id="palette-balls" role="region" aria-label="Ball rack - drag balls onto the table">
     <div class="palette-header">
-      <span class="palette-title"><span class="palette-title-icon">🎱</span> Balls</span>
+      <span class="palette-title"><span class="palette-title-icon" aria-hidden="true">🎱</span> Balls</span>
       <div class="palette-controls">
-        <button class="palette-btn minimize" title="Minimize">−</button>
+        <button class="palette-btn minimize" title="Minimize" aria-label="Minimize panel">−</button>
       </div>
     </div>
     <div class="palette-body">
@@ -2672,147 +2814,114 @@
     </div>
   </div>
 
-  <!-- Palette: Cue Controls (Bottom-Left) -->
-  <div class="tool-palette" id="palette-cue">
+  <!-- Palette: Cue Controls (Bottom-Left) - Minimalist Horizontal Layout -->
+  <div class="tool-palette" id="palette-cue" role="region" aria-label="Cue controls - adjust spin, power, and execute shots">
     <div class="palette-header">
-      <span class="palette-title"><span class="palette-title-icon">🎯</span> Cue Control</span>
+      <span class="palette-title"><span class="palette-title-icon" aria-hidden="true">🎯</span> Cue</span>
       <div class="palette-controls">
-        <button class="palette-btn minimize" title="Minimize">−</button>
+        <button class="palette-btn minimize" title="Minimize" aria-label="Minimize panel">−</button>
       </div>
     </div>
     <div class="palette-body">
-      <div class="cue-controls-grid">
-        <!-- Left Column: Spin, Power, Shoot -->
-        <div class="control-column">
-          <!-- Contact Diagram with Guide Circles - 4x size with left legend -->
-          <div class="contact-diagram-container contact-diagram-large">
-            <div class="control-label">English / Spin</div>
-            <svg id="contact-diagram" viewBox="-2.8 -1.0 4.2 2.0" width="336" height="160">
-              <!-- Legend on left side -->
-              <g class="english-legend" font-family="Arial, sans-serif">
-                <text x="-2.6" y="-0.8" font-size="0.18" fill="#888" font-weight="bold">TIP POSITION</text>
-                <!-- Clock positions legend -->
-                <text x="-2.6" y="-0.55" font-size="0.14" fill="#f90">12 = Follow</text>
-                <text x="-2.6" y="-0.38" font-size="0.14" fill="#f90">6 = Draw</text>
-                <text x="-2.6" y="-0.21" font-size="0.14" fill="#f90">3 = Right</text>
-                <text x="-2.6" y="-0.04" font-size="0.14" fill="#f90">9 = Left</text>
-                <!-- Compass legend -->
-                <text x="-2.6" y="0.16" font-size="0.13" fill="#0af">Inner: N/E/S/W</text>
-                <!-- Zones -->
-                <text x="-2.6" y="0.36" font-size="0.13" fill="#0fa">C = Center</text>
-                <text x="-2.6" y="0.54" font-size="0.12" fill="#f44" opacity="0.7">Red = Miscue</text>
+      <div class="cue-controls-compact">
+        <!-- Top row: Spin diagram + Power/Shoot -->
+        <div class="cue-top-row">
+          <!-- Compact Spin Diagram with spin type inside -->
+          <div class="spin-diagram-compact">
+            <svg id="contact-diagram" viewBox="-1 -1 2 2" width="100" height="100"
+                 role="img" aria-label="Cue ball contact point - click to set spin">
+              <!-- Ball outline -->
+              <circle cx="0" cy="0" r="0.85" fill="#e8e8e8" stroke="#999" stroke-width="0.03" />
+
+              <!-- Miscue zone boundary (outer edge) -->
+              <circle cx="0" cy="0" r="0.85" fill="none" stroke="#ff4444" stroke-width="0.04"
+                stroke-dasharray="0.1,0.06" opacity="0.3" />
+
+              <!-- Inner safe zone ring -->
+              <circle cx="0" cy="0" r="0.5" fill="none" stroke="#ff4444" stroke-width="0.015"
+                stroke-dasharray="0.04,0.03" opacity="0.2" />
+
+              <!-- Outer ring: Cardinal directions (0.55 radius) -->
+              <g class="guide-outer" opacity="0.8">
+                <!-- Top (12 - Follow) -->
+                <circle cx="0" cy="-0.55" r="0.1" fill="none" stroke="#f90" stroke-width="0.02" />
+                <text x="0" y="-0.52" text-anchor="middle" font-size="0.12" fill="#f90" font-weight="bold">12</text>
+                <!-- Bottom (6 - Draw) -->
+                <circle cx="0" cy="0.55" r="0.1" fill="none" stroke="#f90" stroke-width="0.02" />
+                <text x="0" y="0.58" text-anchor="middle" font-size="0.12" fill="#f90" font-weight="bold">6</text>
+                <!-- Left (9) -->
+                <circle cx="-0.55" cy="0" r="0.1" fill="none" stroke="#f90" stroke-width="0.02" />
+                <text x="-0.55" y="0.04" text-anchor="middle" font-size="0.12" fill="#f90" font-weight="bold">9</text>
+                <!-- Right (3) -->
+                <circle cx="0.55" cy="0" r="0.1" fill="none" stroke="#f90" stroke-width="0.02" />
+                <text x="0.55" y="0.04" text-anchor="middle" font-size="0.12" fill="#f90" font-weight="bold">3</text>
+                <!-- Diagonals -->
+                <circle cx="0.39" cy="-0.39" r="0.08" fill="none" stroke="#f90" stroke-width="0.015" opacity="0.6" />
+                <circle cx="-0.39" cy="-0.39" r="0.08" fill="none" stroke="#f90" stroke-width="0.015" opacity="0.6" />
+                <circle cx="0.39" cy="0.39" r="0.08" fill="none" stroke="#f90" stroke-width="0.015" opacity="0.6" />
+                <circle cx="-0.39" cy="0.39" r="0.08" fill="none" stroke="#f90" stroke-width="0.015" opacity="0.6" />
               </g>
 
-              <!-- Ball outline (1/3 smaller: 1.125 * 0.667 = 0.75) -->
-              <circle cx="0" cy="0" r="0.75" fill="#e8e8e8" stroke="#999" stroke-width="0.03" />
-
-              <!-- Miscue zone boundary (scaled) -->
-              <circle cx="0" cy="0" r="0.75" fill="none" stroke="#ff4444" stroke-width="0.05"
-                stroke-dasharray="0.08,0.05" opacity="0.4" />
-              <circle cx="0" cy="0" r="0.42" fill="none" stroke="#ff4444" stroke-width="0.015"
-                stroke-dasharray="0.04,0.03" opacity="0.3" />
-
-              <!-- Outer ring: All 12 clock positions (0.42 radius - moved out 2/3 circle) -->
-              <g class="guide-clock" opacity="0.8">
-                <!-- 12 o'clock (top) -->
-                <circle cx="0" cy="-0.42" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
-                <text x="0" y="-0.393" text-anchor="middle" font-size="0.09" fill="#f90" font-weight="bold">12</text>
-                <!-- 1 o'clock -->
-                <circle cx="0.21" cy="-0.364" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
-                <text x="0.21" y="-0.337" text-anchor="middle" font-size="0.07" fill="#f90">1</text>
-                <!-- 2 o'clock -->
-                <circle cx="0.364" cy="-0.21" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
-                <text x="0.364" y="-0.183" text-anchor="middle" font-size="0.07" fill="#f90">2</text>
-                <!-- 3 o'clock (right) -->
-                <circle cx="0.42" cy="0" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
-                <text x="0.42" y="0.027" text-anchor="middle" font-size="0.09" fill="#f90" font-weight="bold">3</text>
-                <!-- 4 o'clock -->
-                <circle cx="0.364" cy="0.21" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
-                <text x="0.364" y="0.237" text-anchor="middle" font-size="0.07" fill="#f90">4</text>
-                <!-- 5 o'clock -->
-                <circle cx="0.21" cy="0.364" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
-                <text x="0.21" y="0.391" text-anchor="middle" font-size="0.07" fill="#f90">5</text>
-                <!-- 6 o'clock (bottom) -->
-                <circle cx="0" cy="0.42" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
-                <text x="0" y="0.447" text-anchor="middle" font-size="0.09" fill="#f90" font-weight="bold">6</text>
-                <!-- 7 o'clock -->
-                <circle cx="-0.21" cy="0.364" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
-                <text x="-0.21" y="0.391" text-anchor="middle" font-size="0.07" fill="#f90">7</text>
-                <!-- 8 o'clock -->
-                <circle cx="-0.364" cy="0.21" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
-                <text x="-0.364" y="0.237" text-anchor="middle" font-size="0.07" fill="#f90">8</text>
-                <!-- 9 o'clock (left) -->
-                <circle cx="-0.42" cy="0" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
-                <text x="-0.42" y="0.027" text-anchor="middle" font-size="0.09" fill="#f90" font-weight="bold">9</text>
-                <!-- 10 o'clock -->
-                <circle cx="-0.364" cy="-0.21" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
-                <text x="-0.364" y="-0.183" text-anchor="middle" font-size="0.07" fill="#f90">10</text>
-                <!-- 11 o'clock -->
-                <circle cx="-0.21" cy="-0.364" r="0.08" fill="none" stroke="#f90" stroke-width="0.02" />
-                <text x="-0.21" y="-0.337" text-anchor="middle" font-size="0.07" fill="#f90">11</text>
+              <!-- Inner ring: Compass positions (0.3 radius) -->
+              <g class="guide-inner" opacity="0.7">
+                <!-- N -->
+                <circle cx="0" cy="-0.3" r="0.08" fill="none" stroke="#0af" stroke-width="0.02" />
+                <text x="0" y="-0.27" text-anchor="middle" font-size="0.09" fill="#0af" font-weight="bold">N</text>
+                <!-- S -->
+                <circle cx="0" cy="0.3" r="0.08" fill="none" stroke="#0af" stroke-width="0.02" />
+                <text x="0" y="0.33" text-anchor="middle" font-size="0.09" fill="#0af" font-weight="bold">S</text>
+                <!-- W -->
+                <circle cx="-0.3" cy="0" r="0.08" fill="none" stroke="#0af" stroke-width="0.02" />
+                <text x="-0.3" y="0.03" text-anchor="middle" font-size="0.09" fill="#0af" font-weight="bold">W</text>
+                <!-- E -->
+                <circle cx="0.3" cy="0" r="0.08" fill="none" stroke="#0af" stroke-width="0.02" />
+                <text x="0.3" y="0.03" text-anchor="middle" font-size="0.09" fill="#0af" font-weight="bold">E</text>
+                <!-- Diagonals -->
+                <circle cx="0.21" cy="-0.21" r="0.06" fill="none" stroke="#0af" stroke-width="0.015" opacity="0.5" />
+                <circle cx="-0.21" cy="-0.21" r="0.06" fill="none" stroke="#0af" stroke-width="0.015" opacity="0.5" />
+                <circle cx="0.21" cy="0.21" r="0.06" fill="none" stroke="#0af" stroke-width="0.015" opacity="0.5" />
+                <circle cx="-0.21" cy="0.21" r="0.06" fill="none" stroke="#0af" stroke-width="0.015" opacity="0.5" />
               </g>
 
-              <!-- Inner ring: 8 compass positions (0.24 radius - moved in half circle) -->
-              <g class="guide-inner" opacity="0.8">
-                <!-- N (North - top) -->
-                <circle cx="0" cy="-0.24" r="0.08" fill="none" stroke="#0af" stroke-width="0.02" />
-                <text x="0" y="-0.215" text-anchor="middle" font-size="0.07" fill="#0af" font-weight="bold">N</text>
-                <!-- NE (Northeast) -->
-                <circle cx="0.17" cy="-0.17" r="0.08" fill="none" stroke="#0af" stroke-width="0.02" />
-                <text x="0.17" y="-0.145" text-anchor="middle" font-size="0.06" fill="#0af">NE</text>
-                <!-- E (East - right) -->
-                <circle cx="0.24" cy="0" r="0.08" fill="none" stroke="#0af" stroke-width="0.02" />
-                <text x="0.24" y="0.025" text-anchor="middle" font-size="0.07" fill="#0af" font-weight="bold">E</text>
-                <!-- SE (Southeast) -->
-                <circle cx="0.17" cy="0.17" r="0.08" fill="none" stroke="#0af" stroke-width="0.02" />
-                <text x="0.17" y="0.195" text-anchor="middle" font-size="0.06" fill="#0af">SE</text>
-                <!-- S (South - bottom) -->
-                <circle cx="0" cy="0.24" r="0.08" fill="none" stroke="#0af" stroke-width="0.02" />
-                <text x="0" y="0.265" text-anchor="middle" font-size="0.07" fill="#0af" font-weight="bold">S</text>
-                <!-- SW (Southwest) -->
-                <circle cx="-0.17" cy="0.17" r="0.08" fill="none" stroke="#0af" stroke-width="0.02" />
-                <text x="-0.17" y="0.195" text-anchor="middle" font-size="0.06" fill="#0af">SW</text>
-                <!-- W (West - left) -->
-                <circle cx="-0.24" cy="0" r="0.08" fill="none" stroke="#0af" stroke-width="0.02" />
-                <text x="-0.24" y="0.025" text-anchor="middle" font-size="0.07" fill="#0af" font-weight="bold">W</text>
-                <!-- NW (Northwest) -->
-                <circle cx="-0.17" cy="-0.17" r="0.08" fill="none" stroke="#0af" stroke-width="0.02" />
-                <text x="-0.17" y="-0.145" text-anchor="middle" font-size="0.06" fill="#0af">NW</text>
-              </g>
+              <!-- Center marker with spin type inside -->
+              <circle cx="0" cy="0" r="0.12" fill="rgba(0,170,255,0.15)" stroke="#0fa" stroke-width="0.02" />
+              <text id="spinTypeInner" x="0" y="0.04" text-anchor="middle" font-size="0.13" fill="#0fa" font-weight="bold">Draw</text>
 
-              <!-- Center marker (r=0.08, same as all others) -->
-              <circle cx="0" cy="0" r="0.08" fill="none" stroke="#0fa" stroke-width="0.02" />
-              <text x="0" y="0.025" text-anchor="middle" font-size="0.08" fill="#0fa" font-weight="bold">C</text>
-
-              <!-- Crosshairs for alignment (between inner and outer rings) -->
-              <line x1="-0.52" y1="0" x2="-0.32" y2="0" stroke="#555" stroke-width="0.01" opacity="0.4" />
-              <line x1="0.32" y1="0" x2="0.52" y2="0" stroke="#555" stroke-width="0.01" opacity="0.4" />
-              <line x1="0" y1="-0.52" x2="0" y2="-0.32" stroke="#555" stroke-width="0.01" opacity="0.4" />
-              <line x1="0" y1="0.32" x2="0" y2="0.52" stroke="#555" stroke-width="0.01" opacity="0.4" />
-
-              <!-- Cue tip contact point (draggable, r=0.08 same as guides) -->
-              <circle id="contact-point" cx="0" cy="0" r="0.08" fill="#0066cc" stroke="#003366" stroke-width="0.02"
+              <!-- Cue tip contact point (draggable) -->
+              <circle id="contact-point" cx="0" cy="0.55" r="0.1" fill="#0066cc" stroke="#003366" stroke-width="0.025"
                 cursor="move" />
             </svg>
-            <div class="spin-display"><span id="spinType">Center</span></div>
           </div>
-          <!-- Power Slider -->
-          <div class="force-container">
-            <div class="control-label">Power</div>
-            <div class="force-slider-wrapper">
-              <input type="range" id="forceSlider-palette" min="1" max="10" value="5" step="0.5" />
+
+          <!-- Power and Shoot column -->
+          <div class="power-shoot-column">
+            <!-- Power row -->
+            <div class="power-row">
+              <span class="control-label">Power</span>
+              <input type="range" id="forceSlider-palette" min="1" max="10" value="10" step="0.5"
+                aria-label="Shot power" />
+              <span class="force-value"><span id="forceValue-palette">10</span></span>
             </div>
-            <div class="force-value"><span id="forceValue-palette">5</span>/10</div>
-          </div>
-          <!-- Shoot Button -->
-          <div class="shoot-button-container" style="margin-top: 16px;">
-            <button class="action-btn primary" id="btnShoot" title="Execute the shot"
-              style="width: 100%; padding: 14px; font-size: 15px;">
-              <span class="btn-icon">🎯</span>
-              <span>Shoot</span>
-            </button>
+            <!-- Shoot button -->
+            <div class="shoot-row">
+              <button class="shoot-btn-compact" id="btnShoot" title="Execute the shot"
+                aria-label="Shoot - Execute the current shot">
+                <span>🎯</span>
+                <span>Shoot</span>
+              </button>
+            </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden: Legacy spin type display for JS compatibility -->
+  <span id="spinType" style="display:none;">Draw</span>
+
+  <!-- REMOVED: Old two-column layout with shot stats moved to Shot Info palette -->
+  <div style="display:none;">
+        <div class="control-column">
         <!-- Right Column: Shot Info -->
         <div class="control-column">
           <!-- Shooter's View Diagram -->
@@ -2869,42 +2978,43 @@
     </div>
   </div>
 
-  <!-- Palette: Game & Solver (Top-Right) -->
-  <div class="tool-palette" id="palette-game">
+  <!-- Palette: Game & Solver (Top-Right) - minimized by default -->
+  <div class="tool-palette minimized" id="palette-game" role="region" aria-label="Game settings and shot preferences">
     <div class="palette-header">
-      <span class="palette-title"><span class="palette-title-icon">🎮</span> Game</span>
+      <span class="palette-title"><span class="palette-title-icon" aria-hidden="true">🎮</span> Game</span>
       <div class="palette-controls">
-        <button class="palette-btn minimize" title="Minimize">−</button>
+        <button class="palette-btn minimize" title="Expand" aria-label="Expand panel">+</button>
       </div>
     </div>
     <div class="palette-body">
       <div class="game-content">
         <!-- Game Mode -->
         <div class="game-mode-section" style="margin:0;padding:0;border:0;">
-          <select id="gameModeSelect-palette" class="game-mode-select">
+          <label for="gameModeSelect-palette" class="visually-hidden">Game mode</label>
+          <select id="gameModeSelect-palette" class="game-mode-select" aria-label="Select game mode">
             <option value="9ball" selected>9-Ball</option>
             <option value="8ball">8-Ball</option>
             <option value="10ball">10-Ball</option>
             <option value="14.1">Straight Pool</option>
             <option value="1pocket">One Pocket</option>
           </select>
-          <div class="game-mode-description" id="gameModeDescription-palette">Hit lowest ball first</div>
-          <div class="suit-selector" id="suitSelector-palette" style="display: none;">
+          <div class="game-mode-description" id="gameModeDescription-palette" aria-live="polite">Hit lowest ball first</div>
+          <div class="suit-selector" id="suitSelector-palette" style="display: none;" role="radiogroup" aria-label="Select your suit">
             <label><input type="radio" name="player-suit-palette" value="solids" checked><span>Solids</span></label>
             <label><input type="radio" name="player-suit-palette" value="stripes"><span>Stripes</span></label>
           </div>
-          <div class="pocket-selector" id="pocketSelector-palette" style="display: none;">
-            <span class="pocket-label">Your Pocket:</span>
+          <div class="pocket-selector" id="pocketSelector-palette" style="display: none;" role="radiogroup" aria-label="Select your scoring pocket">
+            <span class="pocket-label" id="pocket-label">Your Pocket:</span>
             <label><input type="radio" name="player-pocket-palette" value="corner-bl" checked><span>BL</span></label>
             <label><input type="radio" name="player-pocket-palette" value="corner-br"><span>BR</span></label>
           </div>
         </div>
         <!-- Solver Options -->
         <div class="solver-options" style="min-width:0;">
-          <div class="control-label">Shot Preference:</div>
+          <div class="control-label" id="solver-label">Shot Preference:</div>
           <div class="solver-instructions" style="font-size:12px;color:#666;margin-bottom:8px;">Select an object ball
             and pocket</div>
-          <div class="solver-radio-group">
+          <div class="solver-radio-group" role="radiogroup" aria-labelledby="solver-label">
             <label><input type="radio" name="solver-mode-palette" value="auto" checked><span>Standard</span></label>
             <label><input type="radio" name="solver-mode-palette" value="kick"><span>Kick</span></label>
             <label><input type="radio" name="solver-mode-palette" value="bank"><span>Bank</span></label>
@@ -2930,12 +3040,13 @@
           </div>
           <!-- Saved Diagrams -->
           <div class="saved-diagrams">
-            <div class="section-label">Saved Diagrams</div>
+            <div class="section-label" id="saved-diagrams-label">Saved Diagrams</div>
             <div class="save-input-row">
-              <input type="text" id="saveDiagramName" placeholder="Name..." maxlength="50">
-              <button id="btnSaveDiagram" title="Save current diagram">Save</button>
+              <input type="text" id="saveDiagramName" placeholder="Name..." maxlength="50"
+                     aria-label="Diagram name to save">
+              <button id="btnSaveDiagram" title="Save current diagram" aria-label="Save current diagram">Save</button>
             </div>
-            <div class="saved-list" id="savedDiagramsList">
+            <div class="saved-list" id="savedDiagramsList" role="list" aria-labelledby="saved-diagrams-label">
               <div class="no-saved">No saved diagrams</div>
             </div>
           </div>
@@ -2945,11 +3056,11 @@
   </div>
 
   <!-- Palette: Legend (Left-Middle) -->
-  <div class="tool-palette" id="palette-legend">
+  <div class="tool-palette" id="palette-legend" role="region" aria-label="Line color legend">
     <div class="palette-header">
-      <span class="palette-title"><span class="palette-title-icon">🎨</span> Legend</span>
+      <span class="palette-title"><span class="palette-title-icon" aria-hidden="true">🎨</span> Legend</span>
       <div class="palette-controls">
-        <button class="palette-btn minimize" title="Minimize">−</button>
+        <button class="palette-btn minimize" title="Minimize" aria-label="Minimize panel">−</button>
       </div>
     </div>
     <div class="palette-body">
@@ -2966,18 +3077,19 @@
   </div>
 
   <!-- Palette: Shot Info (Bottom-Right) -->
-  <div class="tool-palette" id="palette-shot">
+  <div class="tool-palette" id="palette-shot" role="region" aria-label="Shot information and statistics">
     <div class="palette-header">
-      <span class="palette-title"><span class="palette-title-icon">📊</span> Shot Info</span>
+      <span class="palette-title"><span class="palette-title-icon" aria-hidden="true">📊</span> Shot Info</span>
       <div class="palette-controls">
-        <button class="palette-btn minimize" title="Minimize">−</button>
+        <button class="palette-btn minimize" title="Minimize" aria-label="Minimize panel">−</button>
       </div>
     </div>
     <div class="palette-body">
       <!-- Shooter's View Diagram -->
       <div class="overlap-diagram-container" style="margin-bottom:12px;">
         <div class="overlap-diagram-wrapper">
-          <svg id="overlap-diagram-palette" viewBox="-3 -1.5 6 3" width="160" height="80">
+          <svg id="overlap-diagram-palette" viewBox="-3 -1.5 6 3" width="160" height="80"
+               role="img" aria-label="Ball overlap diagram showing cut angle from shooter perspective">
             <rect x="-3" y="-1.5" width="6" height="3" fill="#1a1a2e" />
             <circle id="overlap-obj-ball-palette" cx="0.5" cy="0" r="1" fill="none" stroke="#ff6b35"
               stroke-width="0.06" />
@@ -3025,21 +3137,23 @@
   </div>
 
   <!-- Palette: Quick Actions (Top Center) -->
-  <div class="tool-palette" id="palette-actions">
+  <div class="tool-palette" id="palette-actions" role="region" aria-label="Quick actions">
     <div class="palette-header">
-      <span class="palette-title"><span class="palette-title-icon">⚡</span> Actions</span>
+      <span class="palette-title"><span class="palette-title-icon" aria-hidden="true">⚡</span> Actions</span>
       <div class="palette-controls">
-        <button class="palette-btn minimize" title="Minimize">−</button>
+        <button class="palette-btn minimize" title="Minimize" aria-label="Minimize panel">−</button>
       </div>
     </div>
     <div class="palette-body">
       <div class="action-buttons">
-        <button class="action-btn primary" id="btnRandomRack" title="Rack balls and animate break shot">
-          <span class="btn-icon">🎱</span>
+        <button class="action-btn primary" id="btnRandomRack" title="Rack balls and animate break shot"
+          aria-label="Rack - Set up balls for a break shot">
+          <span class="btn-icon" aria-hidden="true">🎱</span>
           <span>Rack</span>
         </button>
-        <button class="action-btn" id="btnStartTour" title="Learn how to use this tool">
-          <span class="btn-icon">📚</span>
+        <button class="action-btn" id="btnStartTour" title="Learn how to use this tool"
+          aria-label="Tour - Learn how to use this tool">
+          <span class="btn-icon" aria-hidden="true">📚</span>
           <span>Tour</span>
         </button>
       </div>
@@ -3051,21 +3165,24 @@
     <div class="palette-header">
       <span class="palette-title"><span class="palette-title-icon">💾</span> Save</span>
       <div class="palette-controls">
-        <button class="palette-btn minimize" title="Minimize">−</button>
+        <button class="palette-btn minimize" title="Minimize" aria-label="Minimize panel">−</button>
       </div>
     </div>
     <div class="palette-body">
       <div class="export-buttons">
-        <button class="export-btn primary" id="btnCopyLink" title="Copy shareable link to clipboard">
-          <span class="btn-icon">🔗</span>
+        <button class="export-btn primary" id="btnCopyLink" title="Copy shareable link to clipboard"
+          aria-label="Copy shareable link to clipboard">
+          <span class="btn-icon" aria-hidden="true">🔗</span>
           <span>Link</span>
         </button>
-        <button class="export-btn" id="btnExportPNG" title="Download as PNG image">
-          <span class="btn-icon">🖼️</span>
+        <button class="export-btn" id="btnExportPNG" title="Download as PNG image"
+          aria-label="Download diagram as PNG image">
+          <span class="btn-icon" aria-hidden="true">🖼️</span>
           <span>PNG</span>
         </button>
-        <button class="export-btn" id="btnExportSVG" title="Download as SVG vector">
-          <span class="btn-icon">📐</span>
+        <button class="export-btn" id="btnExportSVG" title="Download as SVG vector"
+          aria-label="Download diagram as SVG vector">
+          <span class="btn-icon" aria-hidden="true">📐</span>
           <span>SVG</span>
         </button>
       </div>
@@ -3083,12 +3200,12 @@
     </div>
   </div>
 
-  <!-- Palette: Position Aids (Center-Right) -->
-  <div class="tool-palette" id="palette-aids">
+  <!-- Palette: Position Aids (Center-Right) - minimized by default -->
+  <div class="tool-palette minimized" id="palette-aids" role="region" aria-label="Position aid toggles">
     <div class="palette-header">
-      <span class="palette-title"><span class="palette-title-icon">📍</span> Aids</span>
+      <span class="palette-title"><span class="palette-title-icon" aria-hidden="true">📍</span> Aids</span>
       <div class="palette-controls">
-        <button class="palette-btn minimize" title="Minimize">−</button>
+        <button class="palette-btn minimize" title="Expand" aria-label="Expand panel">+</button>
       </div>
     </div>
     <div class="palette-body">
@@ -3153,11 +3270,11 @@
   </div>
 
   <!-- Toast notification for copy feedback -->
-  <div class="toast-notification" id="toastNotification">Link copied to clipboard!</div>
+  <div class="toast-notification" id="toastNotification" role="status" aria-live="polite" aria-atomic="true">Link copied to clipboard!</div>
 
   <!-- Status banner for persistent messages (blocked paths, etc.) -->
-  <div class="status-banner" id="statusBanner">
-    <span class="status-icon">🚫</span>
+  <div class="status-banner" id="statusBanner" role="alert" aria-live="assertive">
+    <span class="status-icon" aria-hidden="true">🚫</span>
     <span class="status-message" id="statusMessage">All lanes blocked.</span>
     <span class="status-suggestion" id="statusSuggestion">Jump shot?</span>
   </div>
@@ -3208,7 +3325,14 @@
       const contactPoint = document.getElementById('contact-point');
       const contactDiagram = document.getElementById('contact-diagram');
       const spinTypeDisplay = document.getElementById('spinType');
+      const spinTypeInner = document.getElementById('spinTypeInner');  // New: spin display inside SVG
       const forceSlider = document.getElementById('forceSlider');
+
+      // Helper to update both spin type displays
+      function updateSpinDisplay(spinText) {
+        if (spinTypeDisplay) spinTypeDisplay.textContent = spinText;
+        if (spinTypeInner) spinTypeInner.textContent = spinText;
+      }
       const forceValueDisplay = document.getElementById('forceValue');
       const overlapGhostBall = document.getElementById('overlap-ghost-ball');
       const overlapGhostLabel = document.getElementById('overlap-ghost-label');
@@ -3407,8 +3531,10 @@
       let selectedPocket = null;  // Clicked pocket
 
       // Cue ball contact state (offset from center, in ball radii)
-      let contactOffset = { x: 0, y: -0.7 };  // x: english (+ = right), y: spin (- = follow, + = draw)
-      let shotForce = 5;  // 1-10 scale
+      // Default to max draw (backspin) for break shots
+      // Contact offset in SVG coordinates - max is ~0.55 for new compact diagram
+      let contactOffset = { x: 0, y: 0.55 };  // x: english (+ = right), y: spin (- = follow, + = draw)
+      let shotForce = 10;  // 1-10 scale - default to max power for breaks
       let isDraggingContact = false;
 
       // Geometry helper functions
@@ -6646,7 +6772,7 @@
         contactPoint.setAttribute('cy', coords.y);
 
         // Update spin type display
-        spinTypeDisplay.textContent = getSpinType(contactOffset);
+        updateSpinDisplay(getSpinType(contactOffset));
 
         // Update shot geometry
         updateShotGeometry();
@@ -6682,7 +6808,7 @@
           contactOffset = { x: 0, y: 0 };
           contactPoint.setAttribute('cx', 0);
           contactPoint.setAttribute('cy', 0);
-          spinTypeDisplay.textContent = 'Center';
+          updateSpinDisplay('Center');
           updateShotGeometry();
         }
       }
@@ -6900,7 +7026,7 @@
         // Set top spin (12 o'clock / follow) - already set as default
         contactPoint.setAttribute('cx', contactOffset.x);
         contactPoint.setAttribute('cy', contactOffset.y);
-        spinTypeDisplay.textContent = getSpinType(contactOffset);
+        updateSpinDisplay(getSpinType(contactOffset));
 
         // Set medium-high force for break
         shotForce = 7;
@@ -6919,9 +7045,12 @@
       createBalls();
       setupPocketHandlers();
 
-      // Set up initial 8-ball rack
+      // Set up initial 8-ball rack (skip if ?empty=1 for testing)
       setTimeout(() => {
-        randomRack();  // Use the simplified rack function
+        const urlParams = new URLSearchParams(window.location.search);
+        if (!urlParams.has('empty')) {
+          randomRack();  // Use the simplified rack function
+        }
       }, 100);
 
       // ============================================
@@ -6967,7 +7096,7 @@
           const minimizeBtn = palette.querySelector('.palette-btn.minimize');
           const closeBtn = palette.querySelector('.palette-btn.close');
 
-          // Minimize toggle
+          // Minimize toggle - button click
           if (minimizeBtn) {
             minimizeBtn.addEventListener('click', (e) => {
               e.stopPropagation();
@@ -6976,15 +7105,17 @@
             });
           }
 
-          // Click on minimized palette header to restore
+          // Click on header/title toggles minimize (no more dragging)
           const header = palette.querySelector('.palette-header');
           if (header) {
+            header.style.cursor = 'pointer';
             header.addEventListener('click', (e) => {
-              // Only restore if palette is minimized and not clicking buttons
-              if (palette.classList.contains('minimized') && !e.target.closest('.palette-btn')) {
-                e.stopPropagation();
-                palette.classList.remove('minimized');
-                if (minimizeBtn) minimizeBtn.textContent = '−';
+              // Don't toggle if clicking the minimize button itself
+              if (e.target.closest('.palette-btn')) return;
+              e.stopPropagation();
+              palette.classList.toggle('minimized');
+              if (minimizeBtn) {
+                minimizeBtn.textContent = palette.classList.contains('minimized') ? '+' : '−';
               }
             });
           }
@@ -7008,57 +7139,10 @@
         });
       }
 
-      // Make palettes draggable
+      // Palette dragging removed - click header to minimize instead
       function setupPaletteDragging() {
-        let draggedPalette = null;
-        let dragOffsetX = 0;
-        let dragOffsetY = 0;
-
-        Object.values(palettes).forEach(palette => {
-          if (!palette) return;
-
-          const header = palette.querySelector('.palette-header');
-          if (!header) return;
-
-          header.addEventListener('mousedown', (e) => {
-            if (e.target.closest('.palette-btn')) return; // Don't drag if clicking buttons
-
-            e.preventDefault();
-            draggedPalette = palette;
-            palette.classList.add('dragging');
-
-            const rect = palette.getBoundingClientRect();
-            dragOffsetX = e.clientX - rect.left;
-            dragOffsetY = e.clientY - rect.top;
-
-            // Remove anchor positioning, switch to absolute
-            palette.style.top = rect.top + 'px';
-            palette.style.left = rect.left + 'px';
-            palette.style.right = 'auto';
-            palette.style.bottom = 'auto';
-          });
-        });
-
-        document.addEventListener('mousemove', (e) => {
-          if (!draggedPalette) return;
-
-          const newLeft = e.clientX - dragOffsetX;
-          const newTop = e.clientY - dragOffsetY;
-
-          // Constrain to viewport
-          const maxX = window.innerWidth - draggedPalette.offsetWidth;
-          const maxY = window.innerHeight - draggedPalette.offsetHeight;
-
-          draggedPalette.style.left = Math.max(0, Math.min(newLeft, maxX)) + 'px';
-          draggedPalette.style.top = Math.max(0, Math.min(newTop, maxY)) + 'px';
-        });
-
-        document.addEventListener('mouseup', () => {
-          if (draggedPalette) {
-            draggedPalette.classList.remove('dragging');
-            draggedPalette = null;
-          }
-        });
+        // Dragging disabled - palettes now minimize on header click
+        // Keeping function stub for compatibility
       }
 
       // Sync palette controls with original controls
@@ -7127,15 +7211,19 @@
       }
 
       // Update palette displays when shot geometry changes
+      // Note: Uses querySelector with #palette-shot prefix to avoid duplicate ID issues
       function updatePaletteDisplays(shotData) {
+        const shotPalette = document.getElementById('palette-shot');
+        if (!shotPalette) return;
+
         // Cut angle
-        const cutPalette = document.getElementById('cutAngleDisplay-palette');
+        const cutPalette = shotPalette.querySelector('#cutAngleDisplay-palette');
         if (cutPalette && shotData) {
           cutPalette.textContent = shotData.cutAngle !== undefined ? shotData.cutAngle.toFixed(1) + '°' : '--';
         }
 
         // Shot type
-        const typePalette = document.getElementById('shotTypeDisplay-palette');
+        const typePalette = shotPalette.querySelector('#shotTypeDisplay-palette');
         if (typePalette && shotData) {
           let typeText = 'Direct';
           if (shotData.isCombo) typeText = 'Combo';
@@ -7145,8 +7233,8 @@
         }
 
         // Difficulty
-        const diffFillPalette = document.getElementById('difficultyFill-palette');
-        const diffTextPalette = document.getElementById('difficultyText-palette');
+        const diffFillPalette = shotPalette.querySelector('#difficultyFill-palette');
+        const diffTextPalette = shotPalette.querySelector('#difficultyText-palette');
         if (diffFillPalette && diffTextPalette && shotData && shotData.difficulty) {
           diffFillPalette.className = 'difficulty-fill ' + shotData.difficulty;
           diffTextPalette.className = 'difficulty-text ' + shotData.difficulty;
@@ -7154,10 +7242,10 @@
         }
 
         // Overlap displays
-        const overlapEnglishP = document.getElementById('overlapEnglish-palette');
-        const overlapSlashP = document.getElementById('overlapSlash-palette');
-        const overlapGhostP = document.getElementById('overlap-ghost-ball-palette');
-        const overlapRegionP = document.getElementById('overlap-region-palette');
+        const overlapEnglishP = shotPalette.querySelector('#overlapEnglish-palette');
+        const overlapSlashP = shotPalette.querySelector('#overlapSlash-palette');
+        const overlapGhostP = shotPalette.querySelector('#overlap-ghost-ball-palette');
+        const overlapRegionP = shotPalette.querySelector('#overlap-region-palette');
 
         if (shotData && shotData.overlap !== undefined) {
           const overlap = shotData.overlap;
@@ -7173,7 +7261,7 @@
         }
 
         // Mini instructions
-        const miniInst = document.getElementById('shotMiniInstructions');
+        const miniInst = shotPalette.querySelector('#shotMiniInstructions');
         if (miniInst && shotData) {
           if (shotData.isFoul) {
             miniInst.innerHTML = '<span style="color:#f66">⚠ FOUL - Hit wrong ball</span>';
@@ -7332,7 +7420,7 @@
           contactOffset = { x: state.english.x, y: state.english.y };
           contactPoint.setAttribute('cx', contactOffset.x);
           contactPoint.setAttribute('cy', contactOffset.y);
-          spinTypeDisplay.textContent = getSpinType(contactOffset);
+          updateSpinDisplay(getSpinType(contactOffset));
         }
 
         // Set solver mode
@@ -8178,7 +8266,9 @@
       }
 
       function updateMakeProbability(shotData) {
-        const display = document.getElementById('makeProbabilityDisplay');
+        // Use querySelector to target the correct palette (ID is duplicated)
+        const shotPalette = document.getElementById('palette-shot');
+        const display = shotPalette ? shotPalette.querySelector('#makeProbabilityDisplay') : null;
         if (!display) return;
 
         const prob = calculateMakeProbability(shotData);
@@ -8208,7 +8298,8 @@
         MIN_VELOCITY: 0.02,        // Minimum velocity before ball stops
         BALL_DIAMETER: BALL_RADIUS * 2,
         FRAME_RATE: 60,            // Target FPS
-        FORCE_MULTIPLIER: 0.8      // 3/4 force = 7.5 * 0.8 = 6 initial speed
+        FORCE_MULTIPLIER: 0.8,     // 3/4 force = 7.5 * 0.8 = 6 initial speed
+        COLLISION_ITERATIONS: 8    // Multiple passes for frozen rack momentum propagation
       };
 
       // Ball state during animation
@@ -8223,6 +8314,8 @@
       let shotAnimationFrames = 0;
       const MAX_SHOT_FRAMES = 120; // ~2 seconds at 60fps - ensures completion in tests
       let isBreakSetup = false;  // Flag to prevent ghost ball clearing during break setup
+      let frozenRackPending = false;  // Flag to apply empirical break physics on first contact
+      let rackBallPositions = {};  // Store rack positions with row/col for break physics
 
       // Cue stick element
       let cueStickElement = null;
@@ -8312,7 +8405,8 @@
           ];
 
           // Separate solids and stripes
-          const solids = gameBalls.filter(b => parseInt(b) >= 1 && parseInt(b) <= 7);
+          // Traditional 8-ball: 1-ball is ALWAYS at the apex (head ball)
+          const solids = gameBalls.filter(b => parseInt(b) >= 1 && parseInt(b) <= 7 && b !== '1');
           const stripes = gameBalls.filter(b => parseInt(b) >= 9 && parseInt(b) <= 15);
 
           shuffleArray(solids);
@@ -8334,8 +8428,8 @@
 
               let ballId;
               if (row === 0) {
-                // Apex: random from remaining
-                ballId = remainingBalls[ballIndex++];
+                // Apex: ALWAYS the 1-ball (traditional 8-ball rack)
+                ballId = '1';
               } else if (row === 2 && col === 1) {
                 ballId = '8';  // 8-ball in center
               } else if (row === 4 && col === 0) {
@@ -8365,6 +8459,88 @@
           [array[i], array[j]] = [array[j], array[i]];
         }
         return array;
+      }
+
+      // Empirical break physics based on Dr. Dave's research
+      // In a frozen rack, forces propagate instantly through touching balls
+      // Center balls (like 8-ball) barely move because forces pass through them
+      // Corner balls get maximum velocity because they only receive outward forces
+      function applyFrozenRackBreakPhysics(cueVelocity) {
+        const FOOT_SPOT = { x: 75, y: 25 };
+        const cueSpeed = Math.sqrt(cueVelocity.vx * cueVelocity.vx + cueVelocity.vy * cueVelocity.vy);
+
+        // Base velocity factor from cue speed
+        const baseVel = cueSpeed * 0.7;
+
+        for (const ballId in shotBallStates) {
+          if (ballId === 'cue') continue;
+
+          const ball = shotBallStates[ballId];
+          if (!ball || ball.pocketed) continue;
+
+          // Calculate position relative to foot spot
+          const relX = ball.x - FOOT_SPOT.x;  // + means behind foot spot (toward back of rack)
+          const relY = ball.y - FOOT_SPOT.y;  // + means below center, - means above
+
+          // Determine row in rack (approximate based on x position)
+          const rowSpacing = BALL_RADIUS * 2 * Math.sin(Math.PI / 3);
+          const row = Math.round(relX / rowSpacing);
+
+          // Determine lateral position (how far from center line)
+          const lateralPos = Math.abs(relY) / (BALL_RADIUS * 2);
+
+          // Calculate velocity based on position
+          // Key insight: center balls (low lateral position) get less velocity
+          // Edge balls (high lateral position) get more velocity
+
+          // Row factor: back rows get slightly more energy
+          const rowFactor = 0.5 + row * 0.12;
+
+          // Lateral factor: edge balls get more, center balls get less
+          // This is the key to making 8-ball (center) stay still
+          const lateralFactor = 0.1 + lateralPos * 0.5;
+
+          // Combined velocity magnitude
+          const velMag = baseVel * rowFactor * lateralFactor;
+
+          // Direction: mostly outward from center, slightly forward
+          const outwardAngle = Math.atan2(relY, 1);  // Angle from center line
+          const spreadAngle = outwardAngle * (0.8 + row * 0.1);  // More spread for back rows
+
+          // Apply velocity
+          ball.vx = Math.cos(spreadAngle) * velMag + baseVel * 0.3;  // Forward component
+          ball.vy = Math.sin(spreadAngle) * velMag;
+
+          // Special handling for 8-ball (or any center ball) - minimal movement
+          if (ballId === '8' || ballId === '9' || ballId === '10') {
+            // Check if truly centered (low lateral position)
+            if (Math.abs(relY) < BALL_RADIUS) {
+              ball.vx *= 0.15;  // Drastically reduce center ball movement
+              ball.vy *= 0.15;
+            }
+          }
+        }
+
+        // Cue ball behavior based on english
+        const cueBall = shotBallStates['cue'];
+        if (cueBall && cueBall.english) {
+          if (cueBall.english.y > 0) {
+            // Draw - cue ball comes back
+            cueBall.vx *= -0.4;
+            cueBall.vy *= -0.4;
+          } else if (cueBall.english.y < 0) {
+            // Follow - cue ball continues forward
+            cueBall.vx *= 0.5;
+            cueBall.vy *= 0.5;
+          } else {
+            // Stop/stun
+            cueBall.vx *= 0.1;
+            cueBall.vy *= 0.1;
+          }
+          cueBall.english = null;
+        }
+
+        frozenRackPending = false;
       }
 
       // Create or get cue stick SVG element
@@ -8458,89 +8634,89 @@
       }
 
       // Ball-ball collision detection and response
+      // Uses multiple iterations to simulate momentum propagation through frozen rack
+      // Key insight: In a frozen rack, momentum cascades through touching balls almost instantly
+      // Iteration 1: Cue→1-ball, Iteration 2: 1-ball→row2, Iteration 3: row2→row3, etc.
       function checkBallCollisions() {
         const ballIds = Object.keys(breakBallStates);
-        const collisions = [];
 
-        for (let i = 0; i < ballIds.length; i++) {
-          for (let j = i + 1; j < ballIds.length; j++) {
-            const ball1 = breakBallStates[ballIds[i]];
-            const ball2 = breakBallStates[ballIds[j]];
+        // Multiple iterations allow momentum to CASCADE through chain of touching balls
+        // Each iteration, newly-moving balls can hit the next layer
+        for (let iter = 0; iter < BREAK_PHYSICS.COLLISION_ITERATIONS; iter++) {
+          let hadCollision = false;
 
-            if (!ball1 || !ball2 || ball1.pocketed || ball2.pocketed) continue;
+          for (let i = 0; i < ballIds.length; i++) {
+            for (let j = i + 1; j < ballIds.length; j++) {
+              const ball1 = breakBallStates[ballIds[i]];
+              const ball2 = breakBallStates[ballIds[j]];
 
-            const dx = ball2.x - ball1.x;
-            const dy = ball2.y - ball1.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
+              if (!ball1 || !ball2 || ball1.pocketed || ball2.pocketed) continue;
 
-            if (dist < BREAK_PHYSICS.BALL_DIAMETER && dist > 0) {
-              collisions.push({
-                ball1: ballIds[i],
-                ball2: ballIds[j],
-                dx, dy, dist
-              });
+              const dx = ball2.x - ball1.x;
+              const dy = ball2.y - ball1.y;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+
+              // Check if balls are touching/overlapping
+              if (dist < BREAK_PHYSICS.BALL_DIAMETER && dist > 0) {
+                const id1 = ballIds[i];
+                const id2 = ballIds[j];
+
+                // Normal vector (from ball1 to ball2)
+                const nx = dx / dist;
+                const ny = dy / dist;
+
+                // Relative velocity
+                const dvx = ball1.vx - ball2.vx;
+                const dvy = ball1.vy - ball2.vy;
+
+                // Relative velocity along collision normal
+                const dvn = dvx * nx + dvy * ny;
+
+                // Only resolve if balls are approaching
+                if (dvn > 0) {
+                  hadCollision = true;
+
+                  // Full impulse - DO NOT divide by iterations!
+                  // Each iteration processes NEW collisions from cascading momentum
+                  const impulse = dvn * BREAK_PHYSICS.BALL_COR;
+
+                  ball1.vx -= impulse * nx;
+                  ball1.vy -= impulse * ny;
+                  ball2.vx += impulse * nx;
+                  ball2.vy += impulse * ny;
+
+                  // Apply english effect when cue ball first hits rack
+                  if (id1 === 'cue' && ball1.english !== undefined && ball1.english !== null) {
+                    const english = ball1.english;
+                    const followFactor = 1 + english * 0.5;
+                    ball1.vx *= followFactor;
+                    ball1.vy *= followFactor;
+                    ball1.english = null;
+                  } else if (id2 === 'cue' && ball2.english !== undefined && ball2.english !== null) {
+                    const english = ball2.english;
+                    const followFactor = 1 + english * 0.5;
+                    ball2.vx *= followFactor;
+                    ball2.vy *= followFactor;
+                    ball2.english = null;
+                  }
+
+                  // Separate overlapping balls fully
+                  const overlap = BREAK_PHYSICS.BALL_DIAMETER - dist;
+                  if (overlap > 0) {
+                    const separationX = (overlap / 2 + 0.01) * nx;
+                    const separationY = (overlap / 2 + 0.01) * ny;
+                    ball1.x -= separationX;
+                    ball1.y -= separationY;
+                    ball2.x += separationX;
+                    ball2.y += separationY;
+                  }
+                }
+              }
             }
           }
-        }
 
-        // Resolve collisions
-        for (const collision of collisions) {
-          const { ball1: id1, ball2: id2, dx, dy, dist } = collision;
-          const ball1 = breakBallStates[id1];
-          const ball2 = breakBallStates[id2];
-
-          // Normal vector (from ball1 to ball2)
-          const nx = dx / dist;
-          const ny = dy / dist;
-
-          // Relative velocity
-          const dvx = ball1.vx - ball2.vx;
-          const dvy = ball1.vy - ball2.vy;
-
-          // Relative velocity along collision normal
-          const dvn = dvx * nx + dvy * ny;
-
-          // Only resolve if balls are approaching
-          if (dvn > 0) {
-            // Impulse (assuming equal mass)
-            const impulse = dvn * BREAK_PHYSICS.BALL_COR;
-
-            ball1.vx -= impulse * nx;
-            ball1.vy -= impulse * ny;
-            ball2.vx += impulse * nx;
-            ball2.vy += impulse * ny;
-
-            // Apply english effect when cue ball first hits rack
-            // Top english (follow): cue ball continues forward
-            // Bottom english (draw): cue ball slows/reverses
-            // Center (stun): cue ball stops after contact
-            if (id1 === 'cue' && ball1.english !== undefined && ball1.english !== null) {
-              const english = ball1.english;
-              // English affects velocity retention in direction of travel
-              // Positive = follow (more forward momentum)
-              // Negative = draw (less forward momentum, can reverse)
-              const followFactor = 1 + english * 0.5;
-              ball1.vx *= followFactor;
-              ball1.vy *= followFactor;
-              // Only apply once
-              ball1.english = null;
-            } else if (id2 === 'cue' && ball2.english !== undefined && ball2.english !== null) {
-              const english = ball2.english;
-              const followFactor = 1 + english * 0.5;
-              ball2.vx *= followFactor;
-              ball2.vy *= followFactor;
-              ball2.english = null;
-            }
-
-            // Separate overlapping balls
-            const overlap = BREAK_PHYSICS.BALL_DIAMETER - dist;
-            const separationX = (overlap / 2 + 0.01) * nx;
-            const separationY = (overlap / 2 + 0.01) * ny;
-            ball1.x -= separationX;
-            ball1.y -= separationY;
-            ball2.x += separationX;
-            ball2.y += separationY;
-          }
+          // If no collisions occurred, no need for more iterations
+          if (!hadCollision) break;
         }
       }
 
@@ -8857,6 +9033,13 @@
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             if (dist < BREAK_PHYSICS.BALL_DIAMETER && dist > 0) {
+              // Check for frozen rack break - cue hitting any rack ball
+              if (frozenRackPending && (ballIds[i] === 'cue' || ballIds[j] === 'cue')) {
+                // Apply empirical break physics instead of sequential collisions
+                const cueBall = shotBallStates['cue'];
+                applyFrozenRackBreakPhysics({ vx: cueBall.vx, vy: cueBall.vy });
+                return;  // Skip normal collision processing
+              }
               collisions.push([ballIds[i], ballIds[j]]);
             }
           }
@@ -9142,12 +9325,13 @@
         }
 
         // Set break-appropriate english and power
-        contactOffset = { x: 0, y: -0.7 };  // Top spin for follow-through
+        // Max draw (bottom spin) for power break with cue ball control
+        contactOffset = { x: 0, y: 0.55 };  // Max draw (backspin) for break
         contactPoint.setAttribute('cx', 0);
-        contactPoint.setAttribute('cy', -0.7);
-        spinTypeDisplay.textContent = getSpinType(contactOffset);
+        contactPoint.setAttribute('cy', 0.55);
+        updateSpinDisplay(getSpinType(contactOffset));
 
-        shotForce = 7;  // Moderate break power (7/10)
+        shotForce = 10;  // Maximum break power (10/10)
         forceSlider.value = shotForce;
         forceValueDisplay.textContent = shotForce;
 
@@ -9182,6 +9366,7 @@
 
         // Set break mode to preserve ghost ball position
         isBreakSetup = true;
+        frozenRackPending = true;  // Enable empirical break physics on first contact
 
         // Update visualizations
         updateCueGhostLine();
@@ -10135,6 +10320,34 @@
         ghost: () => ballPositions['ghost'],
         cue: () => ballPositions['cue'],
         balls: () => ({ ...ballPositions }),
+
+        // Test API: Place a ball on the table
+        placeBall: (ballId, x, y) => {
+          const ball = document.getElementById(`ball-${ballId}`);
+          if (!ball) throw new Error(`Ball not found: ${ballId}`);
+          ballPositions[ballId] = { x, y };
+          positionBallOnTable(ball, x, y);
+          ball.classList.add('on-table');
+          updateShotGeometry();
+          return { success: true, position: { x, y } };
+        },
+
+        // Test API: Select an object ball
+        selectBall: (ballId) => {
+          const ball = document.getElementById(`ball-${ballId}`);
+          if (!ball) throw new Error(`Ball not found: ${ballId}`);
+          selectBall(ballId);
+          return { success: true, selectedBallId: ballId };
+        },
+
+        // Test API: Select a pocket
+        selectPocket: (pocketId) => {
+          const pocket = document.querySelector(`.pocket-target[data-pocket="${pocketId}"]`);
+          if (!pocket) throw new Error(`Pocket not found: ${pocketId}`);
+          // Use the internal selectPocket function which also auto-positions ghost ball
+          selectPocket(pocketId);
+          return { success: true, selectedPocket: pocketId };
+        },
 
         // Shot validation
         testShot: () => {
