@@ -247,8 +247,8 @@
 
     /* Palette anchor positions */
     #palette-balls {
-      top: 30px;
-      left: 30px;
+      top: 60px;   /* Moved down to avoid blocking top-left pocket click */
+      left: 60px;  /* Moved right to avoid blocking top-left pocket click */
     }
 
     #palette-cue {
@@ -8791,17 +8791,18 @@
       }
 
       // Check if ball is in a pocket
+      // Uses same coordinates as pocketCenters for consistency
       function isBallInPocket(x, y) {
         const pockets = [
-          { x: 0, y: 0 },      // Top-left
-          { x: 50, y: 0 },     // Top-center
-          { x: 100, y: 0 },    // Top-right
-          { x: 0, y: 50 },     // Bottom-left
-          { x: 50, y: 50 },    // Bottom-center
-          { x: 100, y: 50 }    // Bottom-right
+          { x: 1.5, y: 1.5 },     // Top-left (corner-tl)
+          { x: 98.5, y: 1.5 },    // Top-right (corner-tr)
+          { x: 1.5, y: 48.5 },    // Bottom-left (corner-bl)
+          { x: 98.5, y: 48.5 },   // Bottom-right (corner-br)
+          { x: 50, y: 0 },        // Side-top (middle of top rail)
+          { x: 50, y: 50 }        // Side-bottom (middle of bottom rail)
         ];
 
-        const POCKET_RADIUS = 3.5; // Slightly smaller than visual pocket
+        const POCKET_RADIUS = 4.0; // Match visual pocket size for reliable detection
 
         for (const pocket of pockets) {
           const dx = x - pocket.x;
@@ -9147,14 +9148,15 @@
 
           const ballR = BALL_RADIUS;
 
-          // Check pockets first
+          // Check pockets first - use realistic pocket radius for detection
+          const POCKET_DETECT_RADIUS = 4.0;  // Match visual pocket size
           for (const pocketName in pocketCenters) {
             const pocket = pocketCenters[pocketName];
             const dx = ball.x - pocket.x;
             const dy = ball.y - pocket.y;
             const distToPocket = Math.sqrt(dx * dx + dy * dy);
 
-            if (distToPocket < ballR * 1.5) {
+            if (distToPocket < POCKET_DETECT_RADIUS) {
               ball.pocketed = true;
               ball.vx = 0;
               ball.vy = 0;
@@ -10189,7 +10191,7 @@
 
           // Pocket centers test
           await this.test('pocketCenters has all 6 pockets', () => {
-            const pockets = ['corner-tl', 'corner-tr', 'corner-bl', 'corner-br', 'side-l', 'side-r'];
+            const pockets = ['corner-tl', 'corner-tr', 'corner-bl', 'corner-br', 'side-top', 'side-bottom'];
             return pockets.every(p => pocketCenters[p] !== undefined);
           });
 
