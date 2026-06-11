@@ -126,6 +126,31 @@ Open browser console and run:
 ACETests.runAll()
 ```
 
+## Batch Scenario Rendering (headless)
+
+`render-scenarios.js` turns scenario state strings into standalone SVG + PNG files
+without opening a browser window:
+
+```
+node render-scenarios.js scenarios.sample.json --out diagrams
+node render-scenarios.js --state "v1|cue:30,15|1:65,32.5|p:cbr|b:1|m:9ball|f:5|e:0.0,0.0|s:auto" --name straight-in
+```
+
+Flags: `--table-only` (crop off the info panels, viewBox -8 -8 116 66), `--bg <color>`
+(recolor page background, e.g. `#ffffff` for print), `--no-png`, `--png-width N` (default 1600).
+Per-scenario JSON fields `tableOnly` and `bg` override the global flags.
+Requires `npm install --ignore-scripts` + `npx playwright install chromium` once.
+
+Implementation notes (gotchas discovered the hard way):
+- `?empty=1` query param is required — index.html auto-racks 8-ball at +100ms otherwise
+- each scenario adds a unique `r=` query param: same-URL-different-hash is a
+  same-document navigation, so `loadStateFromURL()` (runs at +150ms) never re-fires
+- the export button is clicked programmatically (`element.click()` in evaluate);
+  the real button can be zero-size when its palette collapses at headless viewports
+- first-run tour is suppressed via `localStorage['ace-tour-completed']` in addInitScript
+- output SVG is captured from the app's own Export SVG download event, so it is
+  byte-identical to a manual export
+
 ## Development Notes
 
 ### Critical Bugs Fixed

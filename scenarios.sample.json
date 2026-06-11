@@ -1,0 +1,22 @@
+[
+  {
+    "name": "straight-in-corner",
+    "state": "v1|cue:30,15|1:65,32.5|p:cbr|b:1|m:9ball|f:5|e:0.0,0.0|s:auto"
+  },
+  {
+    "name": "thirty-degree-cut-side",
+    "state": "v1|cue:30,35|1:50,12|p:stop|b:1|m:9ball|f:5|e:0.0,0.0|s:auto"
+  },
+  {
+    "name": "kick-one-rail",
+    "state": "v1|cue:20,25|1:70,25|2:45,25|p:cbr|b:1|m:9ball|f:7|e:0.0,0.0|s:kick"
+  },
+  {
+    "name": "bank-cross-side",
+    "state": "v1|cue:25,40|1:50,35|p:stop|b:1|m:9ball|f:6|e:0.0,0.0|s:bank"
+  },
+  {
+    "name": "combo-nine-ball",
+    "state": "v1|cue:20,40|1:55,30|9:70,22|p:cbr|b:9|m:9ball|f:6|e:0.0,0.0|s:combo"
+  }
+]

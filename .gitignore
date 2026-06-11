@@ -36,3 +36,8 @@ npm-debug.log*
 .tmp/
 tmp/
 *.tmp
+
+# Batch-rendered scenario outputs
+diagrams/
+diagrams-print/
+diagrams-white/
