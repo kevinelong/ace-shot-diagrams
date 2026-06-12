@@ -7328,6 +7328,40 @@
       }
 
       // Capture current state for URL encoding
+      // ── Declarative annotations ──
+      // Text labels placed in table coordinates, carried in the URL state
+      // (segment `a:Text@x,y;Text2@x,y`) so a scenario string fully describes
+      // a teaching diagram, captions included. Rendered into a layer on the
+      // connection overlay, so they ride along into SVG/PNG exports.
+      let annotationState = [];  // [{ text, x, y }]
+
+      function renderAnnotations() {
+        const overlay = document.getElementById('connection-overlay');
+        let g = document.getElementById('layer-annotations');
+        if (!g) {
+          g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          g.setAttribute('id', 'layer-annotations');
+          overlay.appendChild(g);
+        }
+        while (g.firstChild) g.removeChild(g.firstChild);
+
+        for (const a of annotationState) {
+          const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          t.setAttribute('x', a.x);
+          t.setAttribute('y', a.y);
+          t.setAttribute('text-anchor', 'middle');
+          t.setAttribute('font-family', 'Arial, sans-serif');
+          t.setAttribute('font-size', '2.4');
+          t.setAttribute('font-weight', 'bold');
+          t.setAttribute('fill', '#111111');
+          t.setAttribute('stroke', '#ffffff');
+          t.setAttribute('stroke-width', '0.45');
+          t.setAttribute('paint-order', 'stroke');
+          t.textContent = a.text;
+          g.appendChild(t);
+        }
+      }
+
       function captureState() {
         const state = {
           v: 1,
@@ -7337,7 +7371,8 @@
           mode: currentGameMode.id,
           power: shotForce,
           english: { x: contactOffset.x, y: contactOffset.y },
-          solver: currentSolverMode
+          solver: currentSolverMode,
+          annotations: annotationState
         };
 
         // Only include balls that are on the table
@@ -7367,6 +7402,11 @@
         parts.push(`e:${state.english.x.toFixed(1)},${state.english.y.toFixed(1)}`);
         parts.push(`s:${state.solver}`);
 
+        // Annotations: a:Text@x,y;Text2@x,y (text must avoid | ; @)
+        if (state.annotations && state.annotations.length) {
+          parts.push('a:' + state.annotations.map(a => `${a.text}@${a.x},${a.y}`).join(';'));
+        }
+
         return parts.join('|');
       }
 
@@ -7394,6 +7434,18 @@
             state.english = { x: ex, y: ey };
           } else if (part.startsWith('s:')) {
             state.solver = part.slice(2);
+          } else if (part.startsWith('a:')) {
+            state.annotations = [];
+            for (const entry of part.slice(2).split(';')) {
+              const at = entry.lastIndexOf('@');
+              if (at < 1) continue;
+              const [x, y] = entry.slice(at + 1).split(',').map(parseFloat);
+              if (isNaN(x) || isNaN(y)) continue;
+              // location.hash arrives percent-encoded (spaces -> %20)
+              let text = entry.slice(0, at);
+              try { text = decodeURIComponent(text); } catch (e) { /* keep raw */ }
+              state.annotations.push({ text, x, y });
+            }
           } else if (part.includes(':')) {
             // Ball position
             const [id, coords] = part.split(':');
@@ -7449,6 +7501,10 @@
           contactPoint.setAttribute('cy', contactOffset.y);
           updateSpinDisplay(getSpinType(contactOffset));
         }
+
+        // Set annotations
+        annotationState = state.annotations || [];
+        renderAnnotations();
 
         // Set solver mode
         if (state.solver) {
@@ -9020,9 +9076,50 @@
         shotAnimationFrames = 0;
         shotLastTime = null;
         shotAccumulator = 0;
+        window.ACE_SHOT = { events: [], initial: snapshotShotBalls(), final: null, done: false };
         isShotAnimating = true;
         shotAnimationId = requestAnimationFrame(animateShot);
       }
+
+      // ── Shot event recording ──
+      // window.ACE_SHOT collects discrete physics events (ball contacts,
+      // rail bounces, pockets) with full position snapshots while a shot
+      // runs. External harnesses (render-impacts.js) use it to produce
+      // before / impact / rest keyframes without watching the animation.
+      function snapshotShotBalls() {
+        const snap = {};
+        for (const id in shotBallStates) {
+          const b = shotBallStates[id];
+          if (!b) continue;
+          snap[id] = {
+            x: Math.round(b.x * 100) / 100,
+            y: Math.round(b.y * 100) / 100,
+            pocketed: !!b.pocketed
+          };
+        }
+        return snap;
+      }
+
+      function recordShotEvent(type, detail) {
+        if (!window.ACE_SHOT) return;
+        window.ACE_SHOT.events.push(Object.assign({ type, step: shotAnimationFrames, balls: snapshotShotBalls() }, detail));
+      }
+
+      // Pose the table to an arbitrary snapshot (used by frame renderers)
+      window.ACE_POSE = function (balls) {
+        for (const id in balls) {
+          const p = balls[id];
+          const el = document.getElementById(`ball-${id}`);
+          if (!el) continue;
+          if (!p || p.pocketed) {
+            el.style.display = 'none';
+          } else {
+            el.style.display = '';
+            positionBallOnTable(el, p.x, p.y);
+            ballPositions[id] = { x: p.x, y: p.y };
+          }
+        }
+      };
 
       // Advance shot physics by one fixed step (no DOM access)
       function stepShotPhysics() {
@@ -9117,6 +9214,7 @@
                 // Apply empirical break physics instead of sequential collisions
                 const cueBall = shotBallStates['cue'];
                 applyFrozenRackBreakPhysics({ vx: cueBall.vx, vy: cueBall.vy });
+                recordShotEvent('break', { ids: [ballIds[i], ballIds[j]] });
                 return;  // Skip normal collision processing
               }
               collisions.push([ballIds[i], ballIds[j]]);
@@ -9187,6 +9285,8 @@
             ball1.y -= separationY;
             ball2.x += separationX;
             ball2.y += separationY;
+
+            recordShotEvent('ball-ball', { ids: [id1, id2] });
           }
         }
       }
@@ -9211,31 +9311,38 @@
               ball.pocketed = true;
               ball.vx = 0;
               ball.vy = 0;
+              recordShotEvent('pocket', { id: ballId, pocket: pocketName });
               break;
             }
           }
 
           if (ball.pocketed) continue;
 
-          // Rail bounces
+          // Rail bounces (events recorded only for meaningful impact speeds,
+          // so a ball rolling along a cushion doesn't spam the log)
+          const RAIL_EVENT_MIN_SPEED = 0.05;
           if (ball.y - ballR <= RAILS.top.y) {
             ball.y = RAILS.top.y + ballR;
             ball.vy = -ball.vy * BREAK_PHYSICS.RAIL_COR;
+            if (Math.abs(ball.vy) > RAIL_EVENT_MIN_SPEED) recordShotEvent('rail', { id: ballId, rail: 'top' });
           }
 
           if (ball.y + ballR >= RAILS.bottom.y) {
             ball.y = RAILS.bottom.y - ballR;
             ball.vy = -ball.vy * BREAK_PHYSICS.RAIL_COR;
+            if (Math.abs(ball.vy) > RAIL_EVENT_MIN_SPEED) recordShotEvent('rail', { id: ballId, rail: 'bottom' });
           }
 
           if (ball.x - ballR <= RAILS.left.x) {
             ball.x = RAILS.left.x + ballR;
             ball.vx = -ball.vx * BREAK_PHYSICS.RAIL_COR;
+            if (Math.abs(ball.vx) > RAIL_EVENT_MIN_SPEED) recordShotEvent('rail', { id: ballId, rail: 'left' });
           }
 
           if (ball.x + ballR >= RAILS.right.x) {
             ball.x = RAILS.right.x - ballR;
             ball.vx = -ball.vx * BREAK_PHYSICS.RAIL_COR;
+            if (Math.abs(ball.vx) > RAIL_EVENT_MIN_SPEED) recordShotEvent('rail', { id: ballId, rail: 'right' });
           }
         }
       }
@@ -9273,6 +9380,11 @@
       // Finalize ball positions after shot animation
       function finalizeShotPositions() {
         isShotAnimating = false;
+
+        if (window.ACE_SHOT) {
+          window.ACE_SHOT.final = snapshotShotBalls();
+          window.ACE_SHOT.done = true;
+        }
 
         let anyBallMade = false;
         let cueBallScratched = false;

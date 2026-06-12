@@ -34,7 +34,9 @@
   "devDependencies": {
     "@playwright/test": "1.57.0",
     "@types/node": "^20.11.0",
-    "http-server": "^14.1.1"
+    "gifenc": "1.0.3",
+    "http-server": "^14.1.1",
+    "pngjs": "7.0.0"
   },
   "type": "module"
 }

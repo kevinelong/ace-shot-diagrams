@@ -34,6 +34,7 @@ const opt = name => {
 
 const outDir = resolve(opt('--out') ?? 'diagrams')
 const globalTableOnly = flag('--table-only')
+const globalTheme = opt('--theme')
 const globalBg = opt('--bg')
 const wantPng = !flag('--no-png')
 const PNG_WIDTH = parseInt(opt('--png-width') ?? '1600', 10)
@@ -72,6 +73,38 @@ function recolorBackground(svg, color) {
   return svg.replace(/(<rect x="-8" y="-8" width="116" height="\d+" fill=")#1a1a2e(")/, `$1${color}$2`)
 }
 
+// ---- print theme ----
+// Brochure palette and dash patterns from the AceShot trifold
+// (Dropbox INDESIGN_SETUP_GUIDE.txt), applied by element id so it
+// survives any future color changes in the app's screen theme.
+const PRINT_THEME = {
+  'cue-ghost-line': { stroke: '#c09820', dash: '1.6,0.6,0.4,0.6' }, // aim line - gold dash-dot
+  'actual-kick-path': { stroke: '#c09820', dash: '1.6,0.6,0.4,0.6' }, // kick aim - same as aim
+  'target-line': { stroke: '#e84030', dash: '2,0.8' },              // pocket line - red dash
+  'obj-ball-path': { stroke: '#e84030', dash: null },               // OB path - red solid
+  'cue-ball-path': { stroke: '#2266bb', dash: null },               // CB path - blue solid
+  'tangent-line': { stroke: '#339944', dash: '1,1' },               // tangent - green dash
+  'follow-line': { stroke: '#2266bb', dash: '0.6,0.6' },            // follow - blue dots
+  'draw-line': { stroke: '#dd6633', dash: '1.2,0.6,0.4,0.6' },      // draw - orange dash-dot
+}
+
+function restyleById(svg, id, stroke, dash) {
+  return svg.replace(new RegExp(`<(line|path)([^>]*id="${id}"[^>]*?)\\s*/?>`), (m, tag, attrs) => {
+    let a = attrs
+      .replace(/\s+stroke="[^"]*"/, ` stroke="${stroke}"`)
+      .replace(/\s+stroke-dasharray="[^"]*"/, '')
+    if (dash) a += ` stroke-dasharray="${dash}"`
+    return m.endsWith('/>') ? `<${tag}${a}/>` : `<${tag}${a}>`
+  })
+}
+
+function applyPrintTheme(svg) {
+  for (const [id, s] of Object.entries(PRINT_THEME)) {
+    svg = restyleById(svg, id, s.stroke, s.dash)
+  }
+  return svg
+}
+
 // ---- main ----
 const indexUrl = pathToFileURL(join(__dirname, 'index.html')).href
 
@@ -87,7 +120,9 @@ for (const sc of scenarios) {
   const name = sc.name ?? `scenario-${results.length + 1}`
   const state = sc.state.startsWith('#') ? sc.state.slice(1) : sc.state
   const tableOnly = sc.tableOnly ?? globalTableOnly
-  const bg = sc.bg ?? globalBg
+  const theme = sc.theme ?? globalTheme
+  // print theme defaults to a white page unless a bg is given explicitly
+  const bg = sc.bg ?? globalBg ?? (theme === 'print' ? '#ffffff' : undefined)
 
   // ?empty=1 skips the auto-rack on init (index.html racks at +100ms otherwise,
   // burying the scenario balls); the r= cache-buster makes each goto a full
@@ -107,6 +142,7 @@ for (const sc of scenarios) {
   let svg = readFileSync(tmpPath, 'utf-8')
 
   if (tableOnly) svg = cropToTable(svg)
+  if (theme === 'print') svg = applyPrintTheme(svg)
   if (bg) svg = recolorBackground(svg, bg)
 
   const svgPath = join(outDir, `${name}.svg`)

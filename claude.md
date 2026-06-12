@@ -145,6 +145,30 @@ Flags: `--table-only` (crop off the info panels, viewBox -8 -8 116 66), `--bg <c
 Per-scenario JSON fields `tableOnly` and `bg` override the global flags.
 Requires `npm install --ignore-scripts` + `npx playwright install chromium` once.
 
+### Annotations in the state encoding
+The URL state supports a labels segment: `a:Text@x,y;Text2@x,y` (table
+coordinates; text must avoid `|` `;` `@`, spaces fine — percent-decoding is
+handled). Rendered as outlined bold text into `#layer-annotations` on the
+connection overlay, so labels appear in SVG/PNG exports. Example:
+`...|s:auto|a:Aim Line@38,21;Ghost Ball@45,17.5`
+
+### Print theme
+`--theme print` (or per-scenario `"theme": "print"`) restyles exported shot
+lines by element id to the AceShot brochure palette (aim gold #c09820
+dash-dot, pocket/OB red #e84030, CB/follow blue #2266bb, tangent green
+#339944, draw orange #dd6633 — see PRINT_THEME in render-scenarios.js) and
+defaults the page background to white.
+
+### Impact keyframes & GIFs (render-impacts.js)
+`node render-impacts.js --state "<state>" --name <name> [--out impacts]
+[--width 480] [--max-frames 8] [--no-gif]` runs the shot through the real
+physics headless and outputs numbered keyframe PNGs — before, each moment
+of impact, rest — plus a slow-motion looping GIF. Powered by hooks in
+index.html: `window.ACE_SHOT` (event log with ball snapshots, recorded in
+checkShotCollisions/checkShotRailCollisions, `done` flag set in
+finalizeShotPositions) and `window.ACE_POSE(balls)` (pose table to a
+snapshot). Events: `ball-ball`, `rail` (speed-gated), `pocket`, `break`.
+
 Implementation notes (gotchas discovered the hard way):
 - `?empty=1` query param is required — index.html auto-racks 8-ball at +100ms otherwise
 - each scenario adds a unique `r=` query param: same-URL-different-hash is a
