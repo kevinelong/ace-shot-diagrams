@@ -8669,6 +8669,23 @@
         cue.style.visibility = 'hidden';
       }
 
+      // ══════════════════════════════════════════════════════════════════
+      //  DEAD CODE — legacy break animation system (commented out)
+      //
+      //  Nothing calls animateBreak(). Breaks run through the live shot
+      //  pipeline: executeShot → animateShot → stepShotPhysics, where
+      //  frozenRackPending triggers applyFrozenRackBreakPhysics on first
+      //  cue contact. This whole chain (checkBallCollisions,
+      //  checkRailCollisions, isBallInPocket, updateBreakPhysics,
+      //  animateBreak, finalizeBreakPositions) is only referenced
+      //  internally by itself.
+      //
+      //  It also predates the fixed-timestep refactor (one step per rAF
+      //  frame, no interpolation, no anti-tunneling substeps) — if ever
+      //  revived, port it to the accumulator pattern used by animateShot.
+      //  Kept for reference; safe to delete.
+      // ══════════════════════════════════════════════════════════════════
+      /*
       // Ball-ball collision detection and response
       // Uses multiple iterations to simulate momentum propagation through frozen rack
       // Key insight: In a frozen rack, momentum cascades through touching balls almost instantly
@@ -8913,6 +8930,8 @@
         updateCueGhostLine();
         showToast('Break complete!');
       }
+      */
+      // ════════════════════ end dead break animation ════════════════════
 
       // ========== REGULAR SHOT ANIMATION SYSTEM ==========
       // Adapts break physics for controlled single-ball shots
