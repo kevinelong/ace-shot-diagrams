@@ -8329,6 +8329,15 @@
         COLLISION_ITERATIONS: 8    // Multiple passes for frozen rack momentum propagation
       };
 
+      // Fixed-timestep animation timing. The physics constants above are tuned
+      // per-step at FRAME_RATE steps/sec; the accumulator in animateShot keeps
+      // the step count tied to wall-clock time, so playback speed no longer
+      // depends on the display refresh rate (rAF fires at 120/144Hz+ on many
+      // monitors, which used to run the whole simulation that much faster).
+      const PHYSICS_STEP_MS = 1000 / BREAK_PHYSICS.FRAME_RATE;
+      const MAX_FRAME_MS = 100;                      // clamp stalls (tab switch, GC pause)
+      const MAX_SUBSTEP_TRAVEL = BALL_RADIUS * 0.9;  // anti-tunneling cap on movement per collide pass
+
       // Ball state during animation
       let breakBallStates = {};    // { ballId: { x, y, vx, vy } }
       let breakAnimationId = null;
@@ -8339,7 +8348,7 @@
       let shotAnimationId = null;
       let isShotAnimating = false;
       let shotAnimationFrames = 0;
-      const MAX_SHOT_FRAMES = 120; // ~2 seconds at 60fps - ensures completion in tests
+      const MAX_SHOT_FRAMES = 120; // physics steps (2s at 60 steps/sec) - ensures completion in tests
       let isBreakSetup = false;  // Flag to prevent ghost ball clearing during break setup
       let frozenRackPending = false;  // Flag to apply empirical break physics on first contact
       let rackBallPositions = {};  // Store rack positions with row/col for break physics
@@ -8990,28 +8999,50 @@
 
         // Start physics simulation
         shotAnimationFrames = 0;
+        shotLastTime = null;
+        shotAccumulator = 0;
         isShotAnimating = true;
-        animateShot();
+        shotAnimationId = requestAnimationFrame(animateShot);
       }
 
-      // Update physics for shot animation (similar to updateBreakPhysics)
-      function updateShotPhysics() {
+      // Advance shot physics by one fixed step (no DOM access)
+      function stepShotPhysics() {
         let anyMoving = false;
 
-        // Apply friction and update positions
+        // Record previous positions for render interpolation, and find the
+        // fastest ball to size anti-tunneling substeps: at full power a ball
+        // covers several units per step — more than a ball diameter — and a
+        // single move-then-check pass lets it pass through balls and pockets
+        let maxSpeed = 0;
+        for (const ballId in shotBallStates) {
+          const ball = shotBallStates[ballId];
+          if (!ball || ball.pocketed) continue;
+          ball.prevX = ball.x;
+          ball.prevY = ball.y;
+          const speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
+          if (speed > maxSpeed) maxSpeed = speed;
+        }
+        const substeps = Math.max(1, Math.ceil(maxSpeed / MAX_SUBSTEP_TRAVEL));
+
+        for (let s = 0; s < substeps; s++) {
+          for (const ballId in shotBallStates) {
+            const ball = shotBallStates[ballId];
+            if (!ball || ball.pocketed) continue;
+            ball.x += ball.vx / substeps;
+            ball.y += ball.vy / substeps;
+          }
+          checkShotCollisions();
+          checkShotRailCollisions();
+        }
+
+        // Friction once per step, so decay matches the original per-frame tuning
         for (const ballId in shotBallStates) {
           const ball = shotBallStates[ballId];
           if (!ball || ball.pocketed) continue;
 
-          // Apply velocity
-          ball.x += ball.vx;
-          ball.y += ball.vy;
-
-          // Apply friction
           ball.vx *= BREAK_PHYSICS.FRICTION;
           ball.vy *= BREAK_PHYSICS.FRICTION;
 
-          // Check if still moving
           const speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
           if (speed > BREAK_PHYSICS.MIN_VELOCITY) {
             anyMoving = true;
@@ -9021,26 +9052,27 @@
           }
         }
 
-        // Check collisions (reuse break physics functions)
-        checkShotCollisions();
-        checkShotRailCollisions();
+        return anyMoving;
+      }
 
-        // Update visual positions
+      // Draw balls interpolated between the previous and current physics step
+      // (alpha 0..1), decoupling render rate from the fixed physics rate
+      function renderShotBalls(alpha) {
         for (const ballId in shotBallStates) {
           const ball = shotBallStates[ballId];
           if (!ball) continue;
 
           const ballEl = document.getElementById(`ball-${ballId}`);
-          if (ballEl) {
-            if (ball.pocketed) {
-              ballEl.style.display = 'none';
-            } else {
-              positionBallOnTable(ballEl, ball.x, ball.y);
-            }
+          if (!ballEl) continue;
+
+          if (ball.pocketed) {
+            ballEl.style.display = 'none';
+          } else {
+            const px = ball.prevX !== undefined ? ball.prevX : ball.x;
+            const py = ball.prevY !== undefined ? ball.prevY : ball.y;
+            positionBallOnTable(ballEl, px + (ball.x - px) * alpha, py + (ball.y - py) * alpha);
           }
         }
-
-        return anyMoving;
       }
 
       // Check ball-to-ball collisions for shot
@@ -9189,17 +9221,32 @@
         }
       }
 
-      // Animation loop for regular shot
-      function animateShot() {
+      // Animation loop for regular shot: fixed-timestep accumulator.
+      // Physics advances in PHYSICS_STEP_MS steps regardless of how often
+      // rAF fires; leftover time becomes the render interpolation alpha.
+      let shotLastTime = null;
+      let shotAccumulator = 0;
+
+      function animateShot(timestamp) {
         if (!isShotAnimating) return;
 
-        shotAnimationFrames++;
-        const stillMoving = updateShotPhysics();
+        if (shotLastTime === null) shotLastTime = timestamp;
+        shotAccumulator += Math.min(timestamp - shotLastTime, MAX_FRAME_MS);
+        shotLastTime = timestamp;
+
+        let stillMoving = true;
+        while (stillMoving && shotAccumulator >= PHYSICS_STEP_MS && shotAnimationFrames < MAX_SHOT_FRAMES) {
+          stillMoving = stepShotPhysics();
+          shotAnimationFrames++;
+          shotAccumulator -= PHYSICS_STEP_MS;
+        }
 
         if (stillMoving && shotAnimationFrames < MAX_SHOT_FRAMES) {
+          renderShotBalls(Math.min(1, shotAccumulator / PHYSICS_STEP_MS));
           shotAnimationId = requestAnimationFrame(animateShot);
         } else {
-          // Animation complete - finalize positions
+          // Animation complete - snap to exact physics positions and finalize
+          renderShotBalls(1);
           finalizeShotPositions();
         }
       }
@@ -9250,25 +9297,30 @@
         }
       }
 
-      // Animate cue stroke
+      // Animate cue stroke (time-based, so stroke speed is refresh-rate independent)
       async function animateCueStroke(cuePos, targetPos, english) {
         return new Promise(resolve => {
           const pullbackDist = 8;
           const strikeDist = 2;
-          const steps = 20;
-          let step = 0;
+          // Match the original 10+10 frame timing at 60fps
+          const PULL_MS = 167;
+          const STRIKE_MS = 167;
+          let startTime = null;
 
-          function animate() {
-            if (step <= steps / 2) {
+          function animate(now) {
+            if (startTime === null) startTime = now;
+            const t = now - startTime;
+
+            if (t <= PULL_MS) {
               // Pullback phase
-              const progress = step / (steps / 2);
+              const progress = t / PULL_MS;
               const pullback = pullbackDist * progress + strikeDist;
               positionCueStick(cuePos, targetPos, pullback);
-            } else if (step <= steps) {
+            } else {
               // Strike phase
-              const progress = (step - steps / 2) / (steps / 2);
+              const progress = (t - PULL_MS) / STRIKE_MS;
               const pullback = pullbackDist * (1 - progress * 2) + strikeDist;
-              if (pullback < 0) {
+              if (pullback < 0 || t > PULL_MS + STRIKE_MS) {
                 // Contact! Start ball movement
                 resolve();
                 return;
@@ -9276,15 +9328,10 @@
               positionCueStick(cuePos, targetPos, Math.max(0, pullback));
             }
 
-            step++;
-            if (step <= steps) {
-              requestAnimationFrame(animate);
-            } else {
-              resolve();
-            }
+            requestAnimationFrame(animate);
           }
 
-          animate();
+          requestAnimationFrame(animate);
         });
       }
 
