@@ -109,6 +109,10 @@ Pool table SVG template for creating interactive shot diagrams with physics-base
 - Ball friction: 0.2, Rail bounce: 0.85
 - Throw calculation for spin transfer
 - Cue ball path with draw/follow curve effect
+- Fixed-timestep animation (60 physics steps/sec via accumulator) with render
+  interpolation — refresh-rate independent; movement substeps capped at ~0.9
+  ball radius per collide pass to prevent tunneling at break speeds.
+  Smoke test: `node verify-animation.js`
 
 ## Usage
 
