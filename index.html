@@ -2973,6 +2973,8 @@
             </div>
             <div class="info-row"><span class="info-label">Make %:</span> <span id="makeProbabilityDisplay"
                 style="font-weight:bold;color:#0f8;">--</span></div>
+            <div class="info-row"><span class="info-label" title="Monte Carlo over the physics core">Sim %:</span>
+                <span id="simMakeDisplay" style="font-weight:bold;color:#0f8;">--</span></div>
           </div>
           <!-- Difficulty Bar -->
           <div class="difficulty-bar" style="margin-top:12px;padding-top:10px;">
@@ -3133,6 +3135,8 @@
         </div>
         <div class="info-row"><span class="info-label">Make %:</span> <span id="makeProbabilityDisplay"
             style="font-weight:bold;color:#0f8;">--</span></div>
+        <div class="info-row"><span class="info-label" title="Monte Carlo over the physics core">Sim %:</span>
+            <span id="simMakeDisplay" style="font-weight:bold;color:#0f8;">--</span></div>
       </div>
       <!-- Difficulty Bar -->
       <div class="difficulty-bar" style="margin-top:12px;padding-top:10px;">
@@ -8464,6 +8468,79 @@
         else display.style.color = '#f44';
       }
 
+      // ── Live Monte Carlo make % (empirical, from the physics core) ──
+      // Fires a small batch of aim-perturbed strokes through the embedded
+      // wasm and reports how often the target ball drops in the chosen pocket.
+      // Direct shots only (kick/bank/combo aim isn't modeled here). Debounced
+      // so dragging stays smooth; the core resolves each trial in microseconds.
+      const SIM_MAKE_N = 120;
+      const SIM_MAKE_SIGMA = 1.0 * Math.PI / 180; // aim error std dev
+      let simMakeTimer = null;
+
+      function gaussRand() {
+        let u = 0, v = 0;
+        while (u === 0) u = Math.random();
+        while (v === 0) v = Math.random();
+        return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+      }
+
+      function updateSimMakeProbability(shotData) {
+        const nodes = document.querySelectorAll('#simMakeDisplay');
+        const setText = (txt, color) => nodes.forEach(n => { n.textContent = txt; n.style.color = color; });
+
+        const direct = shotData && shotData.isReady &&
+          !shotData.isKickShot && !shotData.isBankShot && !shotData.isComboShot;
+        if (!direct || !selectedBallId || !selectedPocket ||
+            !ballPositions[selectedBallId] || !ballPositions['cue']) {
+          setText('--', '#888');
+          return;
+        }
+
+        clearTimeout(simMakeTimer);
+        setText('…', '#888');
+        simMakeTimer = setTimeout(async () => {
+          const ex = await loadAcePhysics();
+          if (!ex) { setText('n/a', '#888'); return; }
+          const ob = ballPositions[selectedBallId];
+          const pk = pocketCenters[selectedPocket];
+          if (!pk) { setText('--', '#888'); return; }
+          const pd = Math.hypot(pk.x - ob.x, pk.y - ob.y) || 1;
+          const ghost = {
+            x: ob.x - (pk.x - ob.x) / pd * BALL_RADIUS * 2,
+            y: ob.y - (pk.y - ob.y) / pd * BALL_RADIUS * 2
+          };
+          const cue = ballPositions['cue'];
+          const base = Math.atan2(ghost.y - cue.y, ghost.x - cue.x);
+          const speed = shotForce * 0.75 * 60;
+          const english = { x: contactOffset.x, y: contactOffset.y };
+
+          // only cue + numbered balls (aceSimulate maps ids via parseInt)
+          const onTable = Object.keys(ballPositions).filter(id =>
+            ballPositions[id] && (id === 'cue' || /^\d+$/.test(id)));
+
+          let make = 0;
+          for (let i = 0; i < SIM_MAKE_N; i++) {
+            const ang = base + gaussRand() * SIM_MAKE_SIGMA;
+            const balls = {};
+            for (const id of onTable) {
+              const b = ballPositions[id];
+              balls[id] = id === 'cue'
+                ? { x: b.x, y: b.y, vx: Math.cos(ang) * speed, vy: Math.sin(ang) * speed }
+                : { x: b.x, y: b.y };
+            }
+            let r;
+            try { r = aceSimulate(balls, english); } catch (e) { setText('n/a', '#888'); return; }
+            if (!r || r.error) { setText('n/a', '#888'); return; }
+            const pocketed = r.events.filter(e => e.type === 'pocket');
+            if (pocketed.some(e => e.id === 'cue')) continue; // scratch = miss
+            if (pocketed.some(e => e.id === selectedBallId && e.pocket === selectedPocket)) make++;
+          }
+          const pct = Math.round(make / SIM_MAKE_N * 100);
+          const col = pct >= 80 ? '#0f8' : pct >= 60 ? '#8f0' : pct >= 40 ? '#ff0' : pct >= 20 ? '#f80' : '#f44';
+          setText(pct + '%', col);
+        }, 120);
+      }
+
       // ========== RANDOM RACK WITH BREAK ANIMATION ==========
 
       // Physics constants for break simulation
@@ -10162,6 +10239,7 @@
       updatePaletteDisplays = function (shotData) {
         origUpdatePaletteDisplays(shotData);
         updateMakeProbability(shotData);
+        updateSimMakeProbability(shotData);
       };
 
       // ========== FIRST-TIME USER TOUR SYSTEM ==========
