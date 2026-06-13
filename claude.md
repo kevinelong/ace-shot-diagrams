@@ -146,11 +146,48 @@ Per-scenario JSON fields `tableOnly` and `bg` override the global flags.
 Requires `npm install --ignore-scripts` + `npx playwright install chromium` once.
 
 ### Annotations in the state encoding
-The URL state supports a labels segment: `a:Text@x,y;Text2@x,y` (table
-coordinates; text must avoid `|` `;` `@`, spaces fine — percent-decoding is
-handled). Rendered as outlined bold text into `#layer-annotations` on the
-connection overlay, so labels appear in SVG/PNG exports. Example:
-`...|s:auto|a:Aim Line@38,21;Ghost Ball@45,17.5`
+The URL state supports an annotations segment (table coordinates; text must
+avoid `|` `;` `@`, spaces fine — entries are percent-decoded whole):
+- `Text@x,y` — outlined bold label
+- `Text@x,y>tx,ty` — label + leader line with a dot at the target
+- `Text@cx,cy*r,a1,a2` — angle arc (degrees, 0°=+x, y-down), label at mid-arc
+
+Rendered into `#layer-annotations` on the connection overlay, so they appear
+in SVG/PNG exports. Example:
+`...|s:auto|a:Aim Line@29,27>38.3,25.8;30@50,12*5.5,-90,-46`
+
+### Consistency battery (verify-consistency.js)
+`tests/battery.json` holds solver-makeable shots; `node verify-consistency.js`
+runs each through the real physics headless and asserts the intended ball
+drops in the intended pocket (or `expectHit` contact for kicks). This is the
+acceptance spec for any physics change — keep it green. It caught: rail
+double-radius, walls across pocket mouths, ghost-ball visual offset in the
+aim, mid-penetration collision normals, dead english branch, and the
+non-COR-aware kick/bank mirror.
+
+### Curriculum figures
+`scenarios/curriculum.json` — 12 named annotated teaching positions.
+Regenerate all print figures:
+`node render-scenarios.js scenarios/curriculum.json --out diagrams-curriculum --table-only --theme print`
+
+### Rust physics core (ace-physics/)
+Event-driven continuous-time sim matching the JS semantics (same friction/
+COR/pockets/english) with exact event times — no tunneling by construction.
+With uniform exponential friction, positions are linear in warped time
+τ = (1−e^(−λt))/λ, so contacts/rails/pockets are closed-form quadratic solves.
+A battery shot resolves in ~2 events instead of ~120 timesteps (microseconds
+per sim — Monte Carlo ready).
+
+ZERO dependencies on purpose: proc-macro crates (serde/wasm-bindgen) need a
+host MSVC linker just to build; with none, the wasm builds with bundled
+rust-lld alone:
+`cargo build --release --target wasm32-unknown-unknown` (in ace-physics/)
+ABI: `alloc_f64(n)` + `simulate_raw(ptr,len)` -> packed u64 (ptr<<32|len) of
+a JSON string; flat-f64 input (see verify-rust-parity.js for the loader).
+Validate: `node verify-rust-parity.js` (battery through the wasm).
+`cargo test` has native unit tests but needs MSVC Build Tools installed.
+Future: browser integration via base64-embedded wasm, spin/curve model,
+Monte Carlo make-percentage.
 
 ### Print theme
 `--theme print` (or per-scenario `"theme": "print"`) restyles exported shot

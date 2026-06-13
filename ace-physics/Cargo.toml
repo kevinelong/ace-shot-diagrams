@@ -1,0 +1,18 @@
+[package]
+name = "ace-physics"
+version = "0.1.0"
+edition = "2021"
+description = "Event-driven continuous-time billiards physics core for ACE Shot Diagrams"
+license = "MIT"
+
+# Zero dependencies on purpose: proc-macro crates (serde, wasm-bindgen)
+# require a host linker (MSVC on Windows) just to build their macros.
+# With no deps, `cargo build --target wasm32-unknown-unknown` links with
+# the bundled rust-lld and needs no native toolchain at all.
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+opt-level = "s"
+lto = true

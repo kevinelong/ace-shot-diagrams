@@ -2,6 +2,13 @@
 
 Five phases, executed in order, each gated by its own test before commit.
 
+**Status: all five phases complete.** Battery 9/9 (verify-consistency.js),
+Rust parity 8/8 (verify-rust-parity.js), animation smoke test passing.
+Phase-5 note: the crate ended up ZERO-dependency (no serde/wasm-bindgen)
+because proc-macros need a host MSVC linker, which this machine lacks —
+the wasm builds with bundled rust-lld alone and speaks a flat-f64/JSON ABI.
+Native `cargo test` unit tests exist but require MSVC Build Tools.
+
 ## Phase 1 — Sim/solver consistency (truthfulness)
 **Problem:** the solver rates shots "makeable" that the simulation then misses
 (observed: a straight-in banked off three rails). Prime suspect: the physics

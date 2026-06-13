@@ -43,3 +43,7 @@ diagrams-print/
 diagrams-white/
 impacts/
 diagrams-curriculum/
+
+# Rust build artifacts
+ace-physics/target/
+ace-physics/pkg/
