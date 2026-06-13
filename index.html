@@ -7337,26 +7337,30 @@
 
       // Capture current state for URL encoding
       // ── Declarative annotations ──
-      // Text labels placed in table coordinates, carried in the URL state
-      // (segment `a:Text@x,y;Text2@x,y`) so a scenario string fully describes
-      // a teaching diagram, captions included. Rendered into a layer on the
+      // Carried in the URL state so a scenario string fully describes a
+      // teaching diagram, captions included. Entry grammar (joined with ;):
+      //   Text@x,y            label
+      //   Text@x,y>tx,ty      label + leader line to a target point
+      //   Text@cx,cy*r,a1,a2  angle arc (degrees, label at mid-arc)
+      // Text must avoid | ; @ (spaces fine). Rendered into a layer on the
       // connection overlay, so they ride along into SVG/PNG exports.
-      let annotationState = [];  // [{ text, x, y }]
+      let annotationState = [];  // [{ type, text, ... }]
 
       function renderAnnotations() {
         const overlay = document.getElementById('connection-overlay');
+        const NS = 'http://www.w3.org/2000/svg';
         let g = document.getElementById('layer-annotations');
         if (!g) {
-          g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          g = document.createElementNS(NS, 'g');
           g.setAttribute('id', 'layer-annotations');
           overlay.appendChild(g);
         }
         while (g.firstChild) g.removeChild(g.firstChild);
 
-        for (const a of annotationState) {
-          const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-          t.setAttribute('x', a.x);
-          t.setAttribute('y', a.y);
+        const addText = (text, x, y) => {
+          const t = document.createElementNS(NS, 'text');
+          t.setAttribute('x', x);
+          t.setAttribute('y', y);
           t.setAttribute('text-anchor', 'middle');
           t.setAttribute('font-family', 'Arial, sans-serif');
           t.setAttribute('font-size', '2.4');
@@ -7365,8 +7369,60 @@
           t.setAttribute('stroke', '#ffffff');
           t.setAttribute('stroke-width', '0.45');
           t.setAttribute('paint-order', 'stroke');
-          t.textContent = a.text;
+          t.textContent = text;
           g.appendChild(t);
+        };
+        // dark stroke over a wider white casing keeps lines legible on any felt
+        const addStroke = (el) => {
+          const casing = el.cloneNode(true);
+          casing.setAttribute('stroke', '#ffffff');
+          casing.setAttribute('stroke-width', '0.55');
+          g.appendChild(casing);
+          el.setAttribute('stroke', '#111111');
+          el.setAttribute('stroke-width', '0.2');
+          g.appendChild(el);
+        };
+
+        for (const a of annotationState) {
+          if (a.type === 'arc') {
+            const rad = d => d * Math.PI / 180;
+            const sx = a.cx + a.r * Math.cos(rad(a.a1));
+            const sy = a.cy + a.r * Math.sin(rad(a.a1));
+            const ex = a.cx + a.r * Math.cos(rad(a.a2));
+            const ey = a.cy + a.r * Math.sin(rad(a.a2));
+            const large = Math.abs(a.a2 - a.a1) > 180 ? 1 : 0;
+            const sweep = a.a2 > a.a1 ? 1 : 0;
+            const p = document.createElementNS(NS, 'path');
+            p.setAttribute('d', `M ${sx} ${sy} A ${a.r} ${a.r} 0 ${large} ${sweep} ${ex} ${ey}`);
+            p.setAttribute('fill', 'none');
+            p.setAttribute('stroke-linecap', 'round');
+            addStroke(p);
+            const mid = rad((a.a1 + a.a2) / 2);
+            addText(a.text, a.cx + (a.r + 2.2) * Math.cos(mid), a.cy + (a.r + 2.2) * Math.sin(mid) + 0.8);
+          } else {
+            if (a.type === 'leader') {
+              // start the leader a little off the label so it doesn't overlap
+              const ldx = a.tx - a.x;
+              const ldy = a.ty - a.y;
+              const ld = Math.sqrt(ldx * ldx + ldy * ldy) || 1;
+              const l = document.createElementNS(NS, 'line');
+              l.setAttribute('x1', a.x + (ldx / ld) * 1.6);
+              l.setAttribute('y1', a.y + (ldy / ld) * 1.6);
+              l.setAttribute('x2', a.tx);
+              l.setAttribute('y2', a.ty);
+              l.setAttribute('stroke-linecap', 'round');
+              addStroke(l);
+              const dot = document.createElementNS(NS, 'circle');
+              dot.setAttribute('cx', a.tx);
+              dot.setAttribute('cy', a.ty);
+              dot.setAttribute('r', '0.4');
+              dot.setAttribute('fill', '#111111');
+              dot.setAttribute('stroke', '#ffffff');
+              dot.setAttribute('stroke-width', '0.18');
+              g.appendChild(dot);
+            }
+            addText(a.text, a.x, a.y);
+          }
         }
       }
 
@@ -7410,9 +7466,14 @@
         parts.push(`e:${state.english.x.toFixed(1)},${state.english.y.toFixed(1)}`);
         parts.push(`s:${state.solver}`);
 
-        // Annotations: a:Text@x,y;Text2@x,y (text must avoid | ; @)
+        // Annotations (text must avoid | ; @): label Text@x,y,
+        // leader Text@x,y>tx,ty, arc Text@cx,cy*r,a1,a2
         if (state.annotations && state.annotations.length) {
-          parts.push('a:' + state.annotations.map(a => `${a.text}@${a.x},${a.y}`).join(';'));
+          parts.push('a:' + state.annotations.map(a =>
+            a.type === 'arc' ? `${a.text}@${a.cx},${a.cy}*${a.r},${a.a1},${a.a2}`
+              : a.type === 'leader' ? `${a.text}@${a.x},${a.y}>${a.tx},${a.ty}`
+              : `${a.text}@${a.x},${a.y}`
+          ).join(';'));
         }
 
         return parts.join('|');
@@ -7444,15 +7505,34 @@
             state.solver = part.slice(2);
           } else if (part.startsWith('a:')) {
             state.annotations = [];
-            for (const entry of part.slice(2).split(';')) {
-              const at = entry.lastIndexOf('@');
+            for (let entry of part.slice(2).split(';')) {
+              // location.hash arrives percent-encoded (spaces -> %20,
+              // the leader '>' -> %3E) - decode the whole entry first
+              try { entry = decodeURIComponent(entry); } catch (e) { /* keep raw */ }
+              const at = entry.indexOf('@');
               if (at < 1) continue;
-              const [x, y] = entry.slice(at + 1).split(',').map(parseFloat);
-              if (isNaN(x) || isNaN(y)) continue;
-              // location.hash arrives percent-encoded (spaces -> %20)
-              let text = entry.slice(0, at);
-              try { text = decodeURIComponent(text); } catch (e) { /* keep raw */ }
-              state.annotations.push({ text, x, y });
+              const text = entry.slice(0, at);
+              const spec = entry.slice(at + 1);
+
+              if (spec.includes('*')) {
+                // arc: cx,cy*r,a1,a2
+                const [center, arcSpec] = spec.split('*');
+                const [cx, cy] = center.split(',').map(parseFloat);
+                const [r, a1, a2] = arcSpec.split(',').map(parseFloat);
+                if ([cx, cy, r, a1, a2].some(isNaN)) continue;
+                state.annotations.push({ type: 'arc', text, cx, cy, r, a1, a2 });
+              } else if (spec.includes('>')) {
+                // leader: x,y>tx,ty
+                const [pos, target] = spec.split('>');
+                const [x, y] = pos.split(',').map(parseFloat);
+                const [tx, ty] = target.split(',').map(parseFloat);
+                if ([x, y, tx, ty].some(isNaN)) continue;
+                state.annotations.push({ type: 'leader', text, x, y, tx, ty });
+              } else {
+                const [x, y] = spec.split(',').map(parseFloat);
+                if (isNaN(x) || isNaN(y)) continue;
+                state.annotations.push({ type: 'label', text, x, y });
+              }
             }
           } else if (part.includes(':')) {
             // Ball position
