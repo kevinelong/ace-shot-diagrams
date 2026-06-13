@@ -3645,15 +3645,23 @@
         return isPathBlockedByAnyBall(start, end, excludeBallIds).blockingBalls;
       }
 
-      // Mirror a point across a rail for kick shot calculation
+      // Mirror a point across a rail for kick/bank aim calculation.
+      // COR-aware: a cushion bounce damps only the normal velocity component
+      // (v_n *= RAIL_COR), so the rebound is SHALLOWER than the incidence
+      // angle. The virtual target therefore sits 1/COR beyond the rail, not
+      // at the plain mirror distance — a plain mirror makes every kick/bank
+      // land short of where the simulation actually sends the ball. With
+      // axis-aligned rails this stretch compounds exactly across multi-rail
+      // mirrors.
       function mirrorAcrossRail(point, railName) {
         const rail = RAILS[railName];
+        const cor = BREAK_PHYSICS.RAIL_COR;
         if (railName === 'top' || railName === 'bottom') {
-          // Horizontal rail - mirror y coordinate
-          return { x: point.x, y: 2 * rail.y - point.y };
+          // Horizontal rail - reflect y, stretched by 1/COR
+          return { x: point.x, y: rail.y - (point.y - rail.y) / cor };
         } else {
-          // Vertical rail - mirror x coordinate
-          return { x: 2 * rail.x - point.x, y: point.y };
+          // Vertical rail - reflect x, stretched by 1/COR
+          return { x: rail.x - (point.x - rail.x) / cor, y: point.y };
         }
       }
 

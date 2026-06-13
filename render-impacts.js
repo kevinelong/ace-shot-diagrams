@@ -33,6 +33,7 @@ const outDir = resolve(opt('--out') ?? 'impacts')
 const GIF_WIDTH = parseInt(opt('--width') ?? '480', 10)
 const MAX_IMPACT_FRAMES = parseInt(opt('--max-frames') ?? '8', 10)
 const wantGif = !flag('--no-gif')
+const wantTrails = !flag('--no-trails')
 
 let scenarios
 if (opt('--state')) {
@@ -80,6 +81,7 @@ function selectKeyframes(shot, maxFrames) {
     const best = [...c.members].sort((a, b) => PRIORITY[a.type] - PRIORITY[b.type])[0]
     return {
       step: c.step,
+      stepEnd: c.lastStep,
       label: describe(best),
       isRailOnly: c.members.every(m => m.type === 'rail'),
       balls: c.members[c.members.length - 1].balls,
@@ -107,13 +109,89 @@ const HIDE_UI_CSS = `
   { display: none !important; visibility: hidden !important; }
 `
 
-async function poseAndCaption(page, balls, caption) {
-  await page.evaluate(({ balls, caption }) => {
+// Per-ball path polylines from the event log: balls travel in straight
+// lines between recorded events, so [initial, ...event snapshots, final]
+// is each ball's exact trajectory.
+function buildPaths(shot) {
+  const paths = {}
+  const add = (step, balls) => {
+    for (const id in balls) {
+      const b = balls[id]
+      const arr = paths[id] ?? (paths[id] = [])
+      const prev = arr[arr.length - 1]
+      if (prev && Math.abs(prev.x - b.x) < 0.05 && Math.abs(prev.y - b.y) < 0.05) continue
+      arr.push({ step, x: b.x, y: b.y })
+    }
+  }
+  add(-1, shot.initial)
+  for (const e of shot.events) add(e.step, e.balls)
+  add(Number.MAX_SAFE_INTEGER, shot.final)
+  return paths
+}
+
+function trailsUpTo(paths, stepEnd, poseBalls) {
+  const trails = []
+  for (const id in paths) {
+    const pts = paths[id].filter(p => p.step <= stepEnd).map(p => ({ x: p.x, y: p.y }))
+    // end the trail exactly at the ball's posed position for this frame
+    const cur = poseBalls[id]
+    if (cur && !cur.pocketed) {
+      const last = pts[pts.length - 1]
+      if (!last || Math.abs(last.x - cur.x) > 0.05 || Math.abs(last.y - cur.y) > 0.05) {
+        pts.push({ x: cur.x, y: cur.y })
+      }
+    }
+    if (pts.length < 2) continue
+    const span = pts.reduce((s, p, i) => i ? s + Math.hypot(p.x - pts[i - 1].x, p.y - pts[i - 1].y) : 0, 0)
+    if (span < 0.5) continue
+    trails.push({ color: id === 'cue' ? '#f5f5f5' : '#ffd700', pts })
+  }
+  return trails
+}
+
+async function poseAndCaption(page, balls, caption, trails) {
+  await page.evaluate(({ balls, caption, trails }) => {
     window.ACE_POSE(balls)
     const overlay = document.getElementById('connection-overlay')
+    const NS = 'http://www.w3.org/2000/svg'
+
+    let tg = document.getElementById('frame-trails')
+    if (!tg) {
+      tg = document.createElementNS(NS, 'g')
+      tg.setAttribute('id', 'frame-trails')
+      overlay.appendChild(tg)
+    }
+    while (tg.firstChild) tg.removeChild(tg.firstChild)
+    for (const trail of trails) {
+      const pl = document.createElementNS(NS, 'polyline')
+      pl.setAttribute('points', trail.pts.map(p => `${p.x},${p.y}`).join(' '))
+      pl.setAttribute('fill', 'none')
+      pl.setAttribute('stroke', trail.color)
+      pl.setAttribute('stroke-width', '0.35')
+      pl.setAttribute('stroke-opacity', '0.55')
+      pl.setAttribute('stroke-linejoin', 'round')
+      pl.setAttribute('stroke-linecap', 'round')
+      tg.appendChild(pl)
+      // arrowhead on the final segment
+      const n = trail.pts.length
+      const a = trail.pts[n - 2], b = trail.pts[n - 1]
+      const ang = Math.atan2(b.y - a.y, b.x - a.x)
+      for (const off of [0.45, -0.45]) {
+        const l = document.createElementNS(NS, 'line')
+        l.setAttribute('x1', b.x); l.setAttribute('y1', b.y)
+        l.setAttribute('x2', b.x - 1.3 * Math.cos(ang + off))
+        l.setAttribute('y2', b.y - 1.3 * Math.sin(ang + off))
+        l.setAttribute('stroke', trail.color)
+        l.setAttribute('stroke-width', '0.35')
+        l.setAttribute('stroke-opacity', '0.8')
+        l.setAttribute('stroke-linecap', 'round')
+        tg.appendChild(l)
+      }
+    }
+
     let t = document.getElementById('frame-caption')
     if (!t) {
-      t = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+      t = document.createElementNS(NS, 'text')
       t.setAttribute('id', 'frame-caption')
       t.setAttribute('x', '50')
       t.setAttribute('y', '-3.5')
@@ -125,7 +203,7 @@ async function poseAndCaption(page, balls, caption) {
       overlay.appendChild(t)
     }
     t.textContent = caption
-  }, { balls, caption })
+  }, { balls, caption, trails })
 }
 
 async function captureFrame(page, scalePage) {
@@ -166,16 +244,18 @@ for (const sc of scenarios) {
   await page.addStyleTag({ content: HIDE_UI_CSS })
 
   const keyframes = [
-    { label: 'before', balls: shot.initial },
+    { label: 'before', stepEnd: -1, balls: shot.initial },
     ...selectKeyframes(shot, MAX_IMPACT_FRAMES),
-    { label: 'rest', balls: shot.final },
+    { label: 'rest', stepEnd: Number.MAX_SAFE_INTEGER, balls: shot.final },
   ]
+  const paths = buildPaths(shot)
 
   const smallFrames = []
   for (let i = 0; i < keyframes.length; i++) {
     const kf = keyframes[i]
     const caption = `${i + 1}/${keyframes.length}  ${kf.label}`
-    await poseAndCaption(page, kf.balls, caption)
+    const trails = wantTrails && i > 0 ? trailsUpTo(paths, kf.stepEnd, kf.balls) : []
+    await poseAndCaption(page, kf.balls, caption, trails)
     const { full, small } = await captureFrame(page, scalePage)
     const framePath = join(outDir, `${name}-${String(i + 1).padStart(2, '0')}-${kf.label.replace(/[^a-z0-9]+/gi, '_')}.png`)
     writeFileSync(framePath, full)

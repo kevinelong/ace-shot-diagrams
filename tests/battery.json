@@ -46,5 +46,10 @@
     "state": "v1|cue:62.9,4.3|1:70,30|p:cbr|b:1|m:9ball|f:7|e:0.0,0.0|s:auto",
     "expectBall": "1",
     "expectPocket": "corner-br"
+  },
+  {
+    "name": "kick-1-rail-contact",
+    "state": "v1|cue:20,25|1:70,25|2:45,25|p:cbr|b:1|m:9ball|f:7|e:0.0,0.0|s:kick",
+    "expectHit": ["cue", "1"]
   }
 ]

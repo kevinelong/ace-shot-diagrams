@@ -31,7 +31,14 @@ for (const c of battery) {
 
   const pocketEvent = shot.events.find(e => e.type === 'pocket' && e.id === c.expectBall)
   const scratched = shot.events.some(e => e.type === 'pocket' && e.id === 'cue')
-  const ok = pocketEvent && pocketEvent.pocket === c.expectPocket && !scratched
+  let ok
+  if (c.expectHit) {
+    // contact-only assertion (e.g. kick shots: solver promises a hit, not a make)
+    ok = shot.events.some(e => e.type === 'ball-ball' &&
+      c.expectHit.every(id => e.ids.includes(id))) && !scratched
+  } else {
+    ok = pocketEvent && pocketEvent.pocket === c.expectPocket && !scratched
+  }
 
   if (ok) {
     passed++
@@ -44,9 +51,8 @@ for (const c of battery) {
         : e.type).join(' ')
     failures.push(c.name)
     console.log(`FAIL  ${c.name}${scratched ? ' [SCRATCH]' : ''}`)
-    console.log(`      expected ${c.expectBall} -> ${c.expectPocket}`)
+    console.log(`      expected ${c.expectHit ? `contact ${c.expectHit.join('+')}` : `${c.expectBall} -> ${c.expectPocket}`}`)
     console.log(`      events: ${summary || '(none)'}`)
-    console.log(`      final ${c.expectBall}: ${JSON.stringify(shot.final[c.expectBall])}`)
   }
 }
 
