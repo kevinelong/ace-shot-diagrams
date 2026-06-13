@@ -1,0 +1,50 @@
+[
+  {
+    "name": "01-straight-in-corner",
+    "state": "v1|cue:42.4,21.7|1:65,32.5|p:cbr|b:1|m:9ball|f:6|e:0.0,0.0|s:auto|a:Aim straight through the 1@30,42;Corner Pocket@84,40>97,47.5"
+  },
+  {
+    "name": "02-straight-in-side",
+    "state": "v1|cue:50,30|1:50,12|p:stop|b:1|m:9ball|f:4|e:0.0,0.0|s:auto|a:Side pockets only accept straight approaches@50,42;Side Pocket@60,4.5>50.9,1"
+  },
+  {
+    "name": "03-ghost-ball-cutout",
+    "state": "v1|cue:30,35|1:50,12|p:stop|b:1|m:9ball|f:5|e:0.0,0.0|s:auto|a:Aim Line@29,27>38.3,25.8;Ghost Ball@36,16.5>48.4,13.8;Pocket Line@61,8.5>50.9,6;30@50,12*5.5,-90,-46"
+  },
+  {
+    "name": "04-cut-15-corner",
+    "state": "v1|cue:51.4,10.2|1:70,30|p:cbr|b:1|m:9ball|f:6|e:0.0,0.0|s:auto|a:15@70,30*5,33,48;Nearly full hit - aim just off center@38,42"
+  },
+  {
+    "name": "05-cut-30-corner",
+    "state": "v1|cue:56.8,6.5|1:70,30|p:cbr|b:1|m:9ball|f:6|e:0.0,0.0|s:auto|a:30@70,30*5,33,63;Half-ball hit - aim at the edge of the 1@38,42"
+  },
+  {
+    "name": "06-cut-45-corner",
+    "state": "v1|cue:62.9,4.3|1:70,30|p:cbr|b:1|m:9ball|f:7|e:0.0,0.0|s:auto|a:45@70,30*5,33,78;Thin hit - more speed, less margin@38,42"
+  },
+  {
+    "name": "07-stun-shot",
+    "state": "v1|cue:42.4,21.7|1:65,32.5|p:cbr|b:1|m:9ball|f:6|e:0.0,0.0|s:auto|a:Center ball: CB stops dead at contact@32,44"
+  },
+  {
+    "name": "08-follow-shot",
+    "state": "v1|cue:42.4,21.7|1:65,32.5|p:cbr|b:1|m:9ball|f:6|e:0.0,-0.5|s:auto|a:Top spin: CB rolls forward after contact@32,44"
+  },
+  {
+    "name": "09-draw-shot",
+    "state": "v1|cue:42.4,21.7|1:65,32.5|p:cbr|b:1|m:9ball|f:6|e:0.0,0.5|s:auto|a:Bottom spin: CB pulls back after contact@32,44"
+  },
+  {
+    "name": "10-kick-one-rail",
+    "state": "v1|cue:20,25|1:70,25|2:45,25|p:cbr|b:1|m:9ball|f:7|e:0.0,0.0|s:kick|a:Blocked - kick off the top rail@26,40;Aim Point@33,7>44.9,3.1"
+  },
+  {
+    "name": "11-bank-cross-side",
+    "state": "v1|cue:25,40|1:50,35|p:stop|b:1|m:9ball|f:6|e:0.0,0.0|s:bank|a:Bank the 1 off the bottom rail to the side@30,12"
+  },
+  {
+    "name": "12-combination",
+    "state": "v1|cue:20,40|1:55,30|9:70,22|p:cbr|b:9|m:9ball|f:6|e:0.0,0.0|s:combo|a:Cue into the 1, the 1 into the 9@30,10"
+  }
+]
