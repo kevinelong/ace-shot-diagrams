@@ -1,0 +1,50 @@
+[
+  {
+    "name": "straight-corner-long",
+    "state": "v1|cue:42.4,21.7|1:65,32.5|p:cbr|b:1|m:9ball|f:6|e:0.0,0.0|s:auto",
+    "expectBall": "1",
+    "expectPocket": "corner-br"
+  },
+  {
+    "name": "straight-corner-short",
+    "state": "v1|cue:72.3,32.0|1:85,40|p:cbr|b:1|m:9ball|f:5|e:0.0,0.0|s:auto",
+    "expectBall": "1",
+    "expectPocket": "corner-br"
+  },
+  {
+    "name": "straight-side-top",
+    "state": "v1|cue:50,30|1:50,12|p:stop|b:1|m:9ball|f:4|e:0.0,0.0|s:auto",
+    "expectBall": "1",
+    "expectPocket": "side-top"
+  },
+  {
+    "name": "straight-corner-tl",
+    "state": "v1|cue:37.4,21.9|1:20,12|p:ctl|b:1|m:9ball|f:5|e:0.0,0.0|s:auto",
+    "expectBall": "1",
+    "expectPocket": "corner-tl"
+  },
+  {
+    "name": "cut-15-corner",
+    "state": "v1|cue:51.4,10.2|1:70,30|p:cbr|b:1|m:9ball|f:6|e:0.0,0.0|s:auto",
+    "expectBall": "1",
+    "expectPocket": "corner-br"
+  },
+  {
+    "name": "cut-30-corner",
+    "state": "v1|cue:56.8,6.5|1:70,30|p:cbr|b:1|m:9ball|f:6|e:0.0,0.0|s:auto",
+    "expectBall": "1",
+    "expectPocket": "corner-br"
+  },
+  {
+    "name": "cut-30-side",
+    "state": "v1|cue:25.6,24.1|1:45,10|p:stop|b:1|m:9ball|f:5|e:0.0,0.0|s:auto",
+    "expectBall": "1",
+    "expectPocket": "side-top"
+  },
+  {
+    "name": "cut-45-corner",
+    "state": "v1|cue:62.9,4.3|1:70,30|p:cbr|b:1|m:9ball|f:7|e:0.0,0.0|s:auto",
+    "expectBall": "1",
+    "expectPocket": "corner-br"
+  }
+]

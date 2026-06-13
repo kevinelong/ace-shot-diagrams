@@ -9029,8 +9029,23 @@
         isShotAnimating = false;
         isBreakAnimating = false;
 
-        // Determine aim target (kick point or ghost ball)
-        const aimTarget = currentKickPath ? currentKickPath.aimPoint : ghostPos;
+        // Determine aim target (kick point or ghost ball).
+        // The displayed ghost ball sits GHOST_BALL_OFFSET (2r + 0.3 visual
+        // buffer) behind the OB, but physical contact happens at exactly 2r —
+        // aim at the true contact point or every cut lands slightly full.
+        let aimTarget = currentKickPath ? currentKickPath.aimPoint : ghostPos;
+        if (!currentKickPath && selectedBallId && ballPositions[selectedBallId]) {
+          const ob = ballPositions[selectedBallId];
+          const gdx = ob.x - ghostPos.x;
+          const gdy = ob.y - ghostPos.y;
+          const gd = Math.sqrt(gdx * gdx + gdy * gdy);
+          if (gd > 0.01) {
+            aimTarget = {
+              x: ob.x - (gdx / gd) * BALL_RADIUS * 2,
+              y: ob.y - (gdy / gd) * BALL_RADIUS * 2
+            };
+          }
+        }
 
         // Show toast immediately so user knows shot is executing
         showToast('🎯 Shot in progress...');
@@ -9147,7 +9162,7 @@
             ball.x += ball.vx / substeps;
             ball.y += ball.vy / substeps;
           }
-          checkShotCollisions();
+          checkShotCollisions(1 / substeps);
           checkShotRailCollisions();
         }
 
@@ -9192,7 +9207,7 @@
       }
 
       // Check ball-to-ball collisions for shot
-      function checkShotCollisions() {
+      function checkShotCollisions(moveScale = 1) {
         const ballIds = Object.keys(shotBallStates);
         const collisions = [];
 
@@ -9227,11 +9242,39 @@
           const ball1 = shotBallStates[id1];
           const ball2 = shotBallStates[id2];
 
-          const dx = ball2.x - ball1.x;
-          const dy = ball2.y - ball1.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
+          let dx = ball2.x - ball1.x;
+          let dy = ball2.y - ball1.y;
+          let dist = Math.sqrt(dx * dx + dy * dy);
 
           if (dist === 0) continue;
+
+          // Rewind both balls to the exact moment of contact before taking
+          // the collision normal. Discrete movement lets balls interpenetrate
+          // by up to a couple of units, and a normal taken mid-overlap skews
+          // the departure angle — worst on thin (large cut angle) hits.
+          const rvx = (ball1.vx - ball2.vx) * moveScale;  // relative motion per pass
+          const rvy = (ball1.vy - ball2.vy) * moveScale;
+          const a = rvx * rvx + rvy * rvy;
+          if (a > 1e-9 && dist < BREAK_PHYSICS.BALL_DIAMETER) {
+            const rx = ball1.x - ball2.x;
+            const ry = ball1.y - ball2.y;
+            const b = rx * rvx + ry * rvy;  // < 0 when approaching
+            const c = dist * dist - BREAK_PHYSICS.BALL_DIAMETER * BREAK_PHYSICS.BALL_DIAMETER;
+            const disc = b * b - a * c;
+            if (disc > 0) {
+              const tau = (b + Math.sqrt(disc)) / a;  // back-out fraction of this pass
+              if (tau > 0 && tau < 2) {
+                ball1.x -= ball1.vx * moveScale * tau;
+                ball1.y -= ball1.vy * moveScale * tau;
+                ball2.x -= ball2.vx * moveScale * tau;
+                ball2.y -= ball2.vy * moveScale * tau;
+                dx = ball2.x - ball1.x;
+                dy = ball2.y - ball1.y;
+                dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist === 0) continue;
+              }
+            }
+          }
 
           const nx = dx / dist;
           const ny = dy / dist;
@@ -9250,31 +9293,37 @@
             ball2.vx += impulse * nx;
             ball2.vy += impulse * ny;
 
-            // Apply english/throw effect if cue ball collision
-            if (id1 === 'cue' && ball1.english) {
-              // Side english causes throw
-              const throwAngle = ball1.english.x * 0.05;  // Radians
-              const speed2 = Math.sqrt(ball2.vx * ball2.vx + ball2.vy * ball2.vy);
-              const angle2 = Math.atan2(ball2.vy, ball2.vx);
-              ball2.vx = Math.cos(angle2 + throwAngle) * speed2;
-              ball2.vy = Math.sin(angle2 + throwAngle) * speed2;
+            // Apply english/throw effect if cue ball collision.
+            // NOTE: the cue must be matched on EITHER side of the pair —
+            // JS object iteration puts numeric ball ids before 'cue', so the
+            // cue is normally id2 and an id1-only check never fires (the
+            // stun/draw/follow behavior was dead in regular shots).
+            const cueB = id1 === 'cue' ? ball1 : id2 === 'cue' ? ball2 : null;
+            const otherB = id1 === 'cue' ? ball2 : id2 === 'cue' ? ball1 : null;
+            if (cueB && cueB.english) {
+              // Side english causes throw on the object ball
+              const throwAngle = cueB.english.x * 0.05;  // Radians
+              const speedO = Math.sqrt(otherB.vx * otherB.vx + otherB.vy * otherB.vy);
+              const angleO = Math.atan2(otherB.vy, otherB.vx);
+              otherB.vx = Math.cos(angleO + throwAngle) * speedO;
+              otherB.vy = Math.sin(angleO + throwAngle) * speedO;
 
               // Top/bottom english affects cue ball after collision
-              if (ball1.english.y < 0) {
+              if (cueB.english.y < 0) {
                 // Follow (top spin) - maintain more forward motion
-                ball1.vx *= 0.8;
-                ball1.vy *= 0.8;
-              } else if (ball1.english.y > 0) {
+                cueB.vx *= 0.8;
+                cueB.vy *= 0.8;
+              } else if (cueB.english.y > 0) {
                 // Draw (bottom spin) - reverse or stop
-                ball1.vx *= -0.3;
-                ball1.vy *= -0.3;
+                cueB.vx *= -0.3;
+                cueB.vy *= -0.3;
               } else {
                 // Stun (center) - stop dead
-                ball1.vx *= 0.1;
-                ball1.vy *= 0.1;
+                cueB.vx *= 0.1;
+                cueB.vy *= 0.1;
               }
 
-              ball1.english = null;  // English applied, clear it
+              cueB.english = null;  // English applied, clear it
             }
 
             // Separate overlapping balls
@@ -9318,29 +9367,49 @@
 
           if (ball.pocketed) continue;
 
-          // Rail bounces (events recorded only for meaningful impact speeds,
-          // so a ball rolling along a cushion doesn't spam the log)
+          // Inside a pocket mouth the cushion gives way to the pocket — skip
+          // rail bounces there so the ball can run in and be captured, instead
+          // of rattling off a phantom full-length wall across the opening.
+          const POCKET_MOUTH_RADIUS = 5.0;
+          let inPocketMouth = false;
+          for (const pocketName in pocketCenters) {
+            const pk = pocketCenters[pocketName];
+            const mdx = ball.x - pk.x;
+            const mdy = ball.y - pk.y;
+            if (mdx * mdx + mdy * mdy < POCKET_MOUTH_RADIUS * POCKET_MOUTH_RADIUS) {
+              inPocketMouth = true;
+              break;
+            }
+          }
+          if (inPocketMouth) continue;
+
+          // Rail bounces. NOTE: the RAILS constants are already ball-radius
+          // adjusted ("ball bounces when center.y >= 46.875") — compare the
+          // CENTER against them; adding ballR again put the effective cushion
+          // 1.125" too far onto the table and made corner shots rattle out.
+          // (Events recorded only for meaningful impact speeds, so a ball
+          // rolling along a cushion doesn't spam the log.)
           const RAIL_EVENT_MIN_SPEED = 0.05;
-          if (ball.y - ballR <= RAILS.top.y) {
-            ball.y = RAILS.top.y + ballR;
+          if (ball.y <= RAILS.top.y) {
+            ball.y = RAILS.top.y;
             ball.vy = -ball.vy * BREAK_PHYSICS.RAIL_COR;
             if (Math.abs(ball.vy) > RAIL_EVENT_MIN_SPEED) recordShotEvent('rail', { id: ballId, rail: 'top' });
           }
 
-          if (ball.y + ballR >= RAILS.bottom.y) {
-            ball.y = RAILS.bottom.y - ballR;
+          if (ball.y >= RAILS.bottom.y) {
+            ball.y = RAILS.bottom.y;
             ball.vy = -ball.vy * BREAK_PHYSICS.RAIL_COR;
             if (Math.abs(ball.vy) > RAIL_EVENT_MIN_SPEED) recordShotEvent('rail', { id: ballId, rail: 'bottom' });
           }
 
-          if (ball.x - ballR <= RAILS.left.x) {
-            ball.x = RAILS.left.x + ballR;
+          if (ball.x <= RAILS.left.x) {
+            ball.x = RAILS.left.x;
             ball.vx = -ball.vx * BREAK_PHYSICS.RAIL_COR;
             if (Math.abs(ball.vx) > RAIL_EVENT_MIN_SPEED) recordShotEvent('rail', { id: ballId, rail: 'left' });
           }
 
-          if (ball.x + ballR >= RAILS.right.x) {
-            ball.x = RAILS.right.x - ballR;
+          if (ball.x >= RAILS.right.x) {
+            ball.x = RAILS.right.x;
             ball.vx = -ball.vx * BREAK_PHYSICS.RAIL_COR;
             if (Math.abs(ball.vx) > RAIL_EVENT_MIN_SPEED) recordShotEvent('rail', { id: ballId, rail: 'right' });
           }
