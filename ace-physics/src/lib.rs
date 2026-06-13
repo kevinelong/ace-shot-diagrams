@@ -44,6 +44,13 @@ const V_MIN: f64 = 1.2; // units/sec (0.02 * 60)
 const EPS: f64 = 1e-9;
 const RAIL_EVENT_MIN_SPEED: f64 = 3.0; // units/sec (0.05 * 60), matches JS gate
 
+// Spin/curve model: with english the cue slides along the tangent line for
+// SLIDE_TIME, then the spin asserts and adds a velocity component along the
+// original aim direction (follow = forward, draw = backward) — the classic
+// two-segment cue path. SPIN_GAIN scales it by the incoming cue speed.
+const SLIDE_TIME: f64 = 0.13; // seconds of slide before roll asserts
+const SPIN_GAIN: f64 = 0.6;
+
 #[derive(Clone)]
 pub struct Ball {
     pub id: String,
@@ -52,6 +59,8 @@ pub struct Ball {
     pub vx: f64,
     pub vy: f64,
     pub pocketed: bool,
+    // pending spin transition: (dir_x, dir_y, magnitude, trigger_time)
+    pub spin: Option<(f64, f64, f64, f64)>,
 }
 
 impl Ball {
@@ -69,6 +78,7 @@ pub enum EventKind {
     Hit(usize, usize),
     Rail(usize, &'static str),
     Pocket(usize, &'static str),
+    Spin(usize),
 }
 
 pub struct Event {
@@ -88,6 +98,7 @@ enum Candidate {
     Rail(usize, bool, &'static str),
     Pocket(usize, usize),
     Hit(usize, usize),
+    Spin(usize),
 }
 
 fn in_pocket_mouth(x: f64, y: f64) -> bool {
@@ -178,6 +189,14 @@ pub fn simulate_core(mut balls: Vec<Ball>, mut english: Option<English>, max_tim
                         consider(tau, Candidate::Hit(i, j), &mut best);
                     }
                 }
+            }
+
+            // spin transition is considered even for a stopped cue: draw can
+            // re-accelerate a ball that has come to rest
+            if let Some((_, _, _, tt)) = b.spin {
+                let remaining = (tt - t_now).max(0.0);
+                let tau = if remaining <= 0.0 { 0.0 } else { (1.0 - (-lam * remaining).exp()) / lam };
+                consider(tau, Candidate::Spin(i), &mut best);
             }
 
             if b.speed() < EPS {
@@ -290,30 +309,45 @@ pub fn simulate_core(mut balls: Vec<Ball>, mut english: Option<English>, max_tim
                     let ny = dy / dist;
                     let dvn = (balls[i].vx - balls[j].vx) * nx + (balls[i].vy - balls[j].vy) * ny;
                     if dvn > 0.0 {
+                        // pre-impulse cue velocity = the aim direction, used to
+                        // orient the spin curve
+                        let cue_pre = cue_idx.map(|ci| (balls[ci].vx, balls[ci].vy));
+
                         let imp = dvn * BALL_COR;
                         balls[i].vx -= imp * nx;
                         balls[i].vy -= imp * ny;
                         balls[j].vx += imp * nx;
                         balls[j].vy += imp * ny;
 
-                        // english/throw on first cue contact (JS parity)
+                        // english on first cue contact (english.take() => once)
                         if Some(i) == cue_idx || Some(j) == cue_idx {
                             if let Some(e) = english.take() {
                                 let (ci, oi) = if Some(i) == cue_idx { (i, j) } else { (j, i) };
+                                // side english throws the object ball
                                 let throw = e.x * 0.05;
                                 let os = balls[oi].speed();
                                 let oa = balls[oi].vy.atan2(balls[oi].vx) + throw;
                                 balls[oi].vx = oa.cos() * os;
                                 balls[oi].vy = oa.sin() * os;
-                                let f = if e.y < 0.0 {
-                                    0.8
-                                } else if e.y > 0.0 {
-                                    -0.3
+
+                                if e.x == 0.0 && e.y == 0.0 {
+                                    // center ball / stun: cue stops dead
+                                    balls[ci].vx *= 0.1;
+                                    balls[ci].vy *= 0.1;
                                 } else {
-                                    0.1
-                                };
-                                balls[ci].vx *= f;
-                                balls[ci].vy *= f;
+                                    // follow/draw: cue slides on the tangent
+                                    // (its post-impulse velocity), then a spin
+                                    // transition adds a component along the aim
+                                    // line. e.y<0 = follow (forward), e.y>0 = draw
+                                    if let Some((cvx, cvy)) = cue_pre {
+                                        let sp = (cvx * cvx + cvy * cvy).sqrt();
+                                        if sp > EPS {
+                                            let mag = -e.y * SPIN_GAIN * sp;
+                                            balls[ci].spin =
+                                                Some((cvx / sp, cvy / sp, mag, t_now + SLIDE_TIME));
+                                        }
+                                    }
+                                }
                             }
                         }
                         events.push(Event {
@@ -324,9 +358,28 @@ pub fn simulate_core(mut balls: Vec<Ball>, mut english: Option<English>, max_tim
                     }
                 }
             }
+            Candidate::Spin(i) => {
+                if let Some((dx, dy, mag, _)) = balls[i].spin.take() {
+                    if !balls[i].pocketed {
+                        balls[i].vx += dx * mag;
+                        balls[i].vy += dy * mag;
+                        if balls[i].speed() <= V_MIN {
+                            balls[i].vx = 0.0;
+                            balls[i].vy = 0.0;
+                        }
+                        events.push(Event {
+                            kind: EventKind::Spin(i),
+                            t: t_now,
+                            balls: balls.clone(),
+                        });
+                    }
+                }
+            }
         }
 
-        if balls.iter().all(|b| b.pocketed || b.speed() < EPS) {
+        // don't stop while a spin transition is still pending (draw can
+        // re-accelerate a ball that has momentarily come to rest)
+        if balls.iter().all(|b| b.pocketed || (b.speed() < EPS && b.spin.is_none())) {
             break;
         }
     }
@@ -373,6 +426,10 @@ pub fn output_to_json(o: &Output) -> String {
             EventKind::Pocket(i, name) => s.push_str(&format!(
                 "{{\"type\":\"pocket\",\"t\":{:.4},\"id\":\"{}\",\"pocket\":\"{}\",",
                 e.t, e.balls[*i].id, name
+            )),
+            EventKind::Spin(i) => s.push_str(&format!(
+                "{{\"type\":\"spin\",\"t\":{:.4},\"id\":\"{}\",",
+                e.t, e.balls[*i].id
             )),
         }
         s.push_str("\"balls\":");
@@ -422,6 +479,7 @@ pub unsafe extern "C" fn simulate_raw(ptr: *const f64, len: usize) -> u64 {
             vx: data[base + 3],
             vy: data[base + 4],
             pocketed: false,
+            spin: None,
         });
     }
     let json = output_to_json(&simulate_core(balls, english, max_time));
@@ -437,7 +495,7 @@ mod tests {
     use super::*;
 
     fn ball(id: &str, x: f64, y: f64, vx: f64, vy: f64) -> Ball {
-        Ball { id: id.to_string(), x, y, vx, vy, pocketed: false }
+        Ball { id: id.to_string(), x, y, vx, vy, pocketed: false, spin: None }
     }
 
     fn find_pocket<'a>(o: &'a Output) -> Option<(&'a str, &'a str)> {

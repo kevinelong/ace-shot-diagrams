@@ -196,8 +196,18 @@ tools share the same physics. verify-consistency.js now exercises this
 in-app wasm path end to end.
 
 Monte Carlo: `node make-percentage.js` (see its header) — empirical make %
-over the core. Future: spin/curve model in the core; replace the app's
-heuristic make % with the Monte Carlo value; per-shot make % in the UI.
+over the core. The app shows it live as the "Sim %" row in the Shot Info
+panel (direct shots, debounced; see updateSimMakeProbability). Validate
+with `node verify-sim-make.js`.
+
+Spin/curve model: english is no longer an instantaneous velocity scale.
+With english the cue slides on the tangent for SLIDE_TIME, then a spin
+transition event adds a component along the aim line (follow forward, draw
+back) — the classic two-segment cue path, captured in trails/GIFs as a
+'spin' event. Center-ball is unchanged (stun), so the battery stays 8/8.
+Validate with `node verify-spin.js`. After any core change: rebuild wasm,
+then `node embed-wasm.js` to refresh the in-app copy.
+Future: side-spin curve off cushions; replace heuristic make % entirely.
 
 ### Print theme
 `--theme print` (or per-scenario `"theme": "print"`) restyles exported shot

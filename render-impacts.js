@@ -57,6 +57,7 @@ mkdirSync(outDir, { recursive: true })
 // each cluster by its most significant member, cap rail-only noise.
 function describe(e) {
   if (e.type === 'break') return 'break!'
+  if (e.type === 'spin') return 'spin takes (draw/follow)'
   if (e.type === 'ball-ball') {
     // the cue (or lower-numbered ball) reads as the actor
     const [a, b] = e.ids.includes('cue') ? ['cue', e.ids.find(i => i !== 'cue')] : e.ids
@@ -68,7 +69,7 @@ function describe(e) {
 }
 
 function selectKeyframes(shot, maxFrames) {
-  const PRIORITY = { break: 0, pocket: 1, 'ball-ball': 2, rail: 3 }
+  const PRIORITY = { break: 0, pocket: 1, 'ball-ball': 2, spin: 3, rail: 4 }
   const clusters = []
   for (const e of shot.events) {
     const c = clusters[clusters.length - 1]
