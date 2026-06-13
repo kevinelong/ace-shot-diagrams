@@ -15,25 +15,9 @@
 import { readFileSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { simulate } from './ace-physics-node.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const wasmPath = join(__dirname, 'ace-physics', 'target', 'wasm32-unknown-unknown', 'release', 'ace_physics.wasm')
-const { instance } = await WebAssembly.instantiate(readFileSync(wasmPath), {})
-const { memory, alloc_f64, simulate_raw } = instance.exports
-
-function simulate(balls, english, maxTime = 10) {
-  const input = [balls.length, maxTime, english ? 1 : 0, english?.x ?? 0, english?.y ?? 0]
-  for (const b of balls) {
-    input.push(b.id === 'cue' ? 0 : parseInt(b.id, 10), b.x, b.y, b.vx ?? 0, b.vy ?? 0)
-  }
-  const ptr = alloc_f64(input.length)
-  new Float64Array(memory.buffer, ptr, input.length).set(input)
-  const packed = simulate_raw(ptr, input.length)
-  const outPtr = Number(packed >> 32n)
-  const outLen = Number(packed & 0xffffffffn)
-  return JSON.parse(Buffer.from(memory.buffer, outPtr, outLen).toString('utf8'))
-}
-
 const battery = JSON.parse(readFileSync(join(__dirname, 'tests', 'battery.json'), 'utf-8'))
 
 const POCKETS = {
@@ -72,10 +56,10 @@ for (const c of battery) {
   const cue = s.balls.cue
   const ad = Math.hypot(ghost.x - cue.x, ghost.y - cue.y)
   const speed = s.force * 0.75 * 60 // units/sec
-  const balls = Object.entries(s.balls).map(([id, b]) =>
+  const balls = Object.fromEntries(Object.entries(s.balls).map(([id, b]) =>
     id === 'cue'
-      ? { id, ...b, vx: (ghost.x - cue.x) / ad * speed, vy: (ghost.y - cue.y) / ad * speed }
-      : { id, ...b })
+      ? [id, { ...b, vx: (ghost.x - cue.x) / ad * speed, vy: (ghost.y - cue.y) / ad * speed }]
+      : [id, { ...b }]))
 
   const result = simulate(balls, s.english)
   const pocketEvent = result.events.find(e => e.type === 'pocket' && e.id === c.expectBall)

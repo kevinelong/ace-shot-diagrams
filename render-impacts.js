@@ -1,15 +1,16 @@
-// Impact keyframe renderer: runs a shot through the app's physics, then
-// outputs the BEFORE position, each moment of impact (ball contacts, rail
-// bounces, pockets - recorded by window.ACE_SHOT in index.html), and the
-// final REST position, as numbered PNG frames plus a slow-motion looping
-// GIF assembled from them.
+// Impact keyframe renderer: resolves a shot through the ace-physics Rust core
+// (the app's solver picks the aim; the wasm runs the physics), then outputs
+// the BEFORE position, each moment of impact (ball contacts, rail bounces,
+// pockets), and the final REST position, as numbered PNG frames plus a
+// slow-motion looping GIF. The browser is used only to render frames.
 //
 // Usage:
 //   node render-impacts.js --state "v1|cue:30,15|1:65,32.5|p:cbr|b:1|m:9ball|f:5|e:0.0,0.0|s:auto" --name straight-in
 //   node render-impacts.js scenarios.sample.json [--out impacts]
 //
 // Flags: --out <dir> (default impacts), --width <px> (GIF width, default 480),
-//        --max-frames <n> (impact frames cap, default 8), --no-gif
+//        --max-frames <n> (impact frames cap, default 8), --no-gif,
+//        --engine js (fall back to the in-page JS sim instead of the wasm core)
 
 import { chromium } from '@playwright/test'
 import gifencPkg from 'gifenc'
@@ -19,6 +20,7 @@ const { PNG } = pngjsPkg
 import { readFileSync, writeFileSync, mkdirSync } from 'fs'
 import { resolve, join, dirname } from 'path'
 import { pathToFileURL, fileURLToPath } from 'url'
+import { simulate } from './ace-physics-node.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -34,6 +36,7 @@ const GIF_WIDTH = parseInt(opt('--width') ?? '480', 10)
 const MAX_IMPACT_FRAMES = parseInt(opt('--max-frames') ?? '8', 10)
 const wantGif = !flag('--no-gif')
 const wantTrails = !flag('--no-trails')
+const engine = opt('--engine') ?? 'wasm'
 
 let scenarios
 if (opt('--state')) {
@@ -234,11 +237,27 @@ for (const sc of scenarios) {
   await page.waitForSelector('#pool-table-svg')
   await page.waitForTimeout(1200)
 
-  // run the shot and wait for the physics to finish
-  await page.evaluate(() => document.getElementById('btnShoot').click())
-  await page.waitForFunction(() => window.ACE_SHOT && window.ACE_SHOT.done, null, { timeout: 20000 })
-  const shot = await page.evaluate(() => window.ACE_SHOT)
-  console.log(`  ${shot.events.length} raw events recorded`)
+  let shot
+  if (engine === 'js') {
+    // legacy path: run the in-page JS sim and read its recorded events
+    await page.evaluate(() => document.getElementById('btnShoot').click())
+    await page.waitForFunction(() => window.ACE_SHOT && window.ACE_SHOT.done, null, { timeout: 20000 })
+    shot = await page.evaluate(() => window.ACE_SHOT)
+  } else {
+    // wasm path: the app's solver picks the aim, the Rust core runs physics
+    const plan = await page.evaluate(() => window.ACE_SHOT_PLAN())
+    if (!plan) { console.log('  (no shot plan - cue/ghost not placed; skipping)'); continue }
+    const result = simulate(plan.balls, plan.english)
+    const initial = {}
+    for (const id in plan.balls) {
+      initial[id] = { x: Math.round(plan.balls[id].x * 100) / 100, y: Math.round(plan.balls[id].y * 100) / 100, pocketed: false }
+    }
+    // map continuous event times to the integer "step" the keyframe selector
+    // and trail builder expect (physics ran at the same 60/sec native rate)
+    const events = result.events.map(e => ({ ...e, step: Math.round(e.t * 60) }))
+    shot = { initial, events, final: result.final }
+  }
+  console.log(`  ${shot.events.length} events (${engine})`)
 
   // hide UI chrome and aim overlays AFTER the shot so frames are clean
   await page.addStyleTag({ content: HIDE_UI_CSS })

@@ -9080,6 +9080,58 @@
       // ========== REGULAR SHOT ANIMATION SYSTEM ==========
       // Adapts break physics for controlled single-ball shots
 
+      // Compute aim target and per-ball initial velocities (units/STEP, the
+      // JS sim's native scale) for the current setup. Returns null if the cue
+      // or ghost isn't placed. The displayed ghost ball sits GHOST_BALL_OFFSET
+      // (2r + 0.3 visual buffer) behind the OB but physical contact is at 2r,
+      // so direct shots aim at the true contact point (cuts land slightly full
+      // otherwise). Kick shots aim at the solver's rail point.
+      function computeShotPlan() {
+        const cuePos = ballPositions['cue'];
+        const ghostPos = ballPositions['ghost'];
+        if (!cuePos || !ghostPos) return null;
+
+        let aimTarget = currentKickPath ? currentKickPath.aimPoint : ghostPos;
+        if (!currentKickPath && selectedBallId && ballPositions[selectedBallId]) {
+          const ob = ballPositions[selectedBallId];
+          const gdx = ob.x - ghostPos.x;
+          const gdy = ob.y - ghostPos.y;
+          const gd = Math.sqrt(gdx * gdx + gdy * gdy);
+          if (gd > 0.01) {
+            aimTarget = {
+              x: ob.x - (gdx / gd) * BALL_RADIUS * 2,
+              y: ob.y - (gdy / gd) * BALL_RADIUS * 2
+            };
+          }
+        }
+
+        const dx = aimTarget.x - cuePos.x;
+        const dy = aimTarget.y - cuePos.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const speed = shotForce * 0.75;  // Scale force 1-10 to physics units/step
+
+        const balls = { cue: { x: cuePos.x, y: cuePos.y, vx: (dx / dist) * speed, vy: (dy / dist) * speed } };
+        for (const id in ballPositions) {
+          if (id === 'cue' || id === 'ghost' || !ballPositions[id]) continue;
+          balls[id] = { x: ballPositions[id].x, y: ballPositions[id].y, vx: 0, vy: 0 };
+        }
+        return { aimTarget, balls, english: { x: contactOffset.x, y: contactOffset.y } };
+      }
+
+      // Hook: the shot plan in the Rust core's units (units/SEC = step*60),
+      // for headless harnesses that run physics through ace-physics wasm while
+      // letting the app's solver decide the aim. Returns null if not ready.
+      window.ACE_SHOT_PLAN = function () {
+        const plan = computeShotPlan();
+        if (!plan) return null;
+        const balls = {};
+        for (const id in plan.balls) {
+          const b = plan.balls[id];
+          balls[id] = { x: b.x, y: b.y, vx: b.vx * 60, vy: b.vy * 60 };
+        }
+        return { balls, english: plan.english };
+      };
+
       // Execute a regular shot with current settings
       async function executeShot() {
         console.log('executeShot() called');
@@ -9117,63 +9169,24 @@
         isShotAnimating = false;
         isBreakAnimating = false;
 
-        // Determine aim target (kick point or ghost ball).
-        // The displayed ghost ball sits GHOST_BALL_OFFSET (2r + 0.3 visual
-        // buffer) behind the OB, but physical contact happens at exactly 2r —
-        // aim at the true contact point or every cut lands slightly full.
-        let aimTarget = currentKickPath ? currentKickPath.aimPoint : ghostPos;
-        if (!currentKickPath && selectedBallId && ballPositions[selectedBallId]) {
-          const ob = ballPositions[selectedBallId];
-          const gdx = ob.x - ghostPos.x;
-          const gdy = ob.y - ghostPos.y;
-          const gd = Math.sqrt(gdx * gdx + gdy * gdy);
-          if (gd > 0.01) {
-            aimTarget = {
-              x: ob.x - (gdx / gd) * BALL_RADIUS * 2,
-              y: ob.y - (gdy / gd) * BALL_RADIUS * 2
-            };
-          }
-        }
+        // Compute the shot plan (aim target + initial velocities). Shared
+        // with the Rust-core hooks below so the app's solver stays the single
+        // source of aim while physics can run in either engine.
+        const plan = computeShotPlan();
 
         // Show toast immediately so user knows shot is executing
         showToast('🎯 Shot in progress...');
 
         // Show cue stroke animation
-        await animateCueStroke(cuePos, aimTarget, contactOffset.y);
+        await animateCueStroke(cuePos, plan.aimTarget, contactOffset.y);
 
-        // Initialize shot physics state - cue ball only initially
-        shotBallStates = {
-          'cue': {
-            x: cuePos.x,
-            y: cuePos.y,
-            vx: 0,
-            vy: 0,
-            pocketed: false,
-            english: { x: contactOffset.x, y: contactOffset.y }  // Store for collision
-          }
-        };
-
-        // Add all other balls on table to physics simulation
-        for (const ballId in ballPositions) {
-          if (ballId === 'cue' || ballId === 'ghost' || !ballPositions[ballId]) continue;
-
-          shotBallStates[ballId] = {
-            x: ballPositions[ballId].x,
-            y: ballPositions[ballId].y,
-            vx: 0,
-            vy: 0,
-            pocketed: false
-          };
+        // Initialize shot physics state from the plan
+        shotBallStates = {};
+        for (const id in plan.balls) {
+          const b = plan.balls[id];
+          shotBallStates[id] = { x: b.x, y: b.y, vx: b.vx, vy: b.vy, pocketed: false };
         }
-
-        // Calculate initial cue ball velocity toward aim target
-        const dx = aimTarget.x - cuePos.x;
-        const dy = aimTarget.y - cuePos.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const speed = shotForce * 0.75;  // Scale 1-10 to physics units
-
-        shotBallStates['cue'].vx = (dx / dist) * speed;
-        shotBallStates['cue'].vy = (dy / dist) * speed;
+        shotBallStates['cue'].english = { x: contactOffset.x, y: contactOffset.y };
 
         // Start physics simulation
         shotAnimationFrames = 0;
