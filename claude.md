@@ -186,8 +186,18 @@ ABI: `alloc_f64(n)` + `simulate_raw(ptr,len)` -> packed u64 (ptr<<32|len) of
 a JSON string; flat-f64 input (see verify-rust-parity.js for the loader).
 Validate: `node verify-rust-parity.js` (battery through the wasm).
 `cargo test` has native unit tests but needs MSVC Build Tools installed.
-Future: browser integration via base64-embedded wasm, spin/curve model,
-Monte Carlo make-percentage.
+In-app integration: the wasm is base64-embedded in index.html (between the
+ACE_WASM markers) by `node embed-wasm.js` — re-run it after every core
+rebuild. The app loads it (loadAcePhysics), resolves each shot up front
+(aceSimulate), and plays back the exact trajectories (animateShotWasm);
+the JS fixed-timestep sim remains as automatic fallback if the wasm is
+absent or errors. window.ACE_SHOT_PLAN exposes the solver's aim so headless
+tools share the same physics. verify-consistency.js now exercises this
+in-app wasm path end to end.
+
+Monte Carlo: `node make-percentage.js` (see its header) — empirical make %
+over the core. Future: spin/curve model in the core; replace the app's
+heuristic make % with the Monte Carlo value; per-shot make % in the UI.
 
 ### Print theme
 `--theme print` (or per-scenario `"theme": "print"`) restyles exported shot
