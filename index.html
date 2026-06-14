@@ -2073,11 +2073,24 @@
       /* Full-width table */
       .diagram-container {
         width: 100%;
-        max-height: 50vh;
+        max-height: 60vh;
+        margin: 0 auto;
       }
 
       #tableWrapper {
         width: 100%;
+      }
+
+      /* The full Shot Info panel is too large for a phone and would cover the
+         table; hide it on mobile (aim lines remain on the table) */
+      #palette-shot {
+        display: none !important;
+      }
+
+      /* Toast floats in the open mid-area, clear of top and bottom palettes */
+      .toast-notification {
+        bottom: auto;
+        top: 45%;
       }
 
       /* Stack palettes at bottom */
@@ -2183,13 +2196,14 @@
         writing-mode: horizontal-tb;
       }
 
-      /* Ball grid - smaller on mobile */
-      .palette-ball-grid {
-        grid-template-columns: repeat(5, 1fr);
+      /* Ball grid - smaller on mobile (element is #paletteBallGrid / .ball-grid) */
+      #paletteBallGrid {
+        grid-template-columns: repeat(8, 1fr);
         gap: 4px;
       }
 
-      .palette-ball-grid .ball {
+      #paletteBallGrid .ball,
+      #paletteBallSpecial .ball {
         width: 28px;
         height: 28px;
       }
@@ -2207,14 +2221,15 @@
       }
 
       .diagram-container {
-        max-height: 40vh;
+        max-height: 52vh;
       }
 
-      .palette-ball-grid {
-        grid-template-columns: repeat(4, 1fr);
+      #paletteBallGrid {
+        grid-template-columns: repeat(8, 1fr);
       }
 
-      .palette-ball-grid .ball {
+      #paletteBallGrid .ball,
+      #paletteBallSpecial .ball {
         width: 24px;
         height: 24px;
         font-size: 9px;
@@ -2225,12 +2240,9 @@
         height: 60px;
       }
 
-      .action-btn span {
-        display: none;
-      }
-
+      /* keep the Rack/Tour labels — hiding the whole span left empty buttons */
       .action-btn {
-        padding: 10px;
+        padding: 10px 12px;
       }
 
       /* Auto-minimize most palettes on very small screens */
