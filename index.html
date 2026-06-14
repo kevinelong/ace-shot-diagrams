@@ -212,13 +212,17 @@
       cursor: pointer;
     }
 
+    /* Minimized: show the icon AND a compact label so collapsed palettes are
+       identifiable ("🎮 Game") instead of a bare icon */
     .tool-palette.minimized .palette-title {
-      font-size: 0px !important;  /* Hide text */
+      font-size: 13px !important;
       line-height: 1 !important;
-      color: transparent !important;
+      color: #cdd6e4 !important;
       overflow: visible !important;
-      width: 28px !important;  /* Just wide enough for icon */
-      height: 28px !important;
+      width: auto !important;
+      height: auto !important;
+      gap: 6px;
+      white-space: nowrap;
       display: flex !important;
       align-items: center;
       justify-content: center;
@@ -584,7 +588,7 @@
     /* Toast notification */
     .toast-notification {
       position: fixed;
-      bottom: 20px;
+      bottom: 200px;   /* above the bottom-center Cue palette / Shoot button */
       left: 50%;
       transform: translateX(-50%) translateY(100px);
       background: rgba(0, 255, 136, 0.9);
@@ -2701,7 +2705,7 @@
       <div class="force-container">
         <div class="control-label">Power</div>
         <div class="force-slider-wrapper">
-          <input type="range" id="forceSlider" min="1" max="10" value="10" step="0.5" />
+          <input type="range" id="forceSlider" min="1" max="10" value="6" step="0.5" />
           <div class="force-labels">
             <span>Soft</span>
             <span>Medium</span>
@@ -2930,9 +2934,9 @@
             <!-- Power row -->
             <div class="power-row">
               <span class="control-label">Power</span>
-              <input type="range" id="forceSlider-palette" min="1" max="10" value="10" step="0.5"
+              <input type="range" id="forceSlider-palette" min="1" max="10" value="6" step="0.5"
                 aria-label="Shot power" />
-              <span class="force-value"><span id="forceValue-palette">10</span></span>
+              <span class="force-value"><span id="forceValue-palette">6</span></span>
             </div>
             <!-- Shoot button -->
             <div class="shoot-row">
@@ -3518,7 +3522,7 @@
       // Default to max draw (backspin) for break shots
       // Contact offset in SVG coordinates - max is ~0.55 for new compact diagram
       let contactOffset = { x: 0, y: 0.55 };  // x: english (+ = right), y: spin (- = follow, + = draw)
-      let shotForce = 10;  // 1-10 scale - default to max power for breaks
+      let shotForce = 6;  // 1-10 scale - sane default for normal shots (break sets its own)
       let isDraggingContact = false;
 
       // Geometry helper functions
