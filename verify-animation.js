@@ -27,13 +27,16 @@ async function runShot(label) {
   const before1 = await ballPos('1')
   await page.evaluate(() => document.getElementById('btnShoot').click())
 
-  // sample cue position during the animation to prove gradual motion
+  // sample cue position during the animation to prove gradual motion; the
+  // break can scatter 15 balls and play back over several seconds, so wait on
+  // the physics-done flag rather than a fixed window
   const samples = []
-  for (let i = 0; i < 50; i++) {
+  let done = false
+  for (let i = 0; i < 150; i++) {
     await page.waitForTimeout(100)
     samples.push(await ballPos('cue'))
-    const t = await toastText()
-    if (/Pocketed|pocketed|Scratch/.test(t)) break
+    done = await page.evaluate(() => !!(window.ACE_SHOT && window.ACE_SHOT.done))
+    if (done) break
   }
   const t = await toastText()
   const after1 = await ballPos('1')
@@ -41,8 +44,8 @@ async function runShot(label) {
     Math.hypot(after1.x - before1.x, after1.y - before1.y) > 2
   const distinctCuePositions = new Set(samples.filter(Boolean).map(p => `${p.x.toFixed(0)},${p.y.toFixed(0)}`)).size
   console.log(`[${label}] result toast: "${t.trim()}"`)
-  console.log(`[${label}] object ball moved/pocketed: ${moved1}; distinct cue positions sampled during animation: ${distinctCuePositions}`)
-  return { finished: /Pocketed|pocketed|Scratch/.test(t), moved1, distinctCuePositions }
+  console.log(`[${label}] done: ${done}; object ball moved/pocketed: ${moved1}; distinct cue positions: ${distinctCuePositions}`)
+  return { finished: done, moved1, distinctCuePositions }
 }
 
 // --- Test 1: regular shot, near-straight to corner ---

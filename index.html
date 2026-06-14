@@ -275,9 +275,15 @@
       transform: translateX(-50%);
     }
 
-    /* Legend and Shot Info removed - merged into other palettes */
+    /* Shot Info panel anchored bottom-right (clears the bottom-center Cue
+       palette and the right-center Aids palette on desktop) */
+    #palette-shot {
+      bottom: 30px;
+      right: 30px;
+    }
+
+    /* Legend and Save merged into other palettes */
     #palette-legend,
-    #palette-shot,
     #palette-save {
       display: none;
     }
@@ -2933,66 +2939,9 @@
   <!-- Hidden: Legacy spin type display for JS compatibility -->
   <span id="spinType" style="display:none;">Draw</span>
 
-  <!-- REMOVED: Old two-column layout with shot stats moved to Shot Info palette -->
-  <div style="display:none;">
-        <div class="control-column">
-        <!-- Right Column: Shot Info -->
-        <div class="control-column">
-          <!-- Shooter's View Diagram -->
-          <div class="overlap-diagram-container" style="margin-bottom:12px;">
-            <div class="overlap-diagram-wrapper">
-              <svg id="overlap-diagram-palette" viewBox="-3 -1.5 6 3" width="160" height="80">
-                <rect x="-3" y="-1.5" width="6" height="3" fill="#1a1a2e" />
-                <circle id="overlap-obj-ball-palette" cx="0.5" cy="0" r="1" fill="none" stroke="#ff6b35"
-                  stroke-width="0.06" />
-                <text x="0.5" y="0.05" text-anchor="middle" font-size="0.28" fill="#ff6b35">OB</text>
-                <circle id="overlap-ghost-ball-palette" cx="-0.5" cy="0" r="1" fill="rgba(255,215,0,0.15)"
-                  stroke="#ffd700" stroke-width="0.06" stroke-dasharray="0.12,0.08" />
-                <text id="overlap-ghost-label-palette" x="-0.5" y="0.05" text-anchor="middle" font-size="0.28"
-                  fill="#ffd700">GB</text>
-                <clipPath id="clip-obj-ball-palette">
-                  <circle cx="0.5" cy="0" r="1" />
-                </clipPath>
-                <circle id="overlap-region-palette" cx="-0.5" cy="0" r="1" fill="rgba(0,255,170,0.25)"
-                  clip-path="url(#clip-obj-ball-palette)" />
-                <line x1="-3" y1="0" x2="3" y2="0" stroke="#333" stroke-width="0.02" stroke-dasharray="0.08,0.08" />
-              </svg>
-            </div>
-            <div class="overlap-info">
-              <div class="overlap-fraction-english" id="overlapEnglish-palette">Half ball</div>
-              <div class="overlap-fraction-slash" id="overlapSlash-palette">1/2</div>
-            </div>
-          </div>
-          <!-- Shot Stats -->
-          <div class="shot-stats" style="display:flex;flex-direction:column;gap:6px;font-size:12px;">
-            <div class="info-row"><span class="info-label">Cut Angle:</span> <span
-                id="cutAngleDisplay-palette">--</span>
-            </div>
-            <div class="info-row"><span class="info-label">Shot Type:</span> <span
-                id="shotTypeDisplay-palette">--</span>
-            </div>
-            <div class="info-row"><span class="info-label">Make %:</span> <span id="makeProbabilityDisplay"
-                style="font-weight:bold;color:#0f8;">--</span></div>
-            <div class="info-row"><span class="info-label" title="Monte Carlo over the physics core">Sim %:</span>
-                <span id="simMakeDisplay" style="font-weight:bold;color:#0f8;">--</span></div>
-          </div>
-          <!-- Difficulty Bar -->
-          <div class="difficulty-bar" style="margin-top:12px;padding-top:10px;">
-            <span class="difficulty-label">Difficulty</span>
-            <div class="difficulty-meter">
-              <div class="difficulty-fill" id="difficultyFill-palette"></div>
-            </div>
-            <span class="difficulty-text" id="difficultyText-palette">--</span>
-          </div>
-          <!-- Instructions -->
-          <div class="shot-mini-instructions" id="shotMiniInstructions"
-            style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);font-size:11px;color:#9ab;">
-            Place balls and select a pocket
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- (Removed dead duplicate shot-stats block: it carried the same element IDs
+       as #palette-shot, so getElementById resolved to the hidden copy. The live
+       Shot Info panel below is the single source now.) -->
 
   <!-- Palette: Game & Solver (Top-Right) - minimized by default -->
   <div class="tool-palette minimized" id="palette-game" role="region" aria-label="Game settings and shot preferences">
@@ -6553,11 +6502,15 @@
 
       // Start drag (or prepare for potential drag)
       function startDrag(e) {
-        // Ignore clicks on palette elements or other UI controls
-        if (e.target.closest('.tool-palette') ||
+        // A ball sitting in the Balls rack is draggable onto the table even
+        // though it lives inside a .tool-palette — let those through; block
+        // every other palette/UI interaction from starting a drag.
+        const paletteBall = e.target.closest('#palette-balls .ball');
+        if (!paletteBall && (
+          e.target.closest('.tool-palette') ||
           e.target.closest('.palette-restore-btn') ||
           e.target.closest('.tour-tooltip') ||
-          e.target.closest('.status-banner')) {
+          e.target.closest('.status-banner'))) {
           return;
         }
 
@@ -7076,10 +7029,12 @@
       createBalls();
       setupPocketHandlers();
 
-      // Set up initial 8-ball rack (skip if ?empty=1 for testing)
+      // Set up initial 8-ball rack (skip if ?empty=1, or when opening a shared
+      // state link — otherwise the rack would overlap the loaded shot)
       setTimeout(() => {
         const urlParams = new URLSearchParams(window.location.search);
-        if (!urlParams.has('empty')) {
+        const hasStateHash = window.location.hash && window.location.hash.startsWith('#v');
+        if (!urlParams.has('empty') && !hasStateHash) {
           randomRack();  // Use the simplified rack function
         }
       }, 100);

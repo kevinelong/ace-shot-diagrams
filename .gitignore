@@ -47,3 +47,6 @@ diagrams-curriculum/
 # Rust build artifacts
 ace-physics/target/
 ace-physics/pkg/
+
+# UX walkthrough screenshots
+ux-shots/
