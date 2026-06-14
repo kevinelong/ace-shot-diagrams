@@ -82,5 +82,18 @@ view, then settles upright at rest. Implementation (index.html, render-only):
   to centered/upright (easeOutCubic, 280ms) for readability once balls stop.
 - `ballRoll` state is reset at each shot start.
 Verified: faces transform mid-shot and return to identity at rest; all
-batteries still green. Sidespin in-plane spin + striped-band scroll remain as
-future polish.
+batteries still green.
+
+### Polish added (sidespin + striped band)
+- **Sidespin**: side english on the cue (`shotEnglish.x`) drives an in-plane
+  rotation of the face (`SIDESPIN_GAIN` deg per unit travel, decaying by
+  `SIDESPIN_DECAY`), composed into `setFaceTransform` as `rotate(angle 50 50)`.
+  Settles back to 0 with the rest of the face. (Object balls don't carry
+  english here — cue only.)
+- **Striped-band scroll**: balls 9–15 get a live `linear-gradient` band
+  oriented across the roll heading and scrolled by the roll phase
+  (`setStripeBand`); the resting CSS band is restored on settle. Colors in
+  `STRIPE_BALL_COLORS`.
+Verified headless: cue reaches a non-zero in-plane angle mid-shot and 0 at rest;
+the 9-ball shows an inline scrolling gradient mid-shot and restores its CSS band
+at rest; no page errors.

@@ -15,6 +15,29 @@ An interactive pool/billiards shot diagramming tool with physics-based shot solv
 
 No build step, dependencies, or server required - it's a single HTML file.
 
+## Documentation & Notes
+
+Design notes, plans, and research for the project (start with `claude.md`):
+
+| Doc | What it covers |
+|-----|----------------|
+| [claude.md](claude.md) | Developer reference: architecture, coordinate system, physics, the Rust core + tooling, and gotchas |
+| [PLAN.md](PLAN.md) | Five-phase physics/rendering improvement plan (sim↔solver consistency, trails, annotations, curriculum, Rust core) |
+| [ROLLING_BALL_DESIGN.md](ROLLING_BALL_DESIGN.md) | Rolling-ball visualization: model, chosen treatment, and remaining polish |
+| [UX_FIXES_PLAN.md](UX_FIXES_PLAN.md) | UX issues found via the Playwright walkthrough and the fixes applied |
+| [FEATURE_ROADMAP.md](FEATURE_ROADMAP.md) | Planned features and explicit anti-features |
+| [GAME_MODE_PLAN.md](GAME_MODE_PLAN.md) | Game-mode and combo implementation details |
+| [POOL_TABLE_SVG_RESEARCH.md](POOL_TABLE_SVG_RESEARCH.md) | Research behind the pool-table SVG |
+| [PLAYWRIGHT_TEST_PLAN.md](PLAYWRIGHT_TEST_PLAN.md) | Test plan for the Playwright suite |
+| [VERSION_LOG.md](VERSION_LOG.md) | SVG template version history |
+| [tests/README.md](tests/README.md) | How to run the test suites |
+
+### Physics core & tooling
+
+- `ace-physics/` — Rust event-driven physics core (compiles to wasm, embedded in `index.html`); see the "Rust physics core" section of `claude.md`.
+- Node tools (run with `node <file>`): `render-scenarios.js` (state → SVG/PNG, print theme), `render-impacts.js` (impact keyframe GIFs), `make-percentage.js` (Monte Carlo make %), `svg-to-lineart.js` (B&W line drawings), `embed-wasm.js` (re-embed the core).
+- Headless checks: `verify-consistency.js`, `verify-rust-parity.js`, `verify-animation.js`, `verify-spin.js`, `verify-ux-fixes.js`, `verify-sim-make.js`.
+
 ## Features
 
 - **Drag-and-drop ball placement** with real-time shot calculation

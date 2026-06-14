@@ -9228,14 +9228,36 @@
 
       // ── Rolling-ball visualization (render-only) ──
       // The face (number + markings) rolls forward as the ball travels: it
-      // scrolls along the heading, foreshortens, and rolls under/out of view,
-      // then settles upright at rest. Roll phase = travel distance / radius.
-      let ballRoll = {};  // id -> { phase, lastX, lastY, heading, faceState }
+      // scrolls along the heading, foreshortens, and rolls under/out of view.
+      // Side english adds an in-plane spin; striped balls scroll their band
+      // across the roll direction. Everything settles upright at rest.
+      let ballRoll = {};   // id -> { phase, lastX, lastY, heading, spinAngle, spinRate, faceState }
+      let shotEnglish = { x: 0, y: 0 };
+      const STRIPE_BALL_COLORS = {
+        '9': '#ffd700', '10': '#0066cc', '11': '#ff4444', '12': '#6b2d8b',
+        '13': '#ff6600', '14': '#006633', '15': '#8b0000'
+      };
+      const SIDESPIN_GAIN = 24;   // degrees of in-plane spin per unit travel at full english
+      const SIDESPIN_DECAY = 0.985;
 
-      function setFaceTransform(face, tX, tY, scale, opacity) {
+      function setFaceTransform(face, tX, tY, scale, opacity, angle) {
+        const a = angle || 0;
         face.setAttribute('transform',
-          `translate(${tX} ${tY}) translate(50 50) scale(${scale}) translate(-50 -50)`);
+          `translate(${tX} ${tY}) rotate(${a} 50 50) translate(50 50) scale(${scale}) translate(-50 -50)`);
         face.setAttribute('opacity', opacity);
+      }
+
+      // Scroll a striped ball's band across the roll direction (perpendicular to
+      // heading), shifting position with the roll phase; '' restores the resting band.
+      function setStripeBand(el, id, headingDeg, shiftPct) {
+        const c = STRIPE_BALL_COLORS[id];
+        if (!c) return;
+        if (headingDeg === null) { el.style.background = ''; return; }
+        const a = (headingDeg + 90).toFixed(1);            // band lies across the roll axis
+        const lo = Math.max(0, Math.min(60, shiftPct - 25));
+        const hi = Math.max(40, Math.min(100, shiftPct + 25));
+        el.style.background =
+          `linear-gradient(${a}deg, ${c} 0%, ${c} ${lo}%, #fff ${lo}%, #fff ${hi}%, ${c} ${hi}%, ${c} 100%)`;
       }
 
       // tx,ty in table (SVG) coordinates — the ball's current render position
@@ -9244,22 +9266,34 @@
         const face = el && el.querySelector('.ball-face');
         if (!face) return;
         let st = ballRoll[id];
-        if (!st) st = ballRoll[id] = { phase: 0, lastX: tx, lastY: ty, heading: { hx: 0, hy: -1 } };
+        if (!st) {
+          // side english spins the cue in-plane; object balls don't carry it here
+          const rate = id === 'cue' ? shotEnglish.x * SIDESPIN_GAIN : 0;
+          st = ballRoll[id] = { phase: 0, lastX: tx, lastY: ty, heading: { hx: 0, hy: -1 }, spinAngle: 0, spinRate: rate };
+        }
         const dx = tx - st.lastX, dy = ty - st.lastY;
         const dist = Math.sqrt(dx * dx + dy * dy);
         st.lastX = tx; st.lastY = ty;
         if (dist > 1e-4) {
           st.phase += dist / BALL_RADIUS;       // radians of roll
           st.heading = { hx: dx / dist, hy: dy / dist };
+          st.spinAngle += st.spinRate * dist;   // in-plane sidespin
+          st.spinRate *= SIDESPIN_DECAY;
         }
         const ph = st.phase, c = Math.cos(ph), s = Math.sin(ph);
-        // 50 = face viewBox radius; project the surface mark top-down
-        const tX = 50 * s * st.heading.hx;
+        const tX = 50 * s * st.heading.hx;       // 50 = face viewBox radius
         const tY = 50 * s * st.heading.hy;
         const scale = 0.5 + 0.5 * Math.max(0, c);
         const opacity = Math.max(0, c);          // mark vanishes as it rolls under
-        setFaceTransform(face, tX, tY, scale, opacity);
-        st.faceState = { tX, tY, scale, opacity };
+        setFaceTransform(face, tX, tY, scale, opacity, st.spinAngle);
+        st.faceState = { tX, tY, scale, opacity, angle: st.spinAngle };
+
+        // striped balls: band oriented across the roll, scrolling with phase
+        if (STRIPE_BALL_COLORS[id]) {
+          const headingDeg = Math.atan2(st.heading.hy, st.heading.hx) * 180 / Math.PI;
+          setStripeBand(el, id, headingDeg, 50 + 40 * s);
+          st.striped = true;
+        }
       }
 
       // Ease every rolled face back to upright/centered for readability at rest
@@ -9268,7 +9302,7 @@
         for (const id in ballRoll) {
           const el = document.getElementById(`ball-${id}`);
           const face = el && el.querySelector('.ball-face');
-          if (face && ballRoll[id].faceState) items.push({ face, from: ballRoll[id].faceState });
+          if (face && ballRoll[id].faceState) items.push({ el, id, face, from: ballRoll[id].faceState, striped: ballRoll[id].striped });
         }
         ballRoll = {};
         if (!items.length) return;
@@ -9282,10 +9316,14 @@
             setFaceTransform(face,
               from.tX * (1 - e), from.tY * (1 - e),
               from.scale + (1 - from.scale) * e,
-              from.opacity + (1 - from.opacity) * e);
+              from.opacity + (1 - from.opacity) * e,
+              from.angle * (1 - e));
           }
           if (k < 1) requestAnimationFrame(step);
-          else for (const { face } of items) setFaceTransform(face, 0, 0, 1, 1);
+          else for (const { el, id, face, striped } of items) {
+            setFaceTransform(face, 0, 0, 1, 1, 0);
+            if (striped) setStripeBand(el, id, null);  // restore the resting CSS band
+          }
         }
         requestAnimationFrame(step);
       }
@@ -9436,8 +9474,9 @@
         }
         shotBallStates['cue'].english = { x: contactOffset.x, y: contactOffset.y };
 
-        // reset rolling-face state so faces start upright
+        // reset rolling-face state so faces start upright; capture english for sidespin
         ballRoll = {};
+        shotEnglish = { x: contactOffset.x, y: contactOffset.y };
 
         // Prefer the Rust core: resolve the whole shot up front, then play back
         // its exact trajectories. Falls back to the JS stepper if unavailable.
