@@ -1219,6 +1219,7 @@
       transition: transform 0.1s;
       flex-shrink: 0;
       position: relative;
+      overflow: hidden;  /* clip the rolling face so markings roll under and out of view */
     }
 
     /* SVG label container inside ball */
@@ -5674,6 +5675,22 @@
           svg.setAttribute('viewBox', '0 0 100 100');
           svg.setAttribute('class', 'ball-label-svg');
 
+          // The label + markings live in a "ball-face" group so they can be
+          // rolled (translated/faded) as a unit during shot playback and
+          // settled back upright at rest.
+          const face = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          face.setAttribute('class', 'ball-face');
+
+          // Cue ball: a red "measle" dot so the white ball visibly rolls
+          if (ball.id === 'cue') {
+            const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            dot.setAttribute('cx', '50');
+            dot.setAttribute('cy', '50');
+            dot.setAttribute('r', '11');
+            dot.setAttribute('fill', '#cc2222');
+            face.appendChild(dot);
+          }
+
           const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
           text.setAttribute('x', '50');
           text.setAttribute('y', '50');
@@ -5690,7 +5707,8 @@
             text.setAttribute('class', 'ball-label ball-label-number');
           }
 
-          svg.appendChild(text);
+          face.appendChild(text);
+          svg.appendChild(face);
           el.appendChild(svg);
 
           // Put cue and ghost in special row, others in grid
@@ -9208,6 +9226,70 @@
       let wasmShotTraj = null;
       let wasmShotDuration = 0;
 
+      // ── Rolling-ball visualization (render-only) ──
+      // The face (number + markings) rolls forward as the ball travels: it
+      // scrolls along the heading, foreshortens, and rolls under/out of view,
+      // then settles upright at rest. Roll phase = travel distance / radius.
+      let ballRoll = {};  // id -> { phase, lastX, lastY, heading, faceState }
+
+      function setFaceTransform(face, tX, tY, scale, opacity) {
+        face.setAttribute('transform',
+          `translate(${tX} ${tY}) translate(50 50) scale(${scale}) translate(-50 -50)`);
+        face.setAttribute('opacity', opacity);
+      }
+
+      // tx,ty in table (SVG) coordinates — the ball's current render position
+      function applyBallRoll(id, tx, ty) {
+        const el = document.getElementById(`ball-${id}`);
+        const face = el && el.querySelector('.ball-face');
+        if (!face) return;
+        let st = ballRoll[id];
+        if (!st) st = ballRoll[id] = { phase: 0, lastX: tx, lastY: ty, heading: { hx: 0, hy: -1 } };
+        const dx = tx - st.lastX, dy = ty - st.lastY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        st.lastX = tx; st.lastY = ty;
+        if (dist > 1e-4) {
+          st.phase += dist / BALL_RADIUS;       // radians of roll
+          st.heading = { hx: dx / dist, hy: dy / dist };
+        }
+        const ph = st.phase, c = Math.cos(ph), s = Math.sin(ph);
+        // 50 = face viewBox radius; project the surface mark top-down
+        const tX = 50 * s * st.heading.hx;
+        const tY = 50 * s * st.heading.hy;
+        const scale = 0.5 + 0.5 * Math.max(0, c);
+        const opacity = Math.max(0, c);          // mark vanishes as it rolls under
+        setFaceTransform(face, tX, tY, scale, opacity);
+        st.faceState = { tX, tY, scale, opacity };
+      }
+
+      // Ease every rolled face back to upright/centered for readability at rest
+      function settleBallFaces() {
+        const items = [];
+        for (const id in ballRoll) {
+          const el = document.getElementById(`ball-${id}`);
+          const face = el && el.querySelector('.ball-face');
+          if (face && ballRoll[id].faceState) items.push({ face, from: ballRoll[id].faceState });
+        }
+        ballRoll = {};
+        if (!items.length) return;
+        const dur = 280;
+        let start = null;
+        function step(now) {
+          if (start === null) start = now;
+          const k = Math.min(1, (now - start) / dur);
+          const e = 1 - Math.pow(1 - k, 3); // easeOutCubic
+          for (const { face, from } of items) {
+            setFaceTransform(face,
+              from.tX * (1 - e), from.tY * (1 - e),
+              from.scale + (1 - from.scale) * e,
+              from.opacity + (1 - from.opacity) * e);
+          }
+          if (k < 1) requestAnimationFrame(step);
+          else for (const { face } of items) setFaceTransform(face, 0, 0, 1, 1);
+        }
+        requestAnimationFrame(step);
+      }
+
       function animateShotWasm(timestamp) {
         if (!isShotAnimating) return;
         if (wasmShotStart === null) wasmShotStart = timestamp;
@@ -9241,6 +9323,7 @@
           } else {
             el.style.display = '';
             positionBallOnTable(el, s.x, s.y);
+            applyBallRoll(id, s.x, s.y);
           }
         }
       }
@@ -9352,6 +9435,9 @@
           shotBallStates[id] = { x: b.x, y: b.y, vx: b.vx, vy: b.vy, pocketed: false };
         }
         shotBallStates['cue'].english = { x: contactOffset.x, y: contactOffset.y };
+
+        // reset rolling-face state so faces start upright
+        ballRoll = {};
 
         // Prefer the Rust core: resolve the whole shot up front, then play back
         // its exact trajectories. Falls back to the JS stepper if unavailable.
@@ -9492,7 +9578,10 @@
           } else {
             const px = ball.prevX !== undefined ? ball.prevX : ball.x;
             const py = ball.prevY !== undefined ? ball.prevY : ball.y;
-            positionBallOnTable(ballEl, px + (ball.x - px) * alpha, py + (ball.y - py) * alpha);
+            const rx = px + (ball.x - px) * alpha;
+            const ry = py + (ball.y - py) * alpha;
+            positionBallOnTable(ballEl, rx, ry);
+            applyBallRoll(ballId, rx, ry);
           }
         }
       }
@@ -9740,6 +9829,9 @@
       // Finalize ball positions after shot animation
       function finalizeShotPositions() {
         isShotAnimating = false;
+
+        // ease rolled ball faces back to upright/centered for readability
+        settleBallFaces();
 
         if (window.ACE_SHOT) {
           window.ACE_SHOT.final = snapshotShotBalls();

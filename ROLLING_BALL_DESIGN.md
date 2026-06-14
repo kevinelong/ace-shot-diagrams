@@ -67,3 +67,20 @@ event, striped-ball band scroll.
 - Readability: mitigated by keeping the number centered/upright.
 - Performance: ~16 balls × a few pips × 60fps = trivial DOM/SVG work.
 - Taste: the pip look is a deliberate choice — confirm before building.
+
+## BUILT (chosen variant: full face roll + settle-upright)
+Per Kevin's call, the face (number + markings) genuinely rolls under and out of
+view, then settles upright at rest. Implementation (index.html, render-only):
+- Each ball's label is wrapped in a `.ball-face` <g>; the cue gets a red measle
+  dot so the white ball visibly rolls. `.ball` is `overflow:hidden` so the face
+  clips at the circle as it rolls under.
+- `applyBallRoll(id, x, y)` advances roll phase by travel-distance/radius and
+  sets the face transform: along-heading offset `50·sin(phase)`, scale/opacity
+  `cos(phase)` (foreshorten + vanish over the edge). Called from both render
+  paths (`renderWasmFrame`, `renderShotBalls`).
+- `settleBallFaces()` (called in `finalizeShotPositions`) eases every face back
+  to centered/upright (easeOutCubic, 280ms) for readability once balls stop.
+- `ballRoll` state is reset at each shot start.
+Verified: faces transform mid-shot and return to identity at rest; all
+batteries still green. Sidespin in-plane spin + striped-band scroll remain as
+future polish.
