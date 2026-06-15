@@ -59,3 +59,6 @@ lineart/
 
 # Break recording output (frames + encoded clips)
 out/
+
+# Make-% heatmaps
+heatmaps/
