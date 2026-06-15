@@ -36,6 +36,10 @@ const MOUTH_R: f64 = 5.0;
 
 const RAIL_COR: f64 = 0.85;
 const BALL_COR: f64 = 0.95;
+// Coulomb friction coefficient at a ball-ball contact. Drives collision-induced
+// "throw": a cut shot drags the struck ball slightly off the pure line of
+// centers. ~0.06 for clean polished balls (Dr. Dave's measured average).
+const MU_BALL: f64 = 0.06;
 // JS tuning: per-step friction 0.985 at 60 steps/s; v_min 0.02 units/step
 fn lambda() -> f64 {
     -60.0 * (0.985_f64).ln()
@@ -318,6 +322,23 @@ pub fn simulate_core(mut balls: Vec<Ball>, mut english: Option<English>, max_tim
                         balls[i].vy -= imp * ny;
                         balls[j].vx += imp * nx;
                         balls[j].vy += imp * ny;
+
+                        // collision-induced throw: friction at the contact
+                        // imparts a tangential impulse opposing the relative
+                        // surface slip, deflecting the struck ball off the pure
+                        // line of centers. The normal impulse above is along n,
+                        // so it leaves the tangential component untouched — dvt
+                        // is the same before or after it. Coulomb-capped at
+                        // MU_BALL * |normal impulse|; uncapped it would need
+                        // dvt/2 to fully arrest equal-mass tangential slip.
+                        let tx = -ny;
+                        let ty = nx;
+                        let dvt = (balls[i].vx - balls[j].vx) * tx + (balls[i].vy - balls[j].vy) * ty;
+                        let jt = (MU_BALL * imp).min(dvt.abs() * 0.5) * dvt.signum();
+                        balls[i].vx -= jt * tx;
+                        balls[i].vy -= jt * ty;
+                        balls[j].vx += jt * tx;
+                        balls[j].vy += jt * ty;
 
                         // english on first cue contact (english.take() => once)
                         if Some(i) == cue_idx || Some(j) == cue_idx {

@@ -44,6 +44,22 @@ function parseState(state) {
   return out
 }
 
+const THROW_MU = 0.06
+// pre-rotate the OB->pocket aim by the predicted collision-induced throw so the
+// ball still arrives at the pocket (same correction as index.html)
+function throwCompensatedDir(cue, ob, objToPocket) {
+  const contact = { x: ob.x - objToPocket.x * BALL_D, y: ob.y - objToPocket.y * BALL_D }
+  const al = Math.hypot(contact.x - cue.x, contact.y - cue.y) || 1
+  const ap = { x: (contact.x - cue.x) / al, y: (contact.y - cue.y) / al }
+  const d = objToPocket
+  const cosT = Math.max(ap.x * d.x + ap.y * d.y, 1e-6)
+  const sinT = ap.x * d.y - ap.y * d.x
+  const phi = Math.atan(Math.min(THROW_MU, 0.5 * Math.abs(sinT) / cosT))
+  const a = phi * Math.sign(sinT)
+  const ca = Math.cos(a), sa = Math.sin(a)
+  return { x: d.x * ca - d.y * sa, y: d.x * sa + d.y * ca }
+}
+
 let passed = 0, ran = 0
 for (const c of battery) {
   if (c.expectHit) continue // kick aim comes from the JS solver
@@ -52,8 +68,11 @@ for (const c of battery) {
   const ob = s.balls[c.expectBall]
   const pk = POCKETS[c.expectPocket]
   const pd = Math.hypot(pk.x - ob.x, pk.y - ob.y)
-  const ghost = { x: ob.x - (pk.x - ob.x) / pd * BALL_D, y: ob.y - (pk.y - ob.y) / pd * BALL_D }
   const cue = s.balls.cue
+  // throw-compensated aim — mirrors throwCompensatedAimDir() in index.html so the
+  // geometric aim accounts for collision-induced throw (MU_BALL in the core)
+  const aim = throwCompensatedDir(cue, ob, { x: (pk.x - ob.x) / pd, y: (pk.y - ob.y) / pd })
+  const ghost = { x: ob.x - aim.x * BALL_D, y: ob.y - aim.y * BALL_D }
   const ad = Math.hypot(ghost.x - cue.x, ghost.y - cue.y)
   const speed = s.force * 0.75 * 60 // units/sec
   const balls = Object.fromEntries(Object.entries(s.balls).map(([id, b]) =>
