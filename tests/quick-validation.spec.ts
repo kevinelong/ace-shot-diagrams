@@ -10,13 +10,23 @@ test.describe('Palette Minimize Fix Validation', () => {
     await page.goto('/');
     await page.waitForSelector('#pool-table-svg', { state: 'visible', timeout: 10000 });
     await page.waitForTimeout(500);
+    // Suppress tour and normalize default-minimized palettes (Game, Aids) to expanded
+    await page.evaluate(() => {
+      for (const id of ['tourTooltip', 'tourOverlay']) {
+        const el = document.getElementById(id); if (el) el.style.display = 'none';
+      }
+      document.querySelectorAll('.tool-palette.minimized').forEach((p: any) => {
+        p.classList.remove('minimized');
+        const b = p.querySelector('.palette-btn.minimize'); if (b) b.textContent = '−';
+      });
+    });
   });
 
-  test('Save palette minimize button should work without table interaction', async ({ page }) => {
+  test('Palette minimize button should work without table interaction', async ({ page }) => {
     // Place cue ball on table
     const cueBall = page.locator('#ball-cue');
     const table = page.locator('#pool-table-svg');
-    
+
     // Drag cue ball to table
     await cueBall.dragTo(table, {
       sourcePosition: { x: 20, y: 20 },
@@ -35,10 +45,10 @@ test.describe('Palette Minimize Fix Validation', () => {
 
     console.log('Position before minimize:', positionBefore);
 
-    // Find save palette and its minimize button
-    const savePalette = page.locator('#palette-save');
+    // Use the Actions palette (palette-save was removed)
+    const savePalette = page.locator('#palette-actions');
     await expect(savePalette).toBeVisible();
-    
+
     const minimizeBtn = savePalette.locator('.palette-btn.minimize');
     await expect(minimizeBtn).toBeVisible();
     await expect(minimizeBtn).toHaveText('−');
@@ -112,9 +122,9 @@ test.describe('Palette Minimize Fix Validation', () => {
 
   test('All palettes minimize buttons registered correctly', async ({ page }) => {
     const paletteIds = [
-      'palette-balls', 'palette-cue', 'palette-legend', 
-      'palette-game', 'palette-shot', 'palette-actions', 
-      'palette-save', 'palette-aids'
+      'palette-balls', 'palette-cue',
+      'palette-game', 'palette-shot', 'palette-actions',
+      'palette-aids'
     ];
 
     for (const paletteId of paletteIds) {

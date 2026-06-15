@@ -250,24 +250,48 @@ export class AceShotHelper {
 
   // ==================== English Controls ====================
 
+  // english grid coords: x>0 right, y>0 top. The app stores contact offset with
+  // y inverted (cy<0 = top spin), so map y -> -y when driving DEBUG.setEnglish.
   async setEnglish(x: number, y: number) {
-    const gridX = Math.round((x + 1) * 1);
-    const gridY = Math.round((1 - y) * 1);
-    await this.page.click(`#english-selector .english-point[data-x="${gridX}"][data-y="${gridY}"]`);
+    await this.page.evaluate(({ x, y }) => {
+      // @ts-ignore
+      window.DEBUG.setEnglish(x, -y);
+    }, { x, y });
     await this.waitForShotCalculation();
   }
 
   // ==================== Power Control ====================
 
-  async setPower(percentage: number) {
-    await this.page.locator('#forceSlider').fill(percentage.toString());
+  // value on the app's 1-10 scale
+  async setPower(value: number) {
+    await this.page.evaluate((v) => {
+      // @ts-ignore
+      window.DEBUG.setPower(v);
+    }, value);
     await this.waitForShotCalculation();
+  }
+
+  // ==================== Solver / Shot Types ====================
+
+  async enableKickSolver() {
+    await this.page.evaluate(() => {
+      // @ts-ignore
+      window.DEBUG.setSolver('kick');
+    });
+    await this.waitForShotCalculation();
+  }
+
+  async isKickModeActive(): Promise<boolean> {
+    return await this.page.evaluate(() => {
+      // @ts-ignore
+      return window.DEBUG.state().solver === 'kick';
+    });
   }
 
   // ==================== Game Modes ====================
 
   async setGameMode(mode: string) {
-    await this.page.selectOption('#gameModeSelect', mode);
+    await this.page.selectOption('#gameModeSelect-palette', mode);
     await this.waitForShotCalculation();
   }
 

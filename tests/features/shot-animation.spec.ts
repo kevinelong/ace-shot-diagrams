@@ -108,11 +108,14 @@ test.describe('Shot Animation System', () => {
         // Wait for shot geometry calculation and ball positioning
         await page.waitForTimeout(500);
 
-        // Verify cue-ghost line exists and becomes visible
+        // Verify cue-ghost line is rendered. NOTE: the break aim is horizontal
+        // (cue and ghost share y), so the SVG path has a zero-height bbox and
+        // toBeVisible() reports false — assert via attributes instead.
         const cueLine = page.locator('#cue-ghost-line');
-        await expect(cueLine).toBeVisible({ timeout: 10000 });
+        await expect(cueLine).toHaveAttribute('visibility', 'visible', { timeout: 10000 });
 
-        // Verify line has stroke (is rendered)
+        const lineD = await cueLine.getAttribute('d');
+        expect(lineD).toBeTruthy();
         const lineStroke = await cueLine.getAttribute('stroke');
         expect(lineStroke).toBeTruthy();
 

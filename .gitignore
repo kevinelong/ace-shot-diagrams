@@ -51,6 +51,9 @@ ace-physics/pkg/
 # UX walkthrough screenshots
 ux-shots/
 
+# Playwright UI test screenshots (regenerated each run, not snapshot baselines)
+tests/ui-ux/screenshots/
+
 # B&W line-art exports
 lineart/
 

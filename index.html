@@ -2948,7 +2948,7 @@
             <div class="shoot-row">
               <button class="shoot-btn-compact" id="btnShoot" title="Execute the shot"
                 aria-label="Shoot - Execute the current shot">
-                <span>🎯</span>
+                <span class="btn-icon" aria-hidden="true">🎯</span>
                 <span>Shoot</span>
               </button>
             </div>
@@ -7046,7 +7046,8 @@
         selectedBallId = null;
         selectedPocket = null;
 
-        // Set top spin (12 o'clock / follow) - already set as default
+        // Set top spin (12 o'clock / follow) for the break
+        contactOffset = { x: 0, y: -0.4 };
         contactPoint.setAttribute('cx', contactOffset.x);
         contactPoint.setAttribute('cy', contactOffset.y);
         updateSpinDisplay(getSpinType(contactOffset));
@@ -10027,16 +10028,20 @@
           }
         }
 
-        // Set break-appropriate english and power
-        // Max draw (bottom spin) for power break with cue ball control
-        contactOffset = { x: 0, y: 0.55 };  // Max draw (backspin) for break
+        // Set break-appropriate english and power: follow (top spin) drives the
+        // cue through the rack; strong-but-controlled 7/10 power
+        contactOffset = { x: 0, y: -0.4 };  // follow (top spin) for the break
         contactPoint.setAttribute('cx', 0);
-        contactPoint.setAttribute('cy', 0.55);
+        contactPoint.setAttribute('cy', -0.4);
         updateSpinDisplay(getSpinType(contactOffset));
 
-        shotForce = 10;  // Maximum break power (10/10)
+        shotForce = 7;  // controlled break power (7/10)
         forceSlider.value = shotForce;
         forceValueDisplay.textContent = shotForce;
+        const fsp = document.getElementById('forceSlider-palette');
+        const fvp = document.getElementById('forceValue-palette');
+        if (fsp) fsp.value = shotForce;
+        if (fvp) fvp.textContent = shotForce;
 
         // Initialize break ball states
         breakBallStates = {};
@@ -11019,7 +11024,8 @@
           selectedPocket,
           isBreakSetup,
           isShotAnimating,
-          isBreakAnimating
+          isBreakAnimating,
+          solver: currentSolverMode
         }),
         ghost: () => ballPositions['ghost'],
         cue: () => ballPositions['cue'],
@@ -11051,6 +11057,38 @@
           // Use the internal selectPocket function which also auto-positions ghost ball
           selectPocket(pocketId);
           return { success: true, selectedPocket: pocketId };
+        },
+
+        // Test API: Set english (cue contact offset). x>0 right, y>0 draw.
+        setEnglish: (x, y) => {
+          contactOffset = { x, y };
+          contactPoint.setAttribute('cx', x);
+          contactPoint.setAttribute('cy', y);
+          updateSpinDisplay(getSpinType(contactOffset));
+          updateShotGeometry();
+          return { success: true, english: { x, y } };
+        },
+
+        // Test API: Set shot power (1-10)
+        setPower: (v) => {
+          shotForce = v;
+          if (forceSlider) forceSlider.value = v;
+          if (forceValueDisplay) forceValueDisplay.textContent = v;
+          const fp = document.getElementById('forceSlider-palette');
+          const fv = document.getElementById('forceValue-palette');
+          if (fp) fp.value = v;
+          if (fv) fv.textContent = v;
+          updateShotGeometry();
+          return { success: true, power: v };
+        },
+
+        // Test API: Set solver mode ('auto' | 'kick' | 'bank' | 'combo')
+        setSolver: (mode) => {
+          currentSolverMode = mode;
+          document.querySelectorAll(`input[name="solver-mode-palette"], input[name="solver-mode"]`)
+            .forEach(r => { r.checked = (r.value === mode); });
+          updateShotGeometry();
+          return { success: true, solver: mode };
         },
 
         // Shot validation
