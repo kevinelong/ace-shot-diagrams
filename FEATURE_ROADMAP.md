@@ -13,6 +13,10 @@
 - Power slider with physics-based path prediction
 - Shot difficulty scoring
 - Object ball and cue ball final position indicators
+- Event-driven Rust/WASM physics core (with JS fallback) running the live app
+- Collision-induced throw in both engines + throw-compensated aim so cuts still
+  pot (direct/bank/kick/combo); validated by verify-rust-parity.js (8/8) and the
+  app-level verify-shots.cjs harness (6/6)
 
 ---
 

@@ -107,7 +107,17 @@ Pool table SVG template for creating interactive shot diagrams with physics-base
 - Per-rail approach angle awareness for kick shots
 - Energy transfer with coefficient of restitution (0.95)
 - Ball friction: 0.2, Rail bounce: 0.85
-- Throw calculation for spin transfer
+- Throw — two mechanisms:
+  - **Spin/english throw**: side english deflects the struck ball (the bank
+    solver reports the error + suggests compensating english).
+  - **Collision-induced throw**: a Coulomb tangential friction impulse
+    (`MU_BALL=0.06`) at every ball-ball contact — a cut drags the struck ball a
+    few degrees toward the cut (head-on→0, capped ~atan(MU)≈3.4°). Present in
+    BOTH engines (Rust core + the JS fallback resolvers) so they agree.
+  - **Throw-compensated aim** (`throwCompensatedAimDir`): the solver pre-rotates
+    the aim by the predicted throw so shots still pot — applied to direct, bank,
+    and combo (both contacts); kicks re-solve using the off-rail arrival
+    direction. Mirrored in `verify-rust-parity.js` so the battery stays green.
 - Cue ball path with draw/follow curve effect
 - Fixed-timestep animation (60 physics steps/sec via accumulator) with render
   interpolation — refresh-rate independent; movement substeps capped at ~0.9
@@ -125,10 +135,21 @@ URLs auto-update with diagram state. Format:
 ```
 
 ### Running Tests
-Open browser console and run:
-```javascript
-ACETests.runAll()
+In the browser console: `ACETests.runAll()`. Headless (Node):
+```bash
+node verify-rust-parity.js   # Rust core + geometric aim vs the shot battery (8/8)
+node verify-shots.cjs        # app-level: drives the REAL solver for
+                             # direct/bank/kick/combo, asserts the ball pots (6/6)
+npm test                     # full Playwright UI suite (needs `npx playwright install`)
 ```
+`verify-shots.cjs` is the safety net for aim changes (throw compensation etc.):
+unlike the parity harness it exercises the computed aim solvers, not a geometric
+aim. It uses playwright-core + system chromium (no browser download).
+
+After changing the Rust core, rebuild AND re-embed or the live app runs stale
+wasm: `cargo build --release --target wasm32-unknown-unknown` (in ace-physics/)
+then `node embed-wasm.js`. Builds are deterministic per-toolchain but differ
+ACROSS toolchains, so embed from one canonical machine to avoid base64 churn.
 
 ## Batch Scenario Rendering (headless)
 
@@ -172,7 +193,8 @@ Regenerate all print figures:
 
 ### Rust physics core (ace-physics/)
 Event-driven continuous-time sim matching the JS semantics (same friction/
-COR/pockets/english) with exact event times — no tunneling by construction.
+COR/pockets/english/collision-throw `MU_BALL`) with exact event times — no
+tunneling by construction.
 With uniform exponential friction, positions are linear in warped time
 τ = (1−e^(−λt))/λ, so contacts/rails/pockets are closed-form quadratic solves.
 A battery shot resolves in ~2 events instead of ~120 timesteps (microseconds
@@ -302,6 +324,11 @@ calculateMakeProbability(shotData) // returns 5-95%
 - [x] ~~First-time user tour~~ (Implemented)
 - [x] ~~Test suite~~ (Implemented)
 - [x] ~~Local storage save/load named diagrams~~ (Implemented)
+- [x] ~~Collision-induced throw (both engines) + throw-compensated aim
+  (direct/bank/kick/combo)~~ (Implemented; parity 8/8, verify-shots.cjs 6/6)
+- [ ] Kick throw compensation: use the off-rail arrival direction with a
+  constructed make-vs-miss test (currently arrival-correct but only
+  no-regression validated; kicks pot within pocket tolerance regardless)
 - [ ] Safety shot mode (snooker zones, defensive positions)
 - [ ] Multi-shot sequences (run-out planning)
 - [x] ~~Mobile responsiveness (@media queries)~~ (Implemented)
