@@ -57,7 +57,10 @@ async function runCase(ctx, c) {
 }
 
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/usr/bin/chromium-browser', args: ['--no-sandbox', '--disable-gpu'] });
+  // Linux/WSL default; override with CHROMIUM_PATH on other OSes (e.g. Windows:
+  // set CHROMIUM_PATH to the Playwright chrome.exe under %LOCALAPPDATA%\ms-playwright)
+  const exe = process.env.CHROMIUM_PATH || '/usr/bin/chromium-browser';
+  const browser = await chromium.launch({ executablePath: exe, args: ['--no-sandbox', '--disable-gpu'] });
   const ctx = await browser.newContext({ viewport: { width: 1100, height: 640 } });
   await ctx.addInitScript(() => localStorage.setItem('ace-tour-completed', 'true'));
   let pass = 0;

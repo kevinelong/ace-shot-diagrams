@@ -27,6 +27,11 @@ const results = {}
 await page.setViewportSize({ width: 1440, height: 900 })
 await page.goto(`${indexUrl}#v1|cue:32,34|1:66,28|p:cbr|b:1|m:9ball|f:6|e:0.0,0.0|s:auto`, { waitUntil: 'load' })
 await page.waitForTimeout(1500); await killTour()
+// the unified Make % is empirical (debounced + async core); wait for it
+await page.waitForFunction(() => {
+  const e = document.querySelector('#palette-shot #makeProbabilityDisplay')
+  return e && /\d+%/.test(e.textContent)
+}, null, { timeout: 8000 }).catch(() => {})
 
 results.shotPanelVisible = await page.evaluate(() => {
   const el = document.getElementById('palette-shot')
@@ -40,8 +45,7 @@ results.fields = await page.evaluate(() => {
   const direct = id => document.getElementById(id)?.textContent
   return {
     cut: direct('cutAngleDisplay-palette'),
-    make: txt('makeProbabilityDisplay'),
-    sim: txt('simMakeDisplay'),
+    make: txt('makeProbabilityDisplay'),  // unified empirical Make %
   }
 })
 // exclude the ghost/aim ball; should be exactly cue + 1 (no rack)
@@ -73,7 +77,7 @@ console.log('page errors: ' + (errs.length ? errs.join(' | ') : 'none'))
 const pass =
   errs.length === 0 &&
   results.shotPanelVisible &&
-  /\d/.test(results.fields.make || '') && /%/.test(results.fields.sim || '') &&
+  /\d/.test(results.fields.make || '') && /%/.test(results.fields.make || '') &&
   results.fields.cut && results.fields.cut !== '--' &&
   results.ballsOnTable === 2 &&
   results.dragOntoTable
