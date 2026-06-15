@@ -4582,8 +4582,11 @@
             if (tooCloseToCorner) continue;
 
             // Calculate ghost ball position for this bank shot
-            // Ghost ball is positioned so OB travels from OB pos toward bank point
-            const obToBankDir = vectorNormalize(vectorSubtract(bankPoint, objBallPos));
+            // Ghost ball is positioned so OB travels from OB pos toward bank point.
+            // Throw-compensate the OB->bankPoint departure (same as direct shots)
+            // so collision throw doesn't push the OB off the bank line.
+            const obToBankDir = throwCompensatedAimDir(
+              cuePos, objBallPos, vectorNormalize(vectorSubtract(bankPoint, objBallPos)));
             const ghostPos = {
               x: objBallPos.x - obToBankDir.x * GHOST_BALL_OFFSET,
               y: objBallPos.y - obToBankDir.y * GHOST_BALL_OFFSET
@@ -4777,12 +4780,13 @@
           const helperPos = ballPositions[helperBallId];
           if (!helperPos) continue;
 
-          // Calculate where helper needs to hit target to send it toward pocket
-          // Ghost ball position for helper → target collision
-          const targetToPocket = vectorNormalize({
+          // Calculate where helper needs to hit target to send it toward pocket.
+          // Throw-compensate the target->pocket departure for the helper->target
+          // contact (the helper is the striker here).
+          const targetToPocket = throwCompensatedAimDir(helperPos, targetPos, vectorNormalize({
             x: pocketPos.x - targetPos.x,
             y: pocketPos.y - targetPos.y
-          });
+          }));
 
           // Target ghost position (where helper should contact target)
           const targetGhostPos = {
@@ -4790,11 +4794,12 @@
             y: targetPos.y - targetToPocket.y * BALL_RADIUS * 2
           };
 
-          // Calculate where cue needs to hit helper to send it toward target ghost
-          const helperToTargetGhost = vectorNormalize({
+          // Calculate where cue needs to hit helper to send it toward target ghost.
+          // Throw-compensate the second contact too (cue is the striker here).
+          const helperToTargetGhost = throwCompensatedAimDir(cuePos, helperPos, vectorNormalize({
             x: targetGhostPos.x - helperPos.x,
             y: targetGhostPos.y - helperPos.y
-          });
+          }));
 
           // Helper ghost position (where cue should contact helper)
           const helperGhostPos = {
