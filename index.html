@@ -5858,7 +5858,24 @@
           if (objBallPos) {
             // Pass shotForce, pocketPos, and targetBallId for physics-based path evaluation
             // This checks ALL balls on table as obstacles, not just the object ball
-            const kickPath = findKickPath(cuePos, ghostPos, objBallPos, contactOffset.x, shotForce, pocketPos, selectedBallId);
+            let kickPath = findKickPath(cuePos, ghostPos, objBallPos, contactOffset.x, shotForce, pocketPos, selectedBallId);
+            let kickGhost = ghostPos;
+
+            // A kick arrives at the OB off a rail, so the throw at that contact
+            // depends on the ARRIVAL direction (last bounce -> OB), not the cue's
+            // direct line. Re-compensate the OB->pocket aim with that arrival and
+            // re-solve to the corrected contact point (one pass; throw is small).
+            if (kickPath && kickPath.bouncePoints && kickPath.bouncePoints.length && objBallPos && pocketPos) {
+              const lastB = kickPath.bouncePoints[kickPath.bouncePoints.length - 1];
+              const obToPocket = vectorNormalize(vectorSubtract(pocketPos, objBallPos));
+              const compDir = throwCompensatedAimDir(lastB, objBallPos, obToPocket);
+              const kg2 = {
+                x: objBallPos.x - compDir.x * GHOST_BALL_OFFSET,
+                y: objBallPos.y - compDir.y * GHOST_BALL_OFFSET
+              };
+              const kp2 = findKickPath(cuePos, kg2, objBallPos, contactOffset.x, shotForce, pocketPos, selectedBallId);
+              if (kp2) { kickPath = kp2; kickGhost = kg2; }
+            }
 
             if (kickPath) {
               // Draw kick shot path with bounce points
@@ -5867,7 +5884,7 @@
               for (const point of kickPath.bouncePoints) {
                 pathD += ` L ${point.x} ${point.y}`;
               }
-              pathD += ` L ${ghostPos.x} ${ghostPos.y}`;
+              pathD += ` L ${kickGhost.x} ${kickGhost.y}`;
 
               // Show kick aim indicator at the first rail contact point
               const aimPoint = kickPath.aimPoint;
