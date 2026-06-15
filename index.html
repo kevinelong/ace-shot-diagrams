@@ -8987,6 +8987,13 @@
                   ball2.vx += impulse * nx;
                   ball2.vy += impulse * ny;
 
+                  // collision-induced throw (mirrors MU_BALL in the wasm core)
+                  const ctx = -ny, cty = nx;
+                  const dvt = (ball1.vx - ball2.vx) * ctx + (ball1.vy - ball2.vy) * cty;
+                  const jt = Math.min(THROW_MU * impulse, Math.abs(dvt) * 0.5) * Math.sign(dvt);
+                  ball1.vx -= jt * ctx; ball1.vy -= jt * cty;
+                  ball2.vx += jt * ctx; ball2.vy += jt * cty;
+
                   // Apply english effect when cue ball first hits rack
                   if (id1 === 'cue' && ball1.english !== undefined && ball1.english !== null) {
                     const english = ball1.english;
@@ -9745,6 +9752,16 @@
             ball1.vy -= impulse * ny;
             ball2.vx += impulse * nx;
             ball2.vy += impulse * ny;
+
+            // collision-induced throw: Coulomb tangential friction impulse on
+            // top of the normal one — mirrors MU_BALL in ace-physics/src/lib.rs
+            // so the JS fallback matches the wasm core (struck ball deflects a
+            // few degrees toward the cut; the aim solver compensates for it)
+            const ctx = -ny, cty = nx;
+            const dvt = (ball1.vx - ball2.vx) * ctx + (ball1.vy - ball2.vy) * cty;
+            const jt = Math.min(THROW_MU * impulse, Math.abs(dvt) * 0.5) * Math.sign(dvt);
+            ball1.vx -= jt * ctx; ball1.vy -= jt * cty;
+            ball2.vx += jt * ctx; ball2.vy += jt * cty;
 
             // Apply english/throw effect if cue ball collision.
             // NOTE: the cue must be matched on EITHER side of the pair —
