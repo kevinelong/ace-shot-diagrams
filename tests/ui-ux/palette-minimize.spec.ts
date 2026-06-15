@@ -22,14 +22,14 @@ const RESOLUTIONS = [
   { width: 1280, height: 720, name: 'HD' }
 ];
 
+// Note: palette-legend and palette-save were removed from the app (merged into
+// other palettes / deprecated), so they're no longer part of this list.
 const PALETTES = [
   { id: 'palette-balls', name: 'Balls', hasRestore: true },
   { id: 'palette-cue', name: 'Cue Control', hasRestore: true },
-  { id: 'palette-legend', name: 'Legend', hasRestore: true },
   { id: 'palette-game', name: 'Game', hasRestore: true },
   { id: 'palette-shot', name: 'Shot Info', hasRestore: true },
   { id: 'palette-actions', name: 'Actions', hasRestore: false },
-  { id: 'palette-save', name: 'Save', hasRestore: false },
   { id: 'palette-aids', name: 'Aids', hasRestore: false }
 ];
 
@@ -44,9 +44,19 @@ test.describe('Palette Minimize - Cross Resolution Tests', () => {
         });
         await page.goto('/');
         await page.waitForSelector('#pool-table-svg', { state: 'visible' });
-        
+
         // Wait for initial setup
         await page.waitForTimeout(500);
+
+        // Normalize: some palettes (Game, Aids) start minimized by design.
+        // Expand all so the minimize tests begin from a known expanded state.
+        await page.evaluate(() => {
+          document.querySelectorAll('.tool-palette.minimized').forEach((p: any) => {
+            p.classList.remove('minimized');
+            const b = p.querySelector('.palette-btn.minimize');
+            if (b) b.textContent = '−';
+          });
+        });
       });
 
       for (const palette of PALETTES) {
@@ -185,7 +195,7 @@ test.describe('Palette Minimize - Cross Resolution Tests', () => {
         });
       });
 
-      test('Save palette minimize with selected ball should not move ball', async ({ page }) => {
+      test('Palette minimize with selected ball should not move ball', async ({ page }) => {
         // Place and select a ball
         const cueBall = page.locator('#ball-cue');
         await cueBall.dragTo(page.locator('#pool-table-svg'), {
@@ -203,9 +213,9 @@ test.describe('Palette Minimize - Cross Resolution Tests', () => {
           top: el.style.top
         }));
 
-        // Click minimize on save palette
-        const savePalette = page.locator('#palette-save');
-        const minimizeBtn = savePalette.locator('.palette-btn.minimize');
+        // Click minimize on the Game palette (palette-save was removed)
+        const gamePalette = page.locator('#palette-game');
+        const minimizeBtn = gamePalette.locator('.palette-btn.minimize');
         await minimizeBtn.click();
         await page.waitForTimeout(300);
 
@@ -231,6 +241,15 @@ test.describe('Palette UI/UX Visual Regression', () => {
       await page.goto('/');
       await page.waitForSelector('#pool-table-svg', { state: 'visible' });
       await page.waitForTimeout(500);
+
+      // Normalize default-minimized palettes (Game, Aids) to expanded
+      await page.evaluate(() => {
+        document.querySelectorAll('.tool-palette.minimized').forEach((p: any) => {
+          p.classList.remove('minimized');
+          const b = p.querySelector('.palette-btn.minimize');
+          if (b) b.textContent = '−';
+        });
+      });
 
       // Take full page screenshot
       await page.screenshot({ 

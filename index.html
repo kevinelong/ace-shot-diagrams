@@ -240,8 +240,10 @@
       color: #fff !important;  /* Make icon white */
     }
 
+    /* Keep the expand (+) button visible when minimized so the affordance is
+       obvious and the panel can be re-expanded directly from it */
     .tool-palette.minimized .palette-controls {
-      display: none !important;
+      display: flex !important;
     }
 
     /* Hidden state */
@@ -284,6 +286,7 @@
     #palette-shot {
       bottom: 30px;
       right: 30px;
+      z-index: 2002;  /* stay above the right-center Aids panel if they overlap */
     }
 
     /* Legend and Save merged into other palettes */
@@ -886,11 +889,13 @@
       opacity: 0;
       transform: translateY(10px);
       transition: opacity 0.3s ease, transform 0.3s ease;
+      pointer-events: none;  /* inactive tooltip must not intercept clicks beneath it */
     }
 
     .tour-tooltip.active {
       opacity: 1;
       transform: translateY(0);
+      pointer-events: auto;
     }
 
     .tour-tooltip-header {
