@@ -53,3 +53,6 @@ ux-shots/
 
 # B&W line-art exports
 lineart/
+
+# Break recording output (frames + encoded clips)
+out/
