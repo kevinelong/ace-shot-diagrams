@@ -196,9 +196,12 @@ tools share the same physics. verify-consistency.js now exercises this
 in-app wasm path end to end.
 
 Monte Carlo: `node make-percentage.js` (see its header) — empirical make %
-over the core. The app shows it live as the "Sim %" row in the Shot Info
-panel (direct shots, debounced; see updateSimMakeProbability). Validate
-with `node verify-sim-make.js`.
+over the core. In the app the Shot Info panel's **Make %** is this empirical
+value for ALL shot types: `updateMakePercentage` perturbs the aim of the same
+shot the app would execute (computeShotPlan — rail point for kick, ghost
+contact otherwise) and counts pocketed/scratch over the core; the old
+heuristic (`calculateMakeProbability`) is now only a fallback when the wasm
+core or a shot plan isn't available. Validate with `node verify-sim-make.js`.
 
 Spin/curve model: english is no longer an instantaneous velocity scale.
 With english the cue slides on the tangent for SLIDE_TIME, then a spin

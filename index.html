@@ -3106,8 +3106,6 @@
         </div>
         <div class="info-row"><span class="info-label">Make %:</span> <span id="makeProbabilityDisplay"
             style="font-weight:bold;color:#0f8;">--</span></div>
-        <div class="info-row"><span class="info-label" title="Monte Carlo over the physics core">Sim %:</span>
-            <span id="simMakeDisplay" style="font-weight:bold;color:#0f8;">--</span></div>
       </div>
       <!-- Difficulty Bar -->
       <div class="difficulty-bar" style="margin-top:12px;padding-top:10px;">
@@ -8507,37 +8505,40 @@
         return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
       }
 
-      function updateSimMakeProbability(shotData) {
-        const nodes = document.querySelectorAll('#simMakeDisplay');
-        const setText = (txt, color) => nodes.forEach(n => { n.textContent = txt; n.style.color = color; });
+      const makeColor = (pct) =>
+        pct >= 80 ? '#0f8' : pct >= 60 ? '#8f0' : pct >= 40 ? '#ff0' : pct >= 20 ? '#f80' : '#f44';
 
-        const direct = shotData && shotData.isReady &&
-          !shotData.isKickShot && !shotData.isBankShot && !shotData.isComboShot;
-        if (!direct || !selectedBallId || !selectedPocket ||
+      // Unified Make % = empirical Monte Carlo over the physics core, for ALL
+      // shot types. It perturbs the aim of the SAME shot the app would execute
+      // (computeShotPlan: rail point for kick, ghost-contact otherwise) so the
+      // number reflects the real shot. Falls back to the heuristic only if the
+      // core or a shot plan isn't available.
+      function updateMakePercentage(shotData) {
+        const nodes = document.querySelectorAll('#makeProbabilityDisplay');
+        const setText = (txt, color) => nodes.forEach(n => { n.textContent = txt; n.style.color = color; });
+        const showHeuristic = () => {
+          const prob = calculateMakeProbability(shotData);
+          if (prob === null) { setText('--', '#888'); return; }
+          setText(prob + '%', makeColor(prob));
+        };
+
+        if (!shotData || !shotData.isReady || !selectedBallId || !selectedPocket ||
             !ballPositions[selectedBallId] || !ballPositions['cue']) {
           setText('--', '#888');
           return;
         }
 
         clearTimeout(simMakeTimer);
-        setText('…', '#888');
         simMakeTimer = setTimeout(async () => {
           const ex = await loadAcePhysics();
-          if (!ex) { setText('n/a', '#888'); return; }
-          const ob = ballPositions[selectedBallId];
-          const pk = pocketCenters[selectedPocket];
-          if (!pk) { setText('--', '#888'); return; }
-          const pd = Math.hypot(pk.x - ob.x, pk.y - ob.y) || 1;
-          const ghost = {
-            x: ob.x - (pk.x - ob.x) / pd * BALL_RADIUS * 2,
-            y: ob.y - (pk.y - ob.y) / pd * BALL_RADIUS * 2
-          };
-          const cue = ballPositions['cue'];
-          const base = Math.atan2(ghost.y - cue.y, ghost.x - cue.x);
-          const speed = shotForce * 0.75 * 60;
-          const english = { x: contactOffset.x, y: contactOffset.y };
+          const plan = (typeof computeShotPlan === 'function') ? computeShotPlan() : null;
+          if (!ex || !plan || !plan.balls.cue) { showHeuristic(); return; }
 
-          // only cue + numbered balls (aceSimulate maps ids via parseInt)
+          // aim of the actual shot (units/step -> direction + units/sec speed)
+          const cv = plan.balls.cue;
+          const base = Math.atan2(cv.vy, cv.vx);
+          const speed = Math.hypot(cv.vx, cv.vy) * 60;
+          const english = plan.english || { x: contactOffset.x, y: contactOffset.y };
           const onTable = Object.keys(ballPositions).filter(id =>
             ballPositions[id] && (id === 'cue' || /^\d+$/.test(id)));
 
@@ -8552,15 +8553,14 @@
                 : { x: b.x, y: b.y };
             }
             let r;
-            try { r = aceSimulate(balls, english); } catch (e) { setText('n/a', '#888'); return; }
-            if (!r || r.error) { setText('n/a', '#888'); return; }
+            try { r = aceSimulate(balls, english); } catch (e) { showHeuristic(); return; }
+            if (!r || r.error) { showHeuristic(); return; }
             const pocketed = r.events.filter(e => e.type === 'pocket');
             if (pocketed.some(e => e.id === 'cue')) continue; // scratch = miss
             if (pocketed.some(e => e.id === selectedBallId && e.pocket === selectedPocket)) make++;
           }
           const pct = Math.round(make / SIM_MAKE_N * 100);
-          const col = pct >= 80 ? '#0f8' : pct >= 60 ? '#8f0' : pct >= 40 ? '#ff0' : pct >= 20 ? '#f80' : '#f44';
-          setText(pct + '%', col);
+          setText(pct + '%', makeColor(pct));
         }, 120);
       }
 
@@ -10378,8 +10378,7 @@
       const origUpdatePaletteDisplays = updatePaletteDisplays;
       updatePaletteDisplays = function (shotData) {
         origUpdatePaletteDisplays(shotData);
-        updateMakeProbability(shotData);
-        updateSimMakeProbability(shotData);
+        updateMakePercentage(shotData);  // unified empirical Make % (all shot types)
       };
 
       // ========== FIRST-TIME USER TOUR SYSTEM ==========

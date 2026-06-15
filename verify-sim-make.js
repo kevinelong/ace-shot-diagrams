@@ -21,11 +21,11 @@ async function simPct(state) {
   await page.waitForSelector('#pool-table-svg')
   // wait for the debounced sim to write a percentage
   await page.waitForFunction(() => {
-    const els = [...document.querySelectorAll('#simMakeDisplay')]
+    const els = [...document.querySelectorAll('#makeProbabilityDisplay')]
     return els.some(e => /\d+%/.test(e.textContent))
   }, null, { timeout: 8000 }).catch(() => {})
   return page.evaluate(() => {
-    const els = [...document.querySelectorAll('#simMakeDisplay')]
+    const els = [...document.querySelectorAll('#makeProbabilityDisplay')]
     const hit = els.map(e => e.textContent).find(t => /\d+%/.test(t))
     return hit ? parseInt(hit, 10) : null
   })
