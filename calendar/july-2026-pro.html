@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Columbia Cue Club — July 2026</title>
+<style>
+  :root {
+    --felt: #0e5c3f;
+    --felt-dark: #0a3f2c;
+    --rail: #4a2c17;
+    --cream: #faf6ee;
+    --ink: #22302b;
+    --muted: #7d8a84;
+    --line: #e3ddd0;
+    --bca: #1f6fb2;
+    --bca-bg: #e8f2fa;
+    --apa: #2e8b57;
+    --apa-bg: #e9f5ee;
+    --open: #c77400;
+    --open-bg: #fdf1dd;
+    --ladies: #b83280;
+    --ladies-bg: #fbe9f3;
+    --gold: #e8c46b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    background: var(--felt-dark);
+    padding: 28px;
+    color: var(--ink);
+  }
+  .board {
+    width: 1500px;
+    margin: 0 auto;
+    background: var(--cream);
+    border: 14px solid var(--rail);
+    border-radius: 18px;
+    box-shadow: 0 24px 60px rgba(0,0,0,.5), inset 0 0 0 3px var(--gold);
+    overflow: hidden;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    background:
+      radial-gradient(ellipse 1200px 320px at 50% -80px, #17795a 0%, var(--felt) 55%, var(--felt-dark) 100%);
+    color: var(--cream);
+    padding: 34px 44px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 4px solid var(--gold);
+  }
+  .brand { display: flex; align-items: center; gap: 22px; }
+  .eightball {
+    width: 74px; height: 74px; border-radius: 50%;
+    background: radial-gradient(circle at 32% 28%, #4a4a4a 0%, #111 45%, #000 100%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 14px rgba(0,0,0,.45), inset -4px -6px 12px rgba(0,0,0,.6);
+    flex: none;
+  }
+  .eightball .circle {
+    width: 34px; height: 34px; border-radius: 50%; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 22px; color: #111;
+  }
+  h1 {
+    font-size: 40px; letter-spacing: 4px; font-weight: 800;
+    text-transform: uppercase; line-height: 1.05;
+    text-shadow: 0 2px 8px rgba(0,0,0,.35);
+  }
+  .tagline {
+    margin-top: 6px; font-size: 16px; letter-spacing: 6px;
+    text-transform: uppercase; color: var(--gold); font-weight: 600;
+  }
+  .month {
+    text-align: right;
+  }
+  .month .m {
+    font-size: 54px; font-weight: 800; letter-spacing: 6px; line-height: 1;
+    text-shadow: 0 2px 8px rgba(0,0,0,.35);
+  }
+  .month .y { font-size: 22px; letter-spacing: 12px; color: var(--gold); font-weight: 600; margin-top: 4px; }
+
+  /* ---------- Layout ---------- */
+  .content { display: grid; grid-template-columns: 1fr 320px; }
+
+  /* ---------- Calendar grid ---------- */
+  .cal { padding: 26px 24px 24px 28px; }
+  table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+  thead th {
+    background: var(--ink); color: var(--cream);
+    font-size: 13px; letter-spacing: 2.5px; text-transform: uppercase;
+    padding: 10px 0; font-weight: 700;
+  }
+  thead th:first-child { border-radius: 8px 0 0 0; }
+  thead th:last-child { border-radius: 0 8px 0 0; }
+  tbody td {
+    border: 1px solid var(--line);
+    vertical-align: top;
+    height: 118px;
+    padding: 8px 8px 6px;
+    background: #fff;
+  }
+  td.other { background: #f3efe6; }
+  td.other .date { color: var(--muted); }
+  .date { font-size: 17px; font-weight: 700; color: var(--ink); }
+  .date .aug { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 1px; margin-left: 2px; }
+  .chip {
+    margin-top: 6px;
+    border-radius: 6px;
+    padding: 4px 7px;
+    font-size: 12.5px;
+    font-weight: 700;
+    line-height: 1.25;
+    border-left: 4px solid;
+  }
+  .chip small { display: block; font-weight: 600; font-size: 11px; opacity: .85; }
+  .chip.bca    { background: var(--bca-bg);    color: var(--bca);    border-color: var(--bca); }
+  .chip.apa    { background: var(--apa-bg);    color: var(--apa);    border-color: var(--apa); }
+  .chip.open   { background: var(--open-bg);   color: var(--open);   border-color: var(--open); }
+  .chip.ladies { background: var(--ladies-bg); color: var(--ladies); border-color: var(--ladies); }
+  td.featured {
+    background: #fffaef;
+    outline: 3px solid var(--gold);
+    outline-offset: -3px;
+  }
+  .star { color: var(--open); font-size: 13px; }
+
+  /* ---------- Sidebar ---------- */
+  aside {
+    background: linear-gradient(180deg, #f3eee2 0%, #ece5d4 100%);
+    border-left: 1px solid var(--line);
+    padding: 26px 24px;
+    display: flex; flex-direction: column; gap: 18px;
+  }
+  aside h2 {
+    font-size: 14px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--ink); border-bottom: 2px solid var(--gold); padding-bottom: 6px;
+  }
+  .card {
+    background: #fff; border-radius: 10px; padding: 14px 16px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.07);
+    border-left: 5px solid var(--gold);
+  }
+  .card.ladies-card { border-left-color: var(--ladies); }
+  .card.open-card { border-left-color: var(--open); }
+  .card h3 { font-size: 16px; margin-bottom: 4px; }
+  .card p { font-size: 13.5px; color: #4c5a54; line-height: 1.45; }
+  .card .big { font-size: 15px; font-weight: 800; color: var(--ink); }
+  .legend { display: flex; flex-direction: column; gap: 8px; }
+  .legend .row { display: flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 600; }
+  .swatch { width: 26px; height: 14px; border-radius: 4px; border-left: 4px solid; flex: none; }
+  .swatch.bca    { background: var(--bca-bg);    border-color: var(--bca); }
+  .swatch.apa    { background: var(--apa-bg);    border-color: var(--apa); }
+  .swatch.open   { background: var(--open-bg);   border-color: var(--open); }
+  .swatch.ladies { background: var(--ladies-bg); border-color: var(--ladies); }
+  .contact { font-size: 13.5px; line-height: 1.7; }
+  .contact b { letter-spacing: .5px; }
+
+  /* ---------- Footer ---------- */
+  footer {
+    background: var(--ink); color: var(--cream);
+    padding: 12px 44px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 13.5px; letter-spacing: 1.5px;
+  }
+  footer .dots { color: var(--gold); font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="board">
+  <header>
+    <div class="brand">
+      <div class="eightball"><div class="circle">8</div></div>
+      <div>
+        <h1>Columbia Cue Club</h1>
+        <div class="tagline">Summer Pool Events</div>
+      </div>
+    </div>
+    <div class="month">
+      <div class="m">JULY</div>
+      <div class="y">2026</div>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="cal">
+      <table>
+        <thead>
+          <tr>
+            <th>Sunday</th><th>Monday</th><th>Tuesday</th><th>Wednesday</th>
+            <th>Thursday</th><th>Friday</th><th>Saturday</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Week of Jul 5 -->
+          <tr>
+            <td><div class="date">5</div></td>
+            <td><div class="date">6</div><div class="chip bca">BCA<small>7:00 PM</small></div></td>
+            <td><div class="date">7</div></td>
+            <td><div class="date">8</div><div class="chip open">Open Tourny<small>6:30 PM</small></div></td>
+            <td><div class="date">9</div><div class="chip apa">APA<small>7:00 PM</small></div></td>
+            <td><div class="date">10</div></td>
+            <td class="featured"><div class="date">11</div><div class="chip ladies">Ladies 3-Person Teams<small>Day 1</small></div></td>
+          </tr>
+          <!-- Week of Jul 12 -->
+          <tr>
+            <td class="featured">
+              <div class="date">12 <span class="star">&#9733; 2nd Sunday</span></div>
+              <div class="chip open">Open Tourny<small>2:00 PM sharp!</small></div>
+              <div class="chip ladies">Ladies 3-Person Teams<small>Day 2</small></div>
+            </td>
+            <td><div class="date">13</div><div class="chip bca">BCA<small>7:00 PM</small></div></td>
+            <td><div class="date">14</div></td>
+            <td><div class="date">15</div><div class="chip open">Open Tourny<small>6:30 PM</small></div></td>
+            <td><div class="date">16</div><div class="chip apa">APA<small>7:00 PM</small></div></td>
+            <td><div class="date">17</div></td>
+            <td><div class="date">18</div></td>
+          </tr>
+          <!-- Week of Jul 19 -->
+          <tr>
+            <td><div class="date">19</div></td>
+            <td><div class="date">20</div><div class="chip bca">BCA<small>7:00 PM</small></div></td>
+            <td><div class="date">21</div></td>
+            <td><div class="date">22</div><div class="chip open">Open Tourny<small>6:30 PM</small></div></td>
+            <td><div class="date">23</div><div class="chip apa">APA<small>7:00 PM</small></div></td>
+            <td><div class="date">24</div></td>
+            <td><div class="date">25</div></td>
+          </tr>
+          <!-- Week of Jul 26 -->
+          <tr>
+            <td><div class="date">26</div></td>
+            <td><div class="date">27</div><div class="chip bca">BCA<small>7:00 PM</small></div></td>
+            <td><div class="date">28</div></td>
+            <td><div class="date">29</div><div class="chip open">Open Tourny<small>6:30 PM</small></div></td>
+            <td><div class="date">30</div><div class="chip apa">APA<small>7:00 PM</small></div></td>
+            <td><div class="date">31</div></td>
+            <td class="other"><div class="date">1<span class="aug">AUG</span></div></td>
+          </tr>
+          <!-- Week of Aug 2 -->
+          <tr>
+            <td class="other"><div class="date">2<span class="aug">AUG</span></div></td>
+            <td class="other"><div class="date">3<span class="aug">AUG</span></div><div class="chip bca">BCA<small>7:00 PM</small></div></td>
+            <td class="other"><div class="date">4<span class="aug">AUG</span></div></td>
+            <td class="other"><div class="date">5<span class="aug">AUG</span></div><div class="chip open">Open Tourny<small>6:30 PM</small></div></td>
+            <td class="other"><div class="date">6<span class="aug">AUG</span></div><div class="chip apa">APA<small>7:00 PM</small></div></td>
+            <td class="other"><div class="date">7<span class="aug">AUG</span></div></td>
+            <td class="other"><div class="date">8<span class="aug">AUG</span></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <aside>
+      <h2>Featured Events</h2>
+      <div class="card ladies-card">
+        <h3>Ladies 3-Person Teams</h3>
+        <p class="big">July 11 &amp; 12</p>
+        <p>Two-day team event — rally your trio!</p>
+      </div>
+      <div class="card open-card">
+        <h3>Open Tourny</h3>
+        <p class="big">2nd Sunday &middot; 2 PM sharp!</p>
+        <p>Plus every Wednesday at 6:30 PM — all summer long.</p>
+      </div>
+
+      <h2>Weekly Lineup</h2>
+      <div class="legend">
+        <div class="row"><span class="swatch bca"></span> Monday &middot; 7:00 PM &middot; BCA</div>
+        <div class="row"><span class="swatch open"></span> Wednesday &middot; 6:30 PM &middot; Open Tourny</div>
+        <div class="row"><span class="swatch apa"></span> Thursday &middot; 7:00 PM &middot; APA</div>
+        <div class="row"><span class="swatch ladies"></span> Special event</div>
+      </div>
+
+      <h2>Get In Touch</h2>
+      <div class="card contact">
+        <b>Watch: Columbia Cue Club</b><br>
+        kevin@columbiacueclub.com<br>
+        SMS 503-888-6879
+      </div>
+    </aside>
+  </div>
+
+  <footer>
+    <span>COLUMBIA CUE CLUB &middot; SUMMER 2026</span>
+    <span class="dots">&#9679; &#9679; &#9679; RACK 'EM UP &#9679; &#9679; &#9679;</span>
+  </footer>
+</div>
+</body>
+</html>
