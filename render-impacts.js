@@ -12,7 +12,7 @@
 //        --max-frames <n> (impact frames cap, default 8), --no-gif,
 //        --engine js (fall back to the in-page JS sim instead of the wasm core)
 
-import { chromium } from '@playwright/test'
+import { chromium } from 'playwright-core'
 import gifencPkg from 'gifenc'
 const { GIFEncoder, quantize, applyPalette } = gifencPkg
 import pngjsPkg from 'pngjs'
@@ -222,7 +222,7 @@ async function captureFrame(page, scalePage) {
 
 // ---- main ----
 const indexUrl = pathToFileURL(join(__dirname, 'index.html')).href
-const browser = await chromium.launch()
+const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', args: ['--no-sandbox', '--disable-gpu'] })
 const context = await browser.newContext()
 await context.addInitScript(() => localStorage.setItem('ace-tour-completed', 'true'))
 const page = await context.newPage()
