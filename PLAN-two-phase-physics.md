@@ -98,11 +98,19 @@ and `launch({ executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium' }
 Keep `playwright-core` + `pngjs` in `package.json` (added). Add a short README/
 "how to render a shot" note. Low effort, unlocks repeatable visual checks.
 
-### D. Mirror the two-phase model into the JS fallback
-The app uses the wasm by default, but the JS fallback sim in `index.html` still
-runs the OLD model, so `verify-consistency` (Rust≈JS) and the wasm-off path are
-now inconsistent. Port the same slide→roll + rewind-to-contact logic to the JS
-sim. Medium effort; validate `verify-consistency` returns to green.
+### D. Mirror the two-phase model into the JS fallback — ⏸ DEFERRED (low value)
+**Premise corrected:** `verify-consistency.js` clicks the app's Shoot button,
+which resolves through the **wasm** (`aceSimulate`/`loadAcePhysics`), *not* the JS
+stepper. So it does **not** test the JS fallback — it validates the wasm over the
+full battery (**8/9**: one correct follow-scratch on `straight-side-top`, same E
+theme). No test requires the JS mirror. The JS stepper (`animateShot`, old
+single-`FRICTION` model) is only reached if the embedded wasm fails to load —
+rare. Porting the whole two-phase + spin model there is a large effort for a
+seldom-hit safety net. **Decision: defer the full port**; the wasm is the source
+of truth. (If ever desired, mirror `step_friction` + `resolve_hit` into the JS
+stepper; not tracked as blocking.) Also wired the remaining `verify-*`/render
+harnesses to `playwright-core` + system chromium so the whole suite runs on this
+(musl) box.
 
 ### E. `cut-45` / `combo` cue scratch — ✅ DECIDED: accept as correct, document
 After the B fix, the **app harness `verify-shots` is 6/6** — the `direct-cut-45`

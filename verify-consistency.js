@@ -2,7 +2,7 @@
 // the analytic solver rates makeable; this harness runs each through the
 // real physics and asserts the intended ball drops in the intended pocket.
 // Failures mean the simulation contradicts what the app tells the player.
-import { chromium } from '@playwright/test'
+import { chromium } from 'playwright-core'
 import { readFileSync } from 'fs'
 import { join, dirname } from 'path'
 import { pathToFileURL, fileURLToPath } from 'url'
@@ -11,7 +11,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const indexUrl = pathToFileURL(join(__dirname, 'index.html')).href
 const battery = JSON.parse(readFileSync(join(__dirname, 'tests', 'battery.json'), 'utf-8'))
 
-const browser = await chromium.launch()
+const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', args: ['--no-sandbox', '--disable-gpu'] })
 const context = await browser.newContext()
 await context.addInitScript(() => localStorage.setItem('ace-tour-completed', 'true'))
 const page = await context.newPage()
