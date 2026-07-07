@@ -34,7 +34,27 @@ sign is correct: `ey=-1` follows most (+8.4 past contact), `ey=+1` least (+3.4).
 **No app or core change needed.** (Lesson: the object rebound confounds any
 2-ball follow/draw measurement — always pot or remove the object.)
 
-### B. Draw dynamics + feel tuning — ⚠️ OPEN MODELING PROBLEM (main next step)
+### B. Draw dynamics — ✅ ROOT-CAUSE FIXED (it was a bug, not a modeling wall)
+**The "knife-edge / native↔wasm divergence" was one index-order bug.** In
+`resolve_hit` the spin reset was keyed on `j`: `balls[j].sx = 0` ("struck ball is
+spinless"). But JS `Object.keys({cue, "1"})` returns `["1","cue"]` (integer-like
+keys sort first), so through the app/node the **cue is index 1 = `balls[j]`** —
+its backspin got wiped, so draw became follow. My *native* unit test built the
+vec cue-first (index 0 = `i`) so it kept spin and drew — that mismatch WAS the
+"divergence" (different ball order, not floating point). Fix: shed spin from
+**both** balls symmetrically (`*= SPIN_RETAIN`), not keyed on `i/j` — a
+rest ball has no spin to lose anyway. Now:
+- **Draw works and is monotonic:** wasm draw −5.3 at `SPIN_RETAIN=0.25` (was
+  +3.4 follow); native and wasm now **agree**.
+- **`verify-shots` app harness: 6/6** (was 4/6 — the cut-45/combo scratches
+  cleared); **`verify-rust-parity`: 7/8**; app renders draw (cue back, x=55.9)
+  vs follow (cue forward, x=87.1).
+- Sweet spot `SPIN_RETAIN=0.25` (stronger draws more but scratches more cuts).
+Remaining feel nits (minor, later): full-follow ≈ centre (topspin over-roll
+converts back to natural roll during the slide, so follow english adds little
+beyond natural roll at distance) — physically defensible; revisit with rendering.
+
+### (was B) earlier notes — superseded by the fix above
 Follow works well; **draw does not**. Findings this session (clean potting test,
 cue 28 units from the object):
 - Full draw (`ey=+1`) still creeps *forward* (+3.4), never reverses; centre

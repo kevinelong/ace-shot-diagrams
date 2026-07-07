@@ -63,7 +63,7 @@ const MU_SLIDE: f64 = 620.0;
 const SPIN_MAX: f64 = 1.7;
 // Fraction of the striker's rolling velocity (spin) that survives a ball-ball
 // impact. <1 so a centre-ball cue follows but doesn't chase the object down.
-const SPIN_RETAIN: f64 = 0.3;
+const SPIN_RETAIN: f64 = 0.25;
 
 const V_MIN: f64 = 1.2; // units/sec (0.02 * 60): below this a rolling ball stops
 const SLIP_EPS: f64 = 0.8; // |u| below this = rolling (snap s to v)
@@ -235,15 +235,17 @@ fn resolve_hit(balls: &mut [Ball], i: usize, j: usize) -> bool {
     balls[j].vx += jt * tx;
     balls[j].vy += jt * ty;
 
-    // The struck ball leaves with no spin → it slides then rolls. The striker
-    // keeps only a fraction of its spin: a real ball-ball impact sheds spin, and
-    // this keeps a natural-roll (centre-ball) cue from *chasing down* the object
-    // ball it just hit while still giving deliberate follow/draw its bite.
+    // A ball-ball impact sheds a fraction of each ball's spin (SPIN_RETAIN),
+    // which keeps a natural-roll cue from *chasing down* the object it just hit
+    // while preserving deliberate follow/draw. Applied to BOTH balls and NOT
+    // keyed on i/j: the ball that was at rest carries no spin to begin with, and
+    // whichever index the cue lands at (JS object-key order can make it j) keeps
+    // its spin. (Keying the zero on j was the bug that wiped cue draw when the
+    // cue happened to be the higher index — and made native ≠ wasm.)
     balls[i].sx *= SPIN_RETAIN;
     balls[i].sy *= SPIN_RETAIN;
-    balls[j].sx = 0.0;
-    balls[j].sy = 0.0;
-    balls[j].was_sliding = false;
+    balls[j].sx *= SPIN_RETAIN;
+    balls[j].sy *= SPIN_RETAIN;
     // re-advance the rewound interval with the post-collision velocities (which
     // now point apart), so the pair separates and isn't re-detected next step.
     if h > 0.0 {
