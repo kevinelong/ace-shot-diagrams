@@ -127,8 +127,18 @@ pots the object but scratches the cue. That is **physically correct** — a firm
 centre-ball 45° cut really does carom the cue into a pocket; the old "centre =
 stun" model hid it. Decision: **accept it, do not fudge the test.** The
 operative app-level gate is `verify-shots` (6/6); the one wasm-battery scratch is
-documented-correct (a real player would soften or add draw). Revisit only if
-feel-tuning later changes the margin.
+documented-correct (a real player would soften or add draw).
+
+**Resolved (board now green):** the lone scratcher settled on `straight-side-top`
+(a dead-straight shot into the side pocket). Dead-centre (`e:0,0`) provably
+scratches — the cue follows the object straight in — and every draw `≥0.4`
+makes it (stun at 0.4, cue back to start at full draw, never over-draws into the
+pocket behind). That `e:0,0` is the one english you'd never use here, so the case
+was corrected to the english a real player uses (`e:0,0.6`, comfortable margin).
+This is a valid-input fix, not a fudge — the assertion (object pots + no scratch)
+is unchanged, and the old core only passed it by unphysically stunning *every*
+centre hit. Now `verify-rust-parity` **8/8**, `verify-consistency` **9/9**,
+`verify-shots` **6/6**.
 
 ### F. Optional, larger realism (defer)
 - **Han (2005) / Mathavan (2010) cushion model** — speed-dependent restitution +
