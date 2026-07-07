@@ -83,10 +83,16 @@ fudge — document whichever.
   component would curve the cue path (currently sidespin only throws the OB).
 
 ## Sequence
-A (investigate/reconcile sign) → C (wire render tooling, small) → B (visual feel
-tuning) → E (cut-45 decision) → D (JS mirror) → then evaluate F. Merge to `main`
-only after B+D land and the harnesses are green (or intentionally, documentedly
-not).
+- ✅ **A** — english sign investigated & resolved (no bug).
+- **C** — wire the repo render tools to system chromium (small; locks in the
+  visual loop). ← NEXT
+- **B** — draw-dynamics model fix, iterated with rendering (the meaty one).
+- **E** — decide the cut-45 / combo cue scratch (informed by B).
+- **D** — mirror the two-phase model into the JS fallback.
+- **F** — evaluate the Han cushion / masse extensions.
+
+Merge to `main` only after B+D land and the harnesses are green (or intentionally,
+documentedly not).
 
 ## Validation gates (keep green, or change deliberately + documented)
 - `cargo test --release` (unit) · `node verify-rust-parity.js` (wasm outcomes) ·
