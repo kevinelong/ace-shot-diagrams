@@ -23,24 +23,36 @@ collision. Same family as pooltool / Leckie–Greenspan.
 
 ## Work items
 
-### A. Reconcile the english-y sign (INVESTIGATE first — not assumed a bug)
-Rendering draw/center/follow showed the cue's follow/draw **inverted** for my
-state strings (`e:0,-1` drew back). The core is self-consistent (`English{y:1}`→
-draw, unit-tested), matching the *old* core's convention, so this is a
-**sign-convention** question, not necessarily an app defect. Trace the whole
-chain end-to-end: **state-string `e:` parse → `contactOffset` → the cue-wheel UI →
-`plan.english` → `aceSimulate`/`animateShotWasm`**. Determine whether the
-**interactive** path (cue-wheel top = follow → cue follows) is actually correct;
-if it is, only the state-string sign was mis-guessed (fix my render states). Fix
-code **only** if a genuine interactive inconsistency exists. Validate by
-rendering follow/center/draw and confirming cue-forward / mild / cue-back.
+### A. Reconcile the english-y sign — ✅ RESOLVED (no bug; verified, not assumed)
+Traced the whole chain (state `e:` → `contactOffset` → `computeShotPlan` →
+`aceSimulate` → wasm): **english-y is passed through unflipped everywhere**, and
+`contactOffset.y < 0 = follow` is consistent (index.html:10100). The apparent
+"inversion" in the first render was a **test artifact**: with only two balls and
+no pocket, the object rebounds off the far rail and **re-hits the cue**, dragging
+it back — read as "draw". A clean test (object *potted*, no rebound) confirms the
+sign is correct: `ey=-1` follows most (+8.4 past contact), `ey=+1` least (+3.4).
+**No app or core change needed.** (Lesson: the object rebound confounds any
+2-ball follow/draw measurement — always pot or remove the object.)
 
-### B. Visual follow/draw feel tuning
-With rendering, iterate `MU_SLIDE`, `SPIN_MAX`, `SPIN_RETAIN` (and the
-natural-roll follow of a centre hit) against **actual pictures** of a fixed set
-of reference shots (stun, follow-through distance, draw-back distance, a stun
-cut). Capture the traveled **path** (screenshot mid-animation or via the app's
-trail), not just the final frame. Keep `verify-rust-parity` object-potting green.
+### B. Draw dynamics + feel tuning — ⚠️ OPEN MODELING PROBLEM (main next step)
+Follow works well; **draw does not**. Findings this session (clean potting test,
+cue 28 units from the object):
+- Full draw (`ey=+1`) still creeps *forward* (+3.4), never reverses; centre
+  follows (+4.7). The backspin **converts to forward roll before contact** —
+  correct in principle (draw wears off with distance) but far too fast here.
+- `SPIN_RETAIN` (post-collision spin damping) has **zero effect** on this shot —
+  the backspin is gone before the collision, so damping it is moot. It only
+  matters for cut over-follow.
+- Sweeping `MU_SLIDE`↓ + `SPIN_MAX`↑ makes draw **converge to centre** (english
+  loses effect) and everything follows *more* — the wrong direction. No swept
+  config produced draw-back.
+Conclusion: real draw needs a **model fix**, not a knob. Likely the slide-phase
+spin evolution and/or the collision spin transfer isn't preserving enough
+surviving backspin at realistic distances (a proper solid-sphere derivation of
+the sliding backspin lifetime, and possibly making the cue keep its spin *axis*
+through the collision rather than a scalar). Iterate with rendering (pot the
+object so no rebound) on a fixed reference set (stun / follow distance / draw-back
+distance / stun cut). Keep `verify-rust-parity` object-potting green.
 
 ### C. Persist the render/verify tooling on this box
 `verify-shots.cjs`/`record-shot.cjs` already use `playwright-core` + system
