@@ -60,7 +60,7 @@ const MU_SLIDE: f64 = 620.0;
 // Max rolling-velocity a full tip of english imparts, as a multiple of the cue's
 // launch speed: e.y=−1 (top) → +SPIN_MAX·v (follow), e.y=+1 (bottom) → −SPIN_MAX·v
 // (draw, cue can reverse). e.y=0 (centre) → 0 spin → slide → natural roll.
-const SPIN_MAX: f64 = 1.7;
+const SPIN_MAX: f64 = 2.3;
 // Fraction of the striker's rolling velocity (spin) that survives a ball-ball
 // impact. <1 so a centre-ball cue follows but doesn't chase the object down.
 const SPIN_RETAIN: f64 = 0.25;

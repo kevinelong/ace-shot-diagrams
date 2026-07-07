@@ -50,9 +50,16 @@ rest ball has no spin to lose anyway. Now:
   cleared); **`verify-rust-parity`: 7/8**; app renders draw (cue back, x=55.9)
   vs follow (cue forward, x=87.1).
 - Sweet spot `SPIN_RETAIN=0.25` (stronger draws more but scratches more cuts).
-Remaining feel nits (minor, later): full-follow ≈ centre (topspin over-roll
-converts back to natural roll during the slide, so follow english adds little
-beyond natural roll at distance) — physically defensible; revisit with rendering.
+**Feel pass (done):** raised `SPIN_MAX` 1.7 → **2.3** — draw went from a weak −5
+to a proper **−15** (≈1.2 diamonds of draw-back) while `verify-rust-parity` stays
+7/8 and `verify-shots` stays 6/6. `SPIN_RETAIN=0.25`.
+Accepted characteristic: **full-follow ≈ centre.** Topspin's launch slip
+(`|v−s| = (SPIN_MAX−1)·v`) is *smaller* than draw's (`(SPIN_MAX+1)·v`), so it
+reaches natural roll before contact and adds little beyond a rolling ball's own
+follow — whereas backspin survives and draws. This is physically defensible (a
+rolling ball already follows; the big english effects are draw + sidespin) and
+fine for a diagram tool. Making follow > centre would need asymmetric spin
+handling — left as an optional refinement, not worth the complexity now.
 
 ### (was B) earlier notes — superseded by the fix above
 Follow works well; **draw does not**. Findings this session (clean potting test,
