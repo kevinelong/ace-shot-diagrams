@@ -104,12 +104,16 @@ runs the OLD model, so `verify-consistency` (Rust≈JS) and the wasm-off path ar
 now inconsistent. Port the same slide→roll + rewind-to-contact logic to the JS
 sim. Medium effort; validate `verify-consistency` returns to green.
 
-### E. Decide `cut-45` (and `combo`) cue scratch
-Physically a firm centre-ball 45° cut **does** carom the cue into a pocket — the
-old stun model hid it. Options: (1) accept the scratch as correct and note it;
-(2) give those battery cases the touch of draw a real player would use (realistic;
-one field each). Pick after B (tuning may change the margin). Do **not** silently
-fudge — document whichever.
+### E. `cut-45` / `combo` cue scratch — ✅ DECIDED: accept as correct, document
+After the B fix, the **app harness `verify-shots` is 6/6** — the `direct-cut-45`
+and `combo` cases pot cleanly (no scratch) at `SPIN_RETAIN=0.25`. The wasm
+`verify-rust-parity` battery is **7/8**: its `cut-45-corner` (f:7, dead centre)
+pots the object but scratches the cue. That is **physically correct** — a firm
+centre-ball 45° cut really does carom the cue into a pocket; the old "centre =
+stun" model hid it. Decision: **accept it, do not fudge the test.** The
+operative app-level gate is `verify-shots` (6/6); the one wasm-battery scratch is
+documented-correct (a real player would soften or add draw). Revisit only if
+feel-tuning later changes the margin.
 
 ### F. Optional, larger realism (defer)
 - **Han (2005) / Mathavan (2010) cushion model** — speed-dependent restitution +
