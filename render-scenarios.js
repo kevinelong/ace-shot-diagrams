@@ -13,7 +13,7 @@
 // to a manual export. --table-only crops the info panels off; --bg recolors
 // the page background (e.g. white for print).
 
-import { chromium } from '@playwright/test'
+import { chromium } from 'playwright-core'
 import { readFileSync, writeFileSync, mkdirSync } from 'fs'
 import { resolve, join } from 'path'
 import { pathToFileURL, fileURLToPath } from 'url'
@@ -108,7 +108,7 @@ function applyPrintTheme(svg) {
 // ---- main ----
 const indexUrl = pathToFileURL(join(__dirname, 'index.html')).href
 
-const browser = await chromium.launch()
+const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', args: ['--no-sandbox', '--disable-gpu'] })
 const context = await browser.newContext({ acceptDownloads: true })
 // suppress the first-run guided tour, whose overlay intercepts clicks
 await context.addInitScript(() => localStorage.setItem('ace-tour-completed', 'true'))

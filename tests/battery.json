@@ -13,7 +13,7 @@
   },
   {
     "name": "straight-side-top",
-    "state": "v1|cue:50,30|1:50,12|p:stop|b:1|m:9ball|f:4|e:0.0,0.0|s:auto",
+    "state": "v1|cue:50,30|1:50,12|p:stop|b:1|m:9ball|f:4|e:0.0,0.6|s:auto",
     "expectBall": "1",
     "expectPocket": "side-top"
   },

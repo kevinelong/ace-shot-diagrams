@@ -8,7 +8,7 @@
 //   node render-heatmap.js --ob 70,30 --pocket corner-br [--name shot]
 //        [--force 6] [--sigma 1.5] [--n 40] [--step 2.5]
 //        [--others "9:60,22;3:40,18"] [--no-png]
-import { chromium } from '@playwright/test'
+import { chromium } from 'playwright-core'
 import { mkdirSync, writeFileSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
@@ -129,7 +129,7 @@ mkdirSync(out, { recursive: true })
 writeFileSync(join(out, `${name}.svg`), svg)
 
 if (wantPng) {
-  const browser = await chromium.launch()
+  const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', args: ['--no-sandbox', '--disable-gpu'] })
   const page = await browser.newPage()
   await page.setContent(`<body style="margin:0">${svg}</body>`)
   await page.evaluate(() => { const s = document.querySelector('svg'); s.removeAttribute('width'); s.removeAttribute('height'); s.style.width = '1600px'; s.style.height = 'auto'; s.style.display = 'block' })

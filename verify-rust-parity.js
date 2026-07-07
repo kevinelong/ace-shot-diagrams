@@ -90,7 +90,8 @@ for (const c of battery) {
     const summary = result.events.map(e =>
       e.type === 'pocket' ? `pocket(${e.id}@${e.pocket})`
         : e.type === 'rail' ? `rail(${e.id}:${e.rail})`
-        : `hit(${e.ids.join('+')})`).join(' ')
+        : e.type === 'ball-ball' ? `hit(${(e.ids || []).join('+')})`
+        : `${e.type}(${e.id ?? ''})`).join(' ')
     console.log(`FAIL  ${c.name}${scratched ? ' [SCRATCH]' : ''}`)
     console.log(`      events: ${summary || '(none)'}`)
     console.log(`      final ${c.expectBall}: ${JSON.stringify(result.final[c.expectBall])}`)

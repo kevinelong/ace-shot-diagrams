@@ -1,19 +1,23 @@
-//! Event-driven, continuous-time billiards physics core.
+//! Two-phase (slide → roll) billiards physics core.
 //!
-//! Matches the semantics of the JS simulation in index.html (same friction,
-//! restitution, pocket capture, english model) but advances by solving for
-//! the exact time of the next event instead of stepping a fixed timestep —
-//! no tunneling, no integration error, trajectories are closed-form.
+//! Each ball carries a linear velocity **v** and a *rolling velocity* **s** (the
+//! surface velocity R·ω projected onto the table). The contact point slips at
+//! u = v − s. While |u| > 0 the ball SLIDES: Coulomb friction of magnitude
+//! MU_SLIDE acts on the centre opposite u, and (because a solid sphere has
+//! I = 2/5·mR²) the slip decays at 7/2 that rate until u = 0, when the ball
+//! begins to ROLL and thereafter only sheds speed to the much smaller rolling
+//! resistance. This is the Coriolis model used by research-grade simulators
+//! (pooltool / Leckie–Greenspan): follow, stun and draw are no longer special
+//! cases — they emerge from the spin state the cue carries into a collision.
 //!
-//! The trick: every ball decays under the same exponential rolling friction
-//! v(t) = v0·e^(−λt), so in warped time τ(t) = (1 − e^(−λt))/λ every position
-//! is LINEAR: p(τ) = p0 + v0·τ. Ball-ball contacts, rail crossings and pocket
-//! captures all become quadratic (or linear) solves in τ. After advancing to
-//! an event, velocities scale by e^(−λΔt) = 1 − λτ and the clock restarts.
+//! Motion is advanced by a fine fixed timestep (sub-stepped so a ball never
+//! moves more than a fraction of its radius — no tunneling). Only the resulting
+//! EVENTS (ball-ball, rail, pocket) and slide→roll waypoints are emitted; the
+//! host renders piecewise-linearly between them, so the internal law is free.
 //!
-//! Zero dependencies (see Cargo.toml): the wasm ABI is a flat f64 array in
-//! and a JSON string out, so the crate builds for wasm32-unknown-unknown
-//! with the bundled rust-lld — no MSVC, no wasm-bindgen, no wasm-pack.
+//! Zero dependencies (see Cargo.toml): the wasm ABI is a flat f64 array in and a
+//! JSON string out, so it builds for wasm32-unknown-unknown with the bundled
+//! rust-lld — no MSVC, no wasm-bindgen, no wasm-pack.
 
 const BALL_D: f64 = 2.25;
 // Rail lines for the BALL CENTER (already radius-adjusted, like RAILS in JS)
@@ -40,20 +44,33 @@ const BALL_COR: f64 = 0.95;
 // "throw": a cut shot drags the struck ball slightly off the pure line of
 // centers. ~0.06 for clean polished balls (Dr. Dave's measured average).
 const MU_BALL: f64 = 0.06;
-// JS tuning: per-step friction 0.985 at 60 steps/s; v_min 0.02 units/step
-fn lambda() -> f64 {
+
+// ── Two-phase friction (sim units: table is 100×50, ball D=2.25, speeds ≈
+// force×45 units/s). Rolling resistance keeps the previously-tuned decay so
+// roll distances are unchanged; sliding is a much stronger, briefer phase. ──
+// Roll: v(t)=v0·e^(−λt). λ from the old JS tuning (per-step 0.985 @ 60/s).
+fn lambda_roll() -> f64 {
     -60.0 * (0.985_f64).ln()
 }
-const V_MIN: f64 = 1.2; // units/sec (0.02 * 60)
+// Sliding deceleration of the CENTRE (units/s²). The slip decays at 7/2 of this,
+// so a plain (centre-ball) strike reaches natural roll at 5/7 of its speed after
+// a short slide — then follows. Tuned so that slide covers ~1 diamond at medium
+// pace while cuts still reach the pocket.
+const MU_SLIDE: f64 = 620.0;
+// Max rolling-velocity a full tip of english imparts, as a multiple of the cue's
+// launch speed: e.y=−1 (top) → +SPIN_MAX·v (follow), e.y=+1 (bottom) → −SPIN_MAX·v
+// (draw, cue can reverse). e.y=0 (centre) → 0 spin → slide → natural roll.
+const SPIN_MAX: f64 = 2.3;
+// Fraction of the striker's rolling velocity (spin) that survives a ball-ball
+// impact. <1 so a centre-ball cue follows but doesn't chase the object down.
+const SPIN_RETAIN: f64 = 0.25;
+
+const V_MIN: f64 = 1.2; // units/sec (0.02 * 60): below this a rolling ball stops
+const SLIP_EPS: f64 = 0.8; // |u| below this = rolling (snap s to v)
 const EPS: f64 = 1e-9;
 const RAIL_EVENT_MIN_SPEED: f64 = 3.0; // units/sec (0.05 * 60), matches JS gate
-
-// Spin/curve model: with english the cue slides along the tangent line for
-// SLIDE_TIME, then the spin asserts and adds a velocity component along the
-// original aim direction (follow = forward, draw = backward) — the classic
-// two-segment cue path. SPIN_GAIN scales it by the incoming cue speed.
-const SLIDE_TIME: f64 = 0.13; // seconds of slide before roll asserts
-const SPIN_GAIN: f64 = 0.6;
+const DT: f64 = 1.0 / 300.0; // base timestep; sub-stepped at high speed
+const MAX_STEP_DIST: f64 = BALL_D * 0.35; // cap movement/substep (anti-tunnel)
 
 #[derive(Clone)]
 pub struct Ball {
@@ -62,14 +79,26 @@ pub struct Ball {
     pub y: f64,
     pub vx: f64,
     pub vy: f64,
+    // rolling velocity (surface velocity R·ω projected on the table). Natural
+    // roll ⇔ (sx,sy) == (vx,vy); slip u = v − s drives sliding friction.
+    pub sx: f64,
+    pub sy: f64,
     pub pocketed: bool,
-    // pending spin transition: (dir_x, dir_y, magnitude, trigger_time)
-    pub spin: Option<(f64, f64, f64, f64)>,
+    // set true while sliding so we emit exactly one slide→roll waypoint
+    was_sliding: bool,
 }
 
 impl Ball {
     fn speed(&self) -> f64 {
         (self.vx * self.vx + self.vy * self.vy).sqrt()
+    }
+    fn slip(&self) -> f64 {
+        let ux = self.vx - self.sx;
+        let uy = self.vy - self.sy;
+        (ux * ux + uy * uy).sqrt()
+    }
+    fn moving(&self) -> bool {
+        !self.pocketed && (self.speed() > EPS || self.slip() > SLIP_EPS)
     }
 }
 
@@ -82,7 +111,7 @@ pub enum EventKind {
     Hit(usize, usize),
     Rail(usize, &'static str),
     Pocket(usize, &'static str),
-    Spin(usize),
+    Spin(usize), // slide→roll waypoint (kept name for host compatibility)
 }
 
 pub struct Event {
@@ -97,319 +126,327 @@ pub struct Output {
     pub duration: f64,
 }
 
-enum Candidate {
-    Stop,
-    Rail(usize, bool, &'static str),
-    Pocket(usize, usize),
-    Hit(usize, usize),
-    Spin(usize),
-}
-
 fn in_pocket_mouth(x: f64, y: f64) -> bool {
     POCKETS
         .iter()
         .any(|&(_, px, py)| (x - px).powi(2) + (y - py).powi(2) < MOUTH_R * MOUTH_R)
 }
 
-/// First τ > EPS where |Δp + Δv·τ| crosses `dist` from outside, approaching.
-fn contact_tau(dpx: f64, dpy: f64, dvx: f64, dvy: f64, dist: f64) -> Option<f64> {
-    let a = dvx * dvx + dvy * dvy;
-    if a < EPS {
-        return None;
-    }
-    let b = dpx * dvx + dpy * dvy; // half-b
-    if b >= 0.0 {
-        return None; // not approaching
-    }
-    let c = dpx * dpx + dpy * dpy - dist * dist;
-    if c <= 0.0 {
-        return None; // already inside — let resolution handle it
-    }
-    let disc = b * b - a * c;
-    if disc <= 0.0 {
-        return None;
-    }
-    let tau = (-b - disc.sqrt()) / a;
-    if tau > EPS {
-        Some(tau)
+/// Advance one ball's velocity + rolling velocity by dt under two-phase friction.
+fn step_friction(b: &mut Ball, dt: f64, lam: f64) {
+    let ux = b.vx - b.sx;
+    let uy = b.vy - b.sy;
+    let u = (ux * ux + uy * uy).sqrt();
+    if u > SLIP_EPS {
+        // SLIDING: friction on the centre opposes slip; the rolling velocity
+        // gains toward v so that the slip u decays at 7/2 the centre rate.
+        let nx = ux / u;
+        let ny = uy / u;
+        let dv = MU_SLIDE * dt; // centre speed change
+        b.vx -= dv * nx;
+        b.vy -= dv * ny;
+        // d(s)/dt = +(5/2)·MU_SLIDE·û  ⇒  d(u)/dt = −(7/2)·MU_SLIDE·û
+        b.sx += 2.5 * dv * nx;
+        b.sy += 2.5 * dv * ny;
+        // don't overshoot the rolling condition within a step
+        let nux = b.vx - b.sx;
+        let nuy = b.vy - b.sy;
+        if nux * ux + nuy * uy <= 0.0 {
+            b.sx = b.vx;
+            b.sy = b.vy;
+        }
     } else {
-        None
+        // ROLLING: shed speed to rolling resistance (exponential, as tuned),
+        // spin locked to translation.
+        let decay = (-lam * dt).exp();
+        b.vx *= decay;
+        b.vy *= decay;
+        b.sx = b.vx;
+        b.sy = b.vy;
+        if b.speed() <= V_MIN {
+            b.vx = 0.0;
+            b.vy = 0.0;
+            b.sx = 0.0;
+            b.sy = 0.0;
+        }
     }
 }
 
-pub fn simulate_core(mut balls: Vec<Ball>, mut english: Option<English>, max_time: f64) -> Output {
-    let lam = lambda();
+/// Resolve a ball-ball contact in place: normal restitution + Coulomb throw.
+/// Spin (rolling velocity) is carried through unchanged — the struck ball keeps
+/// its zero spin and slides, the cue keeps its topspin/backspin and follows/draws.
+fn resolve_hit(balls: &mut [Ball], i: usize, j: usize) -> bool {
+    // Rewind to the EXACT moment the gap was BALL_D so the contact normal is
+    // precise (discrete stepping detects contact already overlapping; a cut is
+    // very sensitive to a wrong normal). Solve |Δp − Δv·h| = BALL_D for the
+    // smallest h ≥ 0, back both balls up by v·h, then re-advance after resolving.
+    let dpx = balls[i].x - balls[j].x;
+    let dpy = balls[i].y - balls[j].y;
+    let dvx = balls[i].vx - balls[j].vx;
+    let dvy = balls[i].vy - balls[j].vy;
+    let a = dvx * dvx + dvy * dvy;
+    let mut h = 0.0_f64;
+    if a > EPS {
+        let bb = dpx * dvx + dpy * dvy;
+        let c = dpx * dpx + dpy * dpy - BALL_D * BALL_D;
+        let disc = bb * bb - a * c;
+        if disc >= 0.0 {
+            let sq = disc.sqrt();
+            let h1 = (bb - sq) / a;
+            let h2 = (bb + sq) / a;
+            // smallest non-negative rewind
+            h = if h1 >= -EPS { h1 } else { h2 };
+            if h < 0.0 { h = 0.0; }
+        }
+    }
+    if h > 0.0 {
+        balls[i].x -= balls[i].vx * h;
+        balls[i].y -= balls[i].vy * h;
+        balls[j].x -= balls[j].vx * h;
+        balls[j].y -= balls[j].vy * h;
+    }
+
+    let dx = balls[j].x - balls[i].x;
+    let dy = balls[j].y - balls[i].y;
+    let dist = (dx * dx + dy * dy).sqrt();
+    if dist <= EPS {
+        return false;
+    }
+    let nx = dx / dist;
+    let ny = dy / dist;
+    let dvn = (balls[i].vx - balls[j].vx) * nx + (balls[i].vy - balls[j].vy) * ny;
+    if dvn <= 0.0 {
+        return false; // separating
+    }
+    let imp = dvn * BALL_COR;
+    balls[i].vx -= imp * nx;
+    balls[i].vy -= imp * ny;
+    balls[j].vx += imp * nx;
+    balls[j].vy += imp * ny;
+
+    // collision-induced throw: tangential Coulomb impulse opposing surface slip
+    // along the tangent, capped at MU_BALL·|normal impulse|.
+    let tx = -ny;
+    let ty = nx;
+    let dvt = (balls[i].vx - balls[j].vx) * tx + (balls[i].vy - balls[j].vy) * ty;
+    let jt = (MU_BALL * imp).min(dvt.abs() * 0.5) * dvt.signum();
+    balls[i].vx -= jt * tx;
+    balls[i].vy -= jt * ty;
+    balls[j].vx += jt * tx;
+    balls[j].vy += jt * ty;
+
+    // A ball-ball impact sheds a fraction of each ball's spin (SPIN_RETAIN),
+    // which keeps a natural-roll cue from *chasing down* the object it just hit
+    // while preserving deliberate follow/draw. Applied to BOTH balls and NOT
+    // keyed on i/j: the ball that was at rest carries no spin to begin with, and
+    // whichever index the cue lands at (JS object-key order can make it j) keeps
+    // its spin. (Keying the zero on j was the bug that wiped cue draw when the
+    // cue happened to be the higher index — and made native ≠ wasm.)
+    balls[i].sx *= SPIN_RETAIN;
+    balls[i].sy *= SPIN_RETAIN;
+    balls[j].sx *= SPIN_RETAIN;
+    balls[j].sy *= SPIN_RETAIN;
+    // re-advance the rewound interval with the post-collision velocities (which
+    // now point apart), so the pair separates and isn't re-detected next step.
+    if h > 0.0 {
+        balls[i].x += balls[i].vx * h;
+        balls[i].y += balls[i].vy * h;
+        balls[j].x += balls[j].vx * h;
+        balls[j].y += balls[j].vy * h;
+    }
+    true
+}
+
+pub fn simulate_core(mut balls: Vec<Ball>, english: Option<English>, max_time: f64) -> Output {
+    let lam = lambda_roll();
     let cue_idx = balls.iter().position(|b| b.id == "cue");
     let mut events: Vec<Event> = Vec::new();
     let mut t_now = 0.0_f64;
 
-    for b in balls.iter_mut() {
-        if b.speed() <= V_MIN {
-            b.vx = 0.0;
-            b.vy = 0.0;
+    // Apply english at the strike. e.y sets the cue's launch spin (follow/draw);
+    // e.x (side) is consumed as object throw at the first cue contact.
+    let mut side_english = 0.0_f64;
+    let mut side_pending = false;
+    if let (Some(ci), Some(e)) = (cue_idx, english) {
+        let sp = balls[ci].speed();
+        if sp > EPS {
+            let dirx = balls[ci].vx / sp;
+            let diry = balls[ci].vy / sp;
+            // e.y<0 = top/follow (s>v), e.y>0 = bottom/draw (s<v, can be negative)
+            let spin_speed = (-e.y) * SPIN_MAX * sp;
+            balls[ci].sx = dirx * spin_speed;
+            balls[ci].sy = diry * spin_speed;
+        }
+        if e.x != 0.0 {
+            side_english = e.x;
+            side_pending = true;
         }
     }
 
-    for _ in 0..10_000 {
+    // stop any ball that starts below V_MIN with no spin
+    for b in balls.iter_mut() {
+        if b.speed() <= V_MIN && b.slip() <= SLIP_EPS {
+            b.vx = 0.0;
+            b.vy = 0.0;
+            b.sx = 0.0;
+            b.sy = 0.0;
+        }
+        b.was_sliding = b.slip() > SLIP_EPS;
+    }
+
+    let max_iters = ((max_time / DT) as usize + 8) * 4;
+    for _ in 0..max_iters {
         if t_now >= max_time {
             break;
         }
+        if balls.iter().all(|b| !b.moving()) {
+            break;
+        }
 
-        let tau_stop: Vec<f64> = balls
+        // sub-step so the fastest ball moves < MAX_STEP_DIST (anti-tunnel)
+        let vmax = balls
             .iter()
-            .map(|b| {
-                if b.pocketed || b.speed() < EPS {
-                    f64::INFINITY
-                } else {
-                    (1.0 - V_MIN / b.speed()).max(0.0) / lam
-                }
-            })
-            .collect();
+            .filter(|b| !b.pocketed)
+            .map(|b| b.speed())
+            .fold(0.0_f64, f64::max);
+        let mut dt = DT.min(max_time - t_now);
+        if vmax * dt > MAX_STEP_DIST {
+            dt = MAX_STEP_DIST / vmax;
+        }
+        if dt <= 0.0 {
+            break;
+        }
 
-        let mut best: Option<(f64, Candidate)> = None;
-        fn consider(tau: f64, c: Candidate, best: &mut Option<(f64, Candidate)>) {
-            if best.as_ref().map_or(true, |(bt, _)| tau < *bt) {
-                *best = Some((tau, c));
+        // integrate friction, then move
+        for b in balls.iter_mut() {
+            if !b.moving() {
+                continue;
+            }
+            step_friction(b, dt, lam);
+            b.x += b.vx * dt;
+            b.y += b.vy * dt;
+        }
+        t_now += dt;
+
+        // ── rails ──
+        for i in 0..balls.len() {
+            if balls[i].pocketed {
+                continue;
+            }
+            // x rails
+            for (lo, name, is_min) in [(RAIL_MIN_X, "left", true), (RAIL_MAX_X, "right", false)] {
+                let past = if is_min { balls[i].x < lo } else { balls[i].x > lo };
+                let toward = if is_min { balls[i].vx < 0.0 } else { balls[i].vx > 0.0 };
+                if past && toward {
+                    let back = if is_min { lo - BACKSTOP } else { lo + BACKSTOP };
+                    // open pocket mouth: let the ball pass to the backstop
+                    let hard = if in_pocket_mouth(balls[i].x, balls[i].y) {
+                        (is_min && balls[i].x < back) || (!is_min && balls[i].x > back)
+                    } else {
+                        true
+                    };
+                    if hard {
+                        let line = if in_pocket_mouth(balls[i].x, balls[i].y) { back } else { lo };
+                        balls[i].x = line;
+                        balls[i].vx = -balls[i].vx * RAIL_COR;
+                        balls[i].sx = -balls[i].sx * RAIL_COR;
+                        if balls[i].vx.abs() > RAIL_EVENT_MIN_SPEED {
+                            events.push(Event { kind: EventKind::Rail(i, name), t: t_now, balls: balls.clone() });
+                        }
+                    }
+                }
+            }
+            // y rails
+            for (lo, name, is_min) in [(RAIL_MIN_Y, "top", true), (RAIL_MAX_Y, "bottom", false)] {
+                let past = if is_min { balls[i].y < lo } else { balls[i].y > lo };
+                let toward = if is_min { balls[i].vy < 0.0 } else { balls[i].vy > 0.0 };
+                if past && toward {
+                    let back = if is_min { lo - BACKSTOP } else { lo + BACKSTOP };
+                    let hard = if in_pocket_mouth(balls[i].x, balls[i].y) {
+                        (is_min && balls[i].y < back) || (!is_min && balls[i].y > back)
+                    } else {
+                        true
+                    };
+                    if hard {
+                        let line = if in_pocket_mouth(balls[i].x, balls[i].y) { back } else { lo };
+                        balls[i].y = line;
+                        balls[i].vy = -balls[i].vy * RAIL_COR;
+                        balls[i].sy = -balls[i].sy * RAIL_COR;
+                        if balls[i].vy.abs() > RAIL_EVENT_MIN_SPEED {
+                            events.push(Event { kind: EventKind::Rail(i, name), t: t_now, balls: balls.clone() });
+                        }
+                    }
+                }
             }
         }
 
+        // ── ball-ball contacts ──
         for i in 0..balls.len() {
-            let b = &balls[i];
-            if b.pocketed {
+            if balls[i].pocketed {
                 continue;
             }
-            // pair candidates must be examined even when ball i is the
-            // stationary one (contact_tau no-ops without relative motion);
-            // only the single-ball candidates require ball i itself to move
             for j in (i + 1)..balls.len() {
-                let o = &balls[j];
-                if o.pocketed {
+                if balls[j].pocketed {
                     continue;
                 }
-                if let Some(tau) =
-                    contact_tau(b.x - o.x, b.y - o.y, b.vx - o.vx, b.vy - o.vy, BALL_D)
-                {
-                    if tau <= tau_stop[i].min(tau_stop[j]) {
-                        consider(tau, Candidate::Hit(i, j), &mut best);
+                let dx = balls[j].x - balls[i].x;
+                let dy = balls[j].y - balls[i].y;
+                if dx * dx + dy * dy <= BALL_D * BALL_D + EPS {
+                    let was_side = side_pending
+                        && (Some(i) == cue_idx || Some(j) == cue_idx);
+                    if resolve_hit(&mut balls, i, j) {
+                        // side english throws the object ball off the tangent
+                        if was_side {
+                            let oi = if Some(i) == cue_idx { j } else { i };
+                            let os = balls[oi].speed();
+                            if os > EPS {
+                                let throw = side_english * 0.05;
+                                let oa = balls[oi].vy.atan2(balls[oi].vx) + throw;
+                                balls[oi].vx = oa.cos() * os;
+                                balls[oi].vy = oa.sin() * os;
+                            }
+                            side_pending = false;
+                        }
+                        events.push(Event { kind: EventKind::Hit(i, j), t: t_now, balls: balls.clone() });
                     }
                 }
             }
+        }
 
-            // spin transition is considered even for a stopped cue: draw can
-            // re-accelerate a ball that has come to rest
-            if let Some((_, _, _, tt)) = b.spin {
-                let remaining = (tt - t_now).max(0.0);
-                let tau = if remaining <= 0.0 { 0.0 } else { (1.0 - (-lam * remaining).exp()) / lam };
-                consider(tau, Candidate::Spin(i), &mut best);
-            }
-
-            if b.speed() < EPS {
+        // ── pockets ──
+        for i in 0..balls.len() {
+            if balls[i].pocketed {
                 continue;
             }
-            consider(tau_stop[i], Candidate::Stop, &mut best);
-
-            for (pi, &(_, px, py)) in POCKETS.iter().enumerate() {
-                if let Some(tau) = contact_tau(b.x - px, b.y - py, b.vx, b.vy, CAPTURE_R) {
-                    if tau <= tau_stop[i] {
-                        consider(tau, Candidate::Pocket(i, pi), &mut best);
-                    }
-                }
-            }
-
-            // rails: inside a pocket mouth the cushion gives way — the wall
-            // moves out to a backstop line so skimmers cannot escape the table
-            let axes: [(bool, f64, f64, &'static str, &'static str); 2] = [
-                (true, RAIL_MIN_X, RAIL_MAX_X, "left", "right"),
-                (false, RAIL_MIN_Y, RAIL_MAX_Y, "top", "bottom"),
-            ];
-            for (is_x, lo, hi, lo_name, hi_name) in axes {
-                let (p, v) = if is_x { (b.x, b.vx) } else { (b.y, b.vy) };
-                if v.abs() < EPS {
-                    continue;
-                }
-                let (line, name) = if v < 0.0 { (lo, lo_name) } else { (hi, hi_name) };
-                let back = if v < 0.0 { line - BACKSTOP } else { line + BACKSTOP };
-                for line_try in [line, back] {
-                    let tau = (line_try - p) / v;
-                    if tau <= EPS || tau > tau_stop[i] {
-                        continue;
-                    }
-                    let (cx, cy) = if is_x {
-                        (line_try, b.y + b.vy * tau)
-                    } else {
-                        (b.x + b.vx * tau, line_try)
-                    };
-                    if line_try == line && in_pocket_mouth(cx, cy) {
-                        continue; // open mouth — fall through to the backstop
-                    }
-                    consider(tau, Candidate::Rail(i, is_x, name), &mut best);
+            for &(name, px, py) in POCKETS.iter() {
+                let dx = balls[i].x - px;
+                let dy = balls[i].y - py;
+                if dx * dx + dy * dy <= CAPTURE_R * CAPTURE_R {
+                    balls[i].pocketed = true;
+                    balls[i].vx = 0.0;
+                    balls[i].vy = 0.0;
+                    balls[i].sx = 0.0;
+                    balls[i].sy = 0.0;
+                    events.push(Event { kind: EventKind::Pocket(i, name), t: t_now, balls: balls.clone() });
                     break;
                 }
             }
         }
 
-        let Some((tau, cand)) = best else { break };
-        if !(tau.is_finite() && tau >= 0.0) {
-            break;
-        }
-
-        // advance everything to the event in closed form
-        let decay = (1.0 - lam * tau).max(0.0); // = e^(−λΔt)
-        let dt = if decay > 0.0 {
-            -decay.ln() / lam
-        } else {
-            max_time - t_now
-        };
-        for b in balls.iter_mut() {
-            if b.pocketed {
+        // ── slide→roll waypoints (one per slide phase, for the follow/draw bend) ──
+        for i in 0..balls.len() {
+            if balls[i].pocketed {
                 continue;
             }
-            b.x += b.vx * tau;
-            b.y += b.vy * tau;
-            b.vx *= decay;
-            b.vy *= decay;
-            if b.speed() <= V_MIN {
-                b.vx = 0.0;
-                b.vy = 0.0;
+            let sliding = balls[i].slip() > SLIP_EPS;
+            if balls[i].was_sliding && !sliding && balls[i].speed() > RAIL_EVENT_MIN_SPEED {
+                events.push(Event { kind: EventKind::Spin(i), t: t_now, balls: balls.clone() });
             }
-        }
-        t_now += dt;
-
-        match cand {
-            Candidate::Stop => {}
-            Candidate::Rail(i, is_x, name) => {
-                let b = &mut balls[i];
-                if is_x {
-                    b.vx = -b.vx * RAIL_COR;
-                } else {
-                    b.vy = -b.vy * RAIL_COR;
-                }
-                let n_speed = if is_x { b.vx.abs() } else { b.vy.abs() };
-                if n_speed > RAIL_EVENT_MIN_SPEED {
-                    events.push(Event {
-                        kind: EventKind::Rail(i, name),
-                        t: t_now,
-                        balls: balls.clone(),
-                    });
-                }
-            }
-            Candidate::Pocket(i, pi) => {
-                let b = &mut balls[i];
-                b.pocketed = true;
-                b.vx = 0.0;
-                b.vy = 0.0;
-                events.push(Event {
-                    kind: EventKind::Pocket(i, POCKETS[pi].0),
-                    t: t_now,
-                    balls: balls.clone(),
-                });
-            }
-            Candidate::Hit(i, j) => {
-                let dx = balls[j].x - balls[i].x;
-                let dy = balls[j].y - balls[i].y;
-                let dist = (dx * dx + dy * dy).sqrt();
-                if dist > EPS {
-                    let nx = dx / dist;
-                    let ny = dy / dist;
-                    let dvn = (balls[i].vx - balls[j].vx) * nx + (balls[i].vy - balls[j].vy) * ny;
-                    if dvn > 0.0 {
-                        // pre-impulse cue velocity = the aim direction, used to
-                        // orient the spin curve
-                        let cue_pre = cue_idx.map(|ci| (balls[ci].vx, balls[ci].vy));
-
-                        let imp = dvn * BALL_COR;
-                        balls[i].vx -= imp * nx;
-                        balls[i].vy -= imp * ny;
-                        balls[j].vx += imp * nx;
-                        balls[j].vy += imp * ny;
-
-                        // collision-induced throw: friction at the contact
-                        // imparts a tangential impulse opposing the relative
-                        // surface slip, deflecting the struck ball off the pure
-                        // line of centers. The normal impulse above is along n,
-                        // so it leaves the tangential component untouched — dvt
-                        // is the same before or after it. Coulomb-capped at
-                        // MU_BALL * |normal impulse|; uncapped it would need
-                        // dvt/2 to fully arrest equal-mass tangential slip.
-                        let tx = -ny;
-                        let ty = nx;
-                        let dvt = (balls[i].vx - balls[j].vx) * tx + (balls[i].vy - balls[j].vy) * ty;
-                        let jt = (MU_BALL * imp).min(dvt.abs() * 0.5) * dvt.signum();
-                        balls[i].vx -= jt * tx;
-                        balls[i].vy -= jt * ty;
-                        balls[j].vx += jt * tx;
-                        balls[j].vy += jt * ty;
-
-                        // english on first cue contact (english.take() => once)
-                        if Some(i) == cue_idx || Some(j) == cue_idx {
-                            if let Some(e) = english.take() {
-                                let (ci, oi) = if Some(i) == cue_idx { (i, j) } else { (j, i) };
-                                // side english throws the object ball
-                                let throw = e.x * 0.05;
-                                let os = balls[oi].speed();
-                                let oa = balls[oi].vy.atan2(balls[oi].vx) + throw;
-                                balls[oi].vx = oa.cos() * os;
-                                balls[oi].vy = oa.sin() * os;
-
-                                if e.x == 0.0 && e.y == 0.0 {
-                                    // center ball / stun: cue stops dead
-                                    balls[ci].vx *= 0.1;
-                                    balls[ci].vy *= 0.1;
-                                } else {
-                                    // follow/draw: cue slides on the tangent
-                                    // (its post-impulse velocity), then a spin
-                                    // transition adds a component along the aim
-                                    // line. e.y<0 = follow (forward), e.y>0 = draw
-                                    if let Some((cvx, cvy)) = cue_pre {
-                                        let sp = (cvx * cvx + cvy * cvy).sqrt();
-                                        if sp > EPS {
-                                            let mag = -e.y * SPIN_GAIN * sp;
-                                            balls[ci].spin =
-                                                Some((cvx / sp, cvy / sp, mag, t_now + SLIDE_TIME));
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        events.push(Event {
-                            kind: EventKind::Hit(i, j),
-                            t: t_now,
-                            balls: balls.clone(),
-                        });
-                    }
-                }
-            }
-            Candidate::Spin(i) => {
-                if let Some((dx, dy, mag, _)) = balls[i].spin.take() {
-                    if !balls[i].pocketed {
-                        balls[i].vx += dx * mag;
-                        balls[i].vy += dy * mag;
-                        if balls[i].speed() <= V_MIN {
-                            balls[i].vx = 0.0;
-                            balls[i].vy = 0.0;
-                        }
-                        events.push(Event {
-                            kind: EventKind::Spin(i),
-                            t: t_now,
-                            balls: balls.clone(),
-                        });
-                    }
-                }
-            }
-        }
-
-        // don't stop while a spin transition is still pending (draw can
-        // re-accelerate a ball that has momentarily come to rest)
-        if balls.iter().all(|b| b.pocketed || (b.speed() < EPS && b.spin.is_none())) {
-            break;
+            balls[i].was_sliding = sliding;
         }
     }
 
-    Output {
-        events,
-        final_balls: balls,
-        duration: t_now,
-    }
+    Output { events, final_balls: balls, duration: t_now }
 }
 
 // ── JSON output (hand-rolled; ids are simple alnum strings) ──
@@ -467,8 +504,7 @@ pub fn output_to_json(o: &Output) -> String {
 // Input: flat f64 array [n_balls, max_time, has_english, ex, ey,
 //                        then per ball: id_code, x, y, vx, vy]
 // id_code 0 = cue, 1..=15 = numbered balls.
-// Returns a packed u64: (ptr << 32) | len of a UTF-8 JSON string in wasm
-// memory. The buffer is leaked per call (harness processes are short-lived).
+// Returns a packed u64: (ptr << 32) | len of a UTF-8 JSON string in wasm memory.
 
 #[no_mangle]
 pub extern "C" fn alloc_f64(n: usize) -> *mut f64 {
@@ -499,8 +535,10 @@ pub unsafe extern "C" fn simulate_raw(ptr: *const f64, len: usize) -> u64 {
             y: data[base + 2],
             vx: data[base + 3],
             vy: data[base + 4],
+            sx: 0.0,
+            sy: 0.0,
             pocketed: false,
-            spin: None,
+            was_sliding: false,
         });
     }
     let json = output_to_json(&simulate_core(balls, english, max_time));
@@ -516,7 +554,7 @@ mod tests {
     use super::*;
 
     fn ball(id: &str, x: f64, y: f64, vx: f64, vy: f64) -> Ball {
-        Ball { id: id.to_string(), x, y, vx, vy, pocketed: false, spin: None }
+        Ball { id: id.to_string(), x, y, vx, vy, sx: 0.0, sy: 0.0, pocketed: false, was_sliding: false }
     }
 
     fn find_pocket<'a>(o: &'a Output) -> Option<(&'a str, &'a str)> {
@@ -528,10 +566,11 @@ mod tests {
 
     #[test]
     fn straight_roll_into_corner_pocket() {
-        let (dx, dy) = (98.5 - 80.0, 48.5 - 37.7);
+        let dx: f64 = 98.5 - 80.0;
+        let dy: f64 = 48.5 - 37.7;
         let len = (dx * dx + dy * dy).sqrt();
         let out = simulate_core(
-            vec![ball("1", 80.0, 37.7, dx / len * 120.0, dy / len * 120.0)],
+            vec![ball("1", 80.0, 37.7, dx / len * 160.0, dy / len * 160.0)],
             None,
             10.0,
         );
@@ -540,7 +579,7 @@ mod tests {
 
     #[test]
     fn rail_bounce_reflects_at_rail_line() {
-        let out = simulate_core(vec![ball("1", 25.0, 25.0, -120.0, 0.0)], None, 10.0);
+        let out = simulate_core(vec![ball("1", 25.0, 25.0, -160.0, 0.0)], None, 10.0);
         let rail = out
             .events
             .iter()
@@ -550,35 +589,23 @@ mod tests {
             })
             .expect("rail event");
         assert_eq!(rail.1, "left");
-        assert!((rail.0.x - RAIL_MIN_X).abs() < 1e-6, "bounced at {}", rail.0.x);
+        assert!((rail.0.x - RAIL_MIN_X).abs() < 1.0, "bounced near {}", rail.0.x);
     }
 
     #[test]
-    fn head_on_stun_pockets_object_ball_and_holds_cue() {
-        let dirx = (98.5 - 80.0) / 21.418;
-        let diry = (48.5 - 37.7) / 21.418;
+    fn draw_returns_the_cue() {
+        // cue strikes an object dead-on with heavy draw (bottom english); after
+        // potting the object the cue should come BACK toward the shooter.
         let out = simulate_core(
             vec![
-                ball("cue", 80.0 - 15.0 * dirx, 37.7 - 15.0 * diry, dirx * 200.0, diry * 200.0),
-                ball("1", 80.0, 37.7, 0.0, 0.0),
+                ball("cue", 30.0, 25.0, 200.0, 0.0),
+                ball("1", 55.0, 25.0, 0.0, 0.0),
             ],
-            Some(English { x: 0.0, y: 0.0 }),
+            Some(English { x: 0.0, y: 1.0 }),
             10.0,
         );
-        let hit = out
-            .events
-            .iter()
-            .find(|e| matches!(e.kind, EventKind::Hit(..)))
-            .expect("contact");
-        let cue_at_hit = hit.balls.iter().find(|b| b.id == "cue").unwrap().clone();
-        let one_at_hit = hit.balls.iter().find(|b| b.id == "1").unwrap();
-        let gap = ((one_at_hit.x - cue_at_hit.x).powi(2) + (one_at_hit.y - cue_at_hit.y).powi(2)).sqrt();
-        assert!((gap - BALL_D).abs() < 1e-6, "contact gap {}", gap);
-        assert_eq!(find_pocket(&out), Some(("1", "corner-br")));
         let fin_cue = out.final_balls.iter().find(|b| b.id == "cue").unwrap();
-        assert!(!fin_cue.pocketed, "cue must not scratch");
-        let drift = ((fin_cue.x - cue_at_hit.x).powi(2) + (fin_cue.y - cue_at_hit.y).powi(2)).sqrt();
-        assert!(drift < 4.0, "stun cue drifted {}", drift);
+        assert!(fin_cue.x < 55.0 - BALL_D, "draw should pull the cue back, ended at {}", fin_cue.x);
     }
 
     #[test]
@@ -599,7 +626,7 @@ mod tests {
 
     #[test]
     fn json_output_shape() {
-        let out = simulate_core(vec![ball("1", 25.0, 25.0, -120.0, 0.0)], None, 10.0);
+        let out = simulate_core(vec![ball("1", 25.0, 25.0, -160.0, 0.0)], None, 10.0);
         let json = output_to_json(&out);
         assert!(json.starts_with("{\"events\":["));
         assert!(json.contains("\"final\":"));

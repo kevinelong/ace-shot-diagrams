@@ -1,14 +1,14 @@
 // Verifies the live Sim % (Monte Carlo make-percentage) field in the app:
 // it must populate from the embedded core and read higher for an easy shot
 // than a hard one.
-import { chromium } from '@playwright/test'
+import { chromium } from 'playwright-core'
 import { join, dirname } from 'path'
 import { pathToFileURL, fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const indexUrl = pathToFileURL(join(__dirname, 'index.html')).href
 
-const browser = await chromium.launch()
+const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', args: ['--no-sandbox', '--disable-gpu'] })
 const context = await browser.newContext()
 await context.addInitScript(() => localStorage.setItem('ace-tour-completed', 'true'))
 const page = await context.newPage()

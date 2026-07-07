@@ -2,14 +2,14 @@
 //  #1 Shot Info panel visible by default and its fields populate.
 //  #3 A shared state link does NOT auto-rack (only configured balls present).
 //  #2 A ball can be dragged out of the rack onto the table.
-import { chromium } from '@playwright/test'
+import { chromium } from 'playwright-core'
 import { join, dirname } from 'path'
 import { pathToFileURL, fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const indexUrl = pathToFileURL(join(__dirname, 'index.html')).href
 
-const browser = await chromium.launch()
+const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', args: ['--no-sandbox', '--disable-gpu'] })
 const context = await browser.newContext()
 await context.addInitScript(() => localStorage.setItem('ace-tour-completed', 'true'))
 const page = await context.newPage()
