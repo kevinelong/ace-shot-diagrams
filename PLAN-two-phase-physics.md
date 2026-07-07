@@ -54,6 +54,21 @@ through the collision rather than a scalar). Iterate with rendering (pot the
 object so no rebound) on a fixed reference set (stun / follow distance / draw-back
 distance / stun cut). Keep `verify-rust-parity` object-potting green.
 
+**CRITICAL (found while starting B): native ↔ wasm DIVERGE on draw.** The same
+committed source, same draw shot (cue 28u from a potted object, `ey=1`): the
+**wasm** build follows (+3.4) but the **native** `cargo test` build draws (−7.7).
+So the draw is on a **numerical knife-edge** (backspin marginally surviving to
+contact) and the two targets round to opposite sides. Consequences:
+- **Validate spin behavior on the WASM only** (the app's engine). Native unit
+  tests like `draw_returns_the_cue` can pass while the app does the opposite —
+  misleading. (Keep them for *potting* geometry, not spin sign/magnitude.)
+- The fix must move draw **off the knife-edge**: make backspin *robustly* survive
+  the slide to normal contact distances (so both targets agree and small param
+  changes don't flip follow↔draw). Candidates: higher initial backspin that
+  clearly outlives the slide; a longer/gentler slide *for the spin axis only*;
+  reduce threshold-snap sensitivity (`s=v` overshoot test, `SLIP_EPS`, the stop
+  test) that fp noise can flip. This is a stability + modeling task, not tuning.
+
 ### C. Persist the render/verify tooling on this box
 `verify-shots.cjs`/`record-shot.cjs` already use `playwright-core` + system
 chromium (default `/usr/bin/chromium-browser`). `render-scenarios.js` /
