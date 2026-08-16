@@ -64,14 +64,15 @@ Each has a matching `voiceover` string that can be used as-is for narration, in 
 
 ## Rack convention used
 
-The rules poster on the wall calls for stripes and solids alternated. The exact positions of the 15 and the two inner-back balls vary by house; the branch uses:
+The rules poster on the wall calls for stripes and solids alternated. Even though the game is called *15-Ball Rotation*, the **8-ball anchors the geometric center of the rack** (standard 8-ball racking discipline). The canonical layout is:
 
 - **1** at apex (head ball on the foot spot)
-- **15** at back-center
-- **5** & **11** at the two back-row corners (one solid, one stripe)
-- Remaining balls alternate solids and stripes down the rack for visual balance
+- **8** in the geometric center of the rack (row 2 middle)
+- **15** at back-center (back row middle)
+- **6** and **14** at the two back-row corners (one solid, one stripe)
+- Remaining balls alternate solids and stripes down the rack
 
-If your club uses a different canonical arrangement, edit the `kballLayout` array in `generateRackPositions()` and re-record. All scenarios reference balls by number so they still play out correctly.
+If your club uses a slightly different arrangement, edit the `kballLayout` array in `generateRackPositions()` and re-run `record-video.cjs`. All scenarios reference balls by number, so they still play out correctly.
 
 ## Not covered here (deliberate)
 

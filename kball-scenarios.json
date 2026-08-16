@@ -3,8 +3,8 @@
     "name": "01-rack",
     "title": "The Rack",
     "duration_ms": 4000,
-    "voiceover": "K-Ball is 15-ball rotation. Rack all 15 balls with stripes and solids alternating, one ball at the apex, and the 15 and 1 balls anchoring the inner back positions of the rack. Cue ball is placed anywhere behind the head string for the break.",
-    "state": "v1|cue:20,25|1:75,25|2:76.9485,24|9:76.9485,26|3:78.897,23|10:78.897,25|4:78.897,27|11:80.8455,22|5:80.8455,24|12:80.8455,26|6:80.8455,28|13:82.794,21|7:82.794,23|15:82.794,25|8:82.794,27|14:82.794,29|p:cbr|b:1|m:kball|f:7|e:0.0,-0.4|s:auto",
+    "voiceover": "K-Ball is 15-ball rotation. Rack all 15 balls with stripes and solids alternating: the 1-ball on the apex, the 8-ball in the center of the rack, and the 15-ball on the back-center. Cue ball is placed anywhere behind the head string for the break.",
+    "state": "v1|cue:20,25|1:75.0,25.0|9:76.9486,23.875|2:76.9486,26.125|3:78.8971,22.75|8:78.8971,25.0|10:78.8971,27.25|4:80.8457,21.625|11:80.8457,23.875|5:80.8457,26.125|12:80.8457,28.375|6:82.7942,20.5|13:82.7942,22.75|15:82.7942,25.0|7:82.7942,27.25|14:82.7942,29.5|p:cbr|b:1|m:kball|f:7|e:0.0,-0.4|s:auto",
     "annotations": [
       {"type": "text", "at": [75, 20], "label": "APEX (1-ball)"},
       {"type": "text", "at": [82.794, 33], "label": "BACK ROW"},
@@ -16,7 +16,7 @@
     "title": "Legal Break",
     "duration_ms": 6000,
     "voiceover": "A legal break requires a minimum of three balls to cross the head string, or be pocketed. If not, it's a foul.",
-    "state": "v1|cue:20,25|1:75,25|2:76.9485,24|9:76.9485,26|3:78.897,23|10:78.897,25|4:78.897,27|11:80.8455,22|5:80.8455,24|12:80.8455,26|6:80.8455,28|13:82.794,21|7:82.794,23|15:82.794,25|8:82.794,27|14:82.794,29|p:cbr|b:1|m:kball|f:10|e:0.0,-0.4|s:auto",
+    "state": "v1|cue:20,25|1:75.0,25.0|9:76.9486,23.875|2:76.9486,26.125|3:78.8971,22.75|8:78.8971,25.0|10:78.8971,27.25|4:80.8457,21.625|11:80.8457,23.875|5:80.8457,26.125|12:80.8457,28.375|6:82.7942,20.5|13:82.7942,22.75|15:82.7942,25.0|7:82.7942,27.25|14:82.7942,29.5|p:cbr|b:1|m:kball|f:10|e:0.0,-0.4|s:auto",
     "annotations": [
       {"type": "line", "from": [30, 0], "to": [30, 50], "label": "Head string", "style": "dashed"},
       {"type": "text", "at": [30, 4], "label": "At least 3 balls must cross \u2192"}
@@ -78,7 +78,7 @@
     "title": "Continuing the Game",
     "duration_ms": 5000,
     "voiceover": "Once all 15 balls are cleared from the table, they are re-racked, and the player who pocketed the final ball breaks the next rack.",
-    "state": "v1|cue:20,25|1:75,25|2:76.9485,24|9:76.9485,26|3:78.897,23|10:78.897,25|4:78.897,27|11:80.8455,22|5:80.8455,24|12:80.8455,26|6:80.8455,28|13:82.794,21|7:82.794,23|15:82.794,25|8:82.794,27|14:82.794,29|p:cbr|b:1|m:kball|f:7|e:0.0,-0.4|s:auto",
+    "state": "v1|cue:20,25|1:75.0,25.0|9:76.9486,23.875|2:76.9486,26.125|3:78.8971,22.75|8:78.8971,25.0|10:78.8971,27.25|4:80.8457,21.625|11:80.8457,23.875|5:80.8457,26.125|12:80.8457,28.375|6:82.7942,20.5|13:82.7942,22.75|15:82.7942,25.0|7:82.7942,27.25|14:82.7942,29.5|p:cbr|b:1|m:kball|f:7|e:0.0,-0.4|s:auto",
     "annotations": [
       {"type": "text", "at": [50, 4], "label": "All 15 cleared \u2192 re-rack, last pocketer breaks"}
     ]
