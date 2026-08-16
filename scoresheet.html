@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>15-Ball Rotation (K-Ball) \u2014 Interactive Score Sheet</title>
+<style>
+  :root {
+    --ink:#111; --paper:#fafaf7; --line:#111; --accent:#c62828; --dim:#666; --hit:#2b7a2b;
+  }
+  html,body{margin:0;background:var(--paper);color:var(--ink);font-family:"Inter","Segoe UI",system-ui,sans-serif}
+  .wrap{max-width:900px;margin:24px auto;padding:16px}
+  header{text-align:center;margin-bottom:12px}
+  header h1{margin:0 0 4px;font-size:26px;letter-spacing:.5px}
+  header .stars{color:var(--accent);letter-spacing:8px;font-size:18px}
+  header .sub{font-weight:600;letter-spacing:2px;font-size:12px;color:var(--dim)}
+  .players{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+  .player-hdr{border:2px solid var(--line);border-radius:6px;padding:10px}
+  .player-hdr label{display:block;font-weight:700;text-transform:uppercase;letter-spacing:2px;font-size:11px;color:var(--dim);margin-bottom:6px}
+  .player-hdr input[type=text]{width:100%;border:0;border-bottom:2px solid var(--line);font-size:18px;padding:4px 2px;background:transparent}
+  .player-hdr .goal{margin-top:10px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .player-hdr .goal strong{font-size:11px;letter-spacing:2px;color:var(--dim)}
+  .player-hdr .goal label{display:inline-flex;align-items:center;gap:6px;font-size:14px}
+  .rack{border:2px solid var(--line);border-radius:6px;margin-bottom:10px;overflow:hidden}
+  .rack-hdr{display:grid;grid-template-columns:60px 1fr 1fr;background:var(--line);color:var(--paper);font-weight:700;letter-spacing:2px;font-size:12px}
+  .rack-hdr div{padding:6px 8px;text-align:center}
+  .rack-hdr div.left{text-align:left}
+  .rack-row{display:grid;grid-template-columns:60px 1fr 1fr;border-top:1px solid var(--line)}
+  .rack-row:first-of-type{border-top:0}
+  .rack-num{background:#eee8;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;border-right:1px solid var(--line)}
+  .player-side{padding:8px;display:flex;flex-wrap:wrap;gap:4px;align-items:center;border-left:0;position:relative}
+  .player-side.right{border-left:1px solid var(--line)}
+  .ball{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;cursor:pointer;user-select:none;background:#fff;transition:transform 80ms ease}
+  .ball:hover{transform:scale(1.08)}
+  .ball.on{background:var(--hit);color:#fff;border-color:var(--hit)}
+  .ball.stripe{background:linear-gradient(#fff 33%,#e9c46a 33%,#e9c46a 66%,#fff 66%)}
+  .ball.stripe.on{background:var(--hit);color:#fff}
+  .totals{display:flex;gap:6px;margin-left:auto;font-size:11px;letter-spacing:1px;color:var(--dim);align-items:center}
+  .totals input{width:36px;text-align:center;border:1px solid var(--line);border-radius:3px;padding:2px 0}
+  .grand{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+  .grand .box{border:2px solid var(--line);border-radius:6px;padding:10px}
+  .grand h3{margin:0 0 8px;font-size:11px;letter-spacing:2px;color:var(--dim)}
+  .grand .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .grand .grid3 label{font-size:10px;letter-spacing:1px;color:var(--dim);display:block;margin-bottom:2px}
+  .grand .grid3 input{width:100%;border:0;border-bottom:2px solid var(--line);font-size:22px;text-align:center;background:transparent;padding:4px 0}
+  .sig{display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:12px}
+  .sig input{width:100%;border:0;border-bottom:1px solid var(--line);padding:4px 2px;background:transparent}
+  .winner{text-align:center;margin:14px 0;font-weight:700;letter-spacing:3px;font-size:13px}
+  footer{text-align:center;margin-top:16px;font-size:12px;color:var(--dim)}
+  .toolbar{display:flex;gap:8px;justify-content:center;margin:14px 0;flex-wrap:wrap}
+  .toolbar button{border:2px solid var(--line);background:#fff;padding:8px 14px;font-weight:700;letter-spacing:1px;font-size:12px;border-radius:6px;cursor:pointer}
+  .toolbar button:hover{background:var(--line);color:var(--paper)}
+  @media print{
+    .toolbar,footer{display:none}
+    body{background:#fff}
+    .ball{border:1px solid #000}
+    .ball.on{background:#000;color:#fff}
+    .wrap{max-width:100%;margin:0;padding:0}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="stars">\u2605\u2605\u2605\u2605\u2605</div>
+    <h1>15-Ball Rotation (K-Ball)</h1>
+    <div class="sub">SCORE SHEET</div>
+  </header>
+
+  <div class="players">
+    <div class="player-hdr">
+      <label for="pAname">Player A</label>
+      <input id="pAname" type="text" placeholder="Name" />
+      <div class="goal">
+        <strong>PLAYER A GOAL:</strong>
+        <label><input type="radio" name="goalA" value="25" checked>25</label>
+        <label><input type="radio" name="goalA" value="50">50</label>
+        <label><input type="radio" name="goalA" value="other">Other</label>
+        <input type="number" id="goalAOther" min="1" style="width:60px" />
+      </div>
+    </div>
+    <div class="player-hdr">
+      <label for="pBname">Player B</label>
+      <input id="pBname" type="text" placeholder="Name" />
+      <div class="goal">
+        <strong>PLAYER B GOAL:</strong>
+        <label><input type="radio" name="goalB" value="25" checked>25</label>
+        <label><input type="radio" name="goalB" value="50">50</label>
+        <label><input type="radio" name="goalB" value="other">Other</label>
+        <input type="number" id="goalBOther" min="1" style="width:60px" />
+      </div>
+    </div>
+  </div>
+
+  <div id="racks"></div>
+
+  <div class="grand">
+    <div class="box">
+      <h3>PLAYER A TOTALS</h3>
+      <div class="grid3">
+        <div><label>HIGH RUN</label><input id="hrA" type="number" min="0" /></div>
+        <div><label>FOULS</label><input id="foulsA" type="number" min="0" /></div>
+        <div><label>FINAL TOTAL</label><input id="finalA" type="number" min="0" readonly /></div>
+      </div>
+    </div>
+    <div class="box">
+      <h3>PLAYER B TOTALS</h3>
+      <div class="grid3">
+        <div><label>HIGH RUN</label><input id="hrB" type="number" min="0" /></div>
+        <div><label>FOULS</label><input id="foulsB" type="number" min="0" /></div>
+        <div><label>FINAL TOTAL</label><input id="finalB" type="number" min="0" readonly /></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="winner">CIRCLE THE WINNER</div>
+  <div class="sig">
+    <div><label>SIGNATURES: PLAYER A</label><input type="text" /></div>
+    <div><label>PLAYER B</label><input type="text" /></div>
+  </div>
+
+  <div class="toolbar">
+    <button onclick="window.print()">Print</button>
+    <button onclick="resetSheet()">Reset</button>
+    <button onclick="saveLocal()">Save</button>
+    <button onclick="loadLocal()">Load Last</button>
+    <button onclick="exportJson()">Export JSON</button>
+  </div>
+
+  <footer>ColumbiaCueClub.com \u2014 K-Ball Score Sheet</footer>
+</div>
+
+<script>
+  const RACKS = 10;
+  const SOLIDS = [1,2,3,4,5,6,7];
+  const STRIPES = [9,10,11,12,13,14,15];
+  const ALL = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
+
+  const racksEl = document.getElementById('racks');
+  for (let r = 1; r <= RACKS; r++) {
+    const box = document.createElement('div');
+    box.className = 'rack';
+    box.innerHTML = `
+      ${r === 1 ? `<div class="rack-hdr"><div>RACK</div><div>PLAYER A</div><div>PLAYER B</div></div>` : ''}
+      <div class="rack-row">
+        <div class="rack-num">${r}</div>
+        <div class="player-side" data-rack="${r}" data-side="A">
+          ${ALL.map(n => `<div class="ball ${STRIPES.includes(n)?'stripe':''}" data-num="${n}">${n}</div>`).join('')}
+          <div class="totals">
+            <span>RACK</span><input type="number" min="0" data-total="rackA" readonly />
+            <span>FOULS</span><input type="number" min="0" data-total="foulsA" />
+            <span>RUN</span><input type="number" min="0" data-total="runA" />
+          </div>
+        </div>
+        <div class="player-side right" data-rack="${r}" data-side="B">
+          ${ALL.map(n => `<div class="ball ${STRIPES.includes(n)?'stripe':''}" data-num="${n}">${n}</div>`).join('')}
+          <div class="totals">
+            <span>RACK</span><input type="number" min="0" data-total="rackB" readonly />
+            <span>FOULS</span><input type="number" min="0" data-total="foulsB" />
+            <span>RUN</span><input type="number" min="0" data-total="runB" />
+          </div>
+        </div>
+      </div>`;
+    racksEl.appendChild(box);
+  }
+
+  racksEl.addEventListener('click', (e) => {
+    const ball = e.target.closest('.ball');
+    if (!ball) return;
+    ball.classList.toggle('on');
+    recompute();
+  });
+
+  function recompute() {
+    let finalA = 0, finalB = 0;
+    document.querySelectorAll('.rack-row').forEach(row => {
+      ['A','B'].forEach(side => {
+        const holder = row.querySelector(`.player-side[data-side="${side}"]`);
+        if (!holder) return;
+        const on = holder.querySelectorAll('.ball.on').length;
+        holder.querySelector(`[data-total="rack${side}"]`).value = on;
+        if (side === 'A') finalA += on; else finalB += on;
+      });
+    });
+    document.getElementById('finalA').value = finalA;
+    document.getElementById('finalB').value = finalB;
+  }
+
+  function resetSheet() {
+    if (!confirm('Clear this score sheet?')) return;
+    document.querySelectorAll('.ball.on').forEach(b => b.classList.remove('on'));
+    document.querySelectorAll('input[type=text],input[type=number]').forEach(i => { if (!i.readOnly) i.value = ''; });
+    recompute();
+  }
+
+  function saveLocal() {
+    const data = collect();
+    localStorage.setItem('kball-scoresheet', JSON.stringify(data));
+    alert('Saved to browser storage.');
+  }
+
+  function loadLocal() {
+    const raw = localStorage.getItem('kball-scoresheet');
+    if (!raw) return alert('No saved sheet found.');
+    apply(JSON.parse(raw));
+  }
+
+  function exportJson() {
+    const blob = new Blob([JSON.stringify(collect(), null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'kball-scoresheet.json';
+    a.click();
+  }
+
+  function collect() {
+    const racks = [];
+    document.querySelectorAll('.rack-row').forEach((row, i) => {
+      const entry = { rack: i + 1, A: {}, B: {} };
+      ['A','B'].forEach(side => {
+        const holder = row.querySelector(`.player-side[data-side="${side}"]`);
+        entry[side].balls = [...holder.querySelectorAll('.ball.on')].map(b => +b.dataset.num);
+        entry[side].fouls = +holder.querySelector(`[data-total="fouls${side}"]`).value || 0;
+        entry[side].run = +holder.querySelector(`[data-total="run${side}"]`).value || 0;
+      });
+      racks.push(entry);
+    });
+    return {
+      timestamp: new Date().toISOString(),
+      playerA: document.getElementById('pAname').value,
+      playerB: document.getElementById('pBname').value,
+      racks,
+      finalA: +document.getElementById('finalA').value || 0,
+      finalB: +document.getElementById('finalB').value || 0,
+      highRunA: +document.getElementById('hrA').value || 0,
+      highRunB: +document.getElementById('hrB').value || 0
+    };
+  }
+
+  function apply(data) {
+    resetSheet();
+    document.getElementById('pAname').value = data.playerA || '';
+    document.getElementById('pBname').value = data.playerB || '';
+    (data.racks || []).forEach((entry, i) => {
+      const row = document.querySelectorAll('.rack-row')[i];
+      if (!row) return;
+      ['A','B'].forEach(side => {
+        const holder = row.querySelector(`.player-side[data-side="${side}"]`);
+        (entry[side]?.balls || []).forEach(n => {
+          const b = holder.querySelector(`.ball[data-num="${n}"]`);
+          if (b) b.classList.add('on');
+        });
+        holder.querySelector(`[data-total="fouls${side}"]`).value = entry[side]?.fouls || '';
+        holder.querySelector(`[data-total="run${side}"]`).value = entry[side]?.run || '';
+      });
+    });
+    document.getElementById('hrA').value = data.highRunA || '';
+    document.getElementById('hrB').value = data.highRunB || '';
+    recompute();
+  }
+
+  recompute();
+</script>
+</body>
+</html>

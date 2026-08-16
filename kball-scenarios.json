@@ -1,0 +1,96 @@
+[
+  {
+    "name": "01-rack",
+    "title": "The Rack",
+    "duration_ms": 4000,
+    "voiceover": "K-Ball is 15-ball rotation. Rack all 15 balls with stripes and solids alternating, one ball at the apex, and the 15 and 1 balls anchoring the inner back positions of the rack. Cue ball is placed anywhere behind the head string for the break.",
+    "state": "v1|cue:20,25|1:75,25|2:76.9485,24|9:76.9485,26|3:78.897,23|10:78.897,25|4:78.897,27|11:80.8455,22|5:80.8455,24|12:80.8455,26|6:80.8455,28|13:82.794,21|7:82.794,23|15:82.794,25|8:82.794,27|14:82.794,29|p:cbr|b:1|m:kball|f:7|e:0.0,-0.4|s:auto",
+    "annotations": [
+      {"type": "text", "at": [75, 20], "label": "APEX (1-ball)"},
+      {"type": "text", "at": [82.794, 33], "label": "BACK ROW"},
+      {"type": "arrow", "from": [70, 40], "to": [75, 25], "label": "Foot spot"}
+    ]
+  },
+  {
+    "name": "02-legal-break",
+    "title": "Legal Break",
+    "duration_ms": 6000,
+    "voiceover": "A legal break requires a minimum of three balls to cross the head string, or be pocketed. If not, it's a foul.",
+    "state": "v1|cue:20,25|1:75,25|2:76.9485,24|9:76.9485,26|3:78.897,23|10:78.897,25|4:78.897,27|11:80.8455,22|5:80.8455,24|12:80.8455,26|6:80.8455,28|13:82.794,21|7:82.794,23|15:82.794,25|8:82.794,27|14:82.794,29|p:cbr|b:1|m:kball|f:10|e:0.0,-0.4|s:auto",
+    "annotations": [
+      {"type": "line", "from": [30, 0], "to": [30, 50], "label": "Head string", "style": "dashed"},
+      {"type": "text", "at": [30, 4], "label": "At least 3 balls must cross \u2192"}
+    ]
+  },
+  {
+    "name": "03-break-results",
+    "title": "Break Results",
+    "duration_ms": 5000,
+    "voiceover": "If a ball is pocketed on a legal break, the breaker continues shooting from wherever the cue ball lies on the table. If no balls are pocketed on the break, the incoming player gets ball in hand.",
+    "state": "v1|cue:42,28|2:60,22|9:66,30|3:68,18|10:50,35|4:44,20|11:38,45|5:80,25|12:88,32|6:55,10|13:70,42|7:82,15|15:78,40|8:52,25|14:62,35|p:cbr|b:2|m:kball|f:5|e:0.0,0.0|s:auto",
+    "annotations": [
+      {"type": "highlight", "ball": "2", "label": "Lowest ball on table"}
+    ]
+  },
+  {
+    "name": "04-rotation-and-calling-pockets",
+    "title": "Rotation & Calling Pockets",
+    "duration_ms": 6000,
+    "voiceover": "You must hit the lowest-numbered ball on the table first. Every single pocket must be called explicitly before the shot.",
+    "state": "v1|cue:25,32|2:60,25|3:70,20|4:80,32|5:50,15|9:55,40|p:cbr|b:2|m:kball|f:5|e:0.0,0.0|s:auto",
+    "annotations": [
+      {"type": "highlight", "ball": "2", "label": "Must hit first"},
+      {"type": "pocketCall", "pocket": "corner-br", "label": "CALLED"}
+    ]
+  },
+  {
+    "name": "05-miss-penalty",
+    "title": "Miss Penalty",
+    "duration_ms": 5000,
+    "voiceover": "After any missed shot, your opponent receives cue ball in hand \u2014 they can place the cue ball anywhere on the table.",
+    "state": "v1|cue:35,25|2:70,30|3:80,15|p:cbr|b:2|m:kball|f:5|e:0.0,0.0|s:auto",
+    "annotations": [
+      {"type": "text", "at": [50, 4], "label": "MISS \u2192 opponent gets ball in hand ANYWHERE"}
+    ]
+  },
+  {
+    "name": "06-no-safety-play",
+    "title": "No Safety Play",
+    "duration_ms": 5000,
+    "voiceover": "Safety play is strictly prohibited under standard K-Ball guidelines. Every shot must be an honest attempt to pocket the called ball.",
+    "state": "v1|cue:25,25|3:70,25|4:73,23|5:73,27|p:stop|b:3|m:kball|f:3|e:0.0,0.0|s:auto",
+    "annotations": [
+      {"type": "text", "at": [50, 4], "label": "NO SAFETIES \u2014 you must play to pocket"}
+    ]
+  },
+  {
+    "name": "07-scoring",
+    "title": "Scoring",
+    "duration_ms": 5000,
+    "voiceover": "Every legally pocketed ball counts as one point. Matches are typically played to a target score: 25 balls for recreational play, 35 for professional.",
+    "state": "v1|cue:30,25|1:60,20|p:cbr|b:1|m:kball|f:5|e:0.0,0.0|s:auto",
+    "annotations": [
+      {"type": "text", "at": [50, 4], "label": "1 ball = 1 point   Target: 25 (rec) / 35 (pro)"}
+    ]
+  },
+  {
+    "name": "08-continuing-the-game",
+    "title": "Continuing the Game",
+    "duration_ms": 5000,
+    "voiceover": "Once all 15 balls are cleared from the table, they are re-racked, and the player who pocketed the final ball breaks the next rack.",
+    "state": "v1|cue:20,25|1:75,25|2:76.9485,24|9:76.9485,26|3:78.897,23|10:78.897,25|4:78.897,27|11:80.8455,22|5:80.8455,24|12:80.8455,26|6:80.8455,28|13:82.794,21|7:82.794,23|15:82.794,25|8:82.794,27|14:82.794,29|p:cbr|b:1|m:kball|f:7|e:0.0,-0.4|s:auto",
+    "annotations": [
+      {"type": "text", "at": [50, 4], "label": "All 15 cleared \u2192 re-rack, last pocketer breaks"}
+    ]
+  },
+  {
+    "name": "09-finishing-the-game",
+    "title": "Finishing the Game",
+    "duration_ms": 5000,
+    "voiceover": "Play continues until a player reaches their point goal. The winning player may also keep shooting past their goal to work on their high run.",
+    "state": "v1|cue:35,25|1:60,25|p:cbr|b:1|m:kball|f:5|e:0.0,0.0|s:auto",
+    "annotations": [
+      {"type": "text", "at": [50, 4], "label": "Win = reach target score.  Bonus: high-run practice."}
+    ]
+  }
+]
