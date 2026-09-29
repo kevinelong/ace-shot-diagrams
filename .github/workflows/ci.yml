@@ -1,0 +1,68 @@
+name: CI
+
+# Two jobs, because the physics core needs no npm and the browser suite needs no Rust.
+#
+# Deliberately NOT in here, each for a reason worth fixing rather than hiding:
+#   - verify-animation.js, verify-consistency.js, verify-sim-make.js, verify-ux-fixes.js
+#     launch a hardcoded /usr/bin chromium path, so they only run on a Linux box that has
+#     one. They are useful locally; wire them up once they resolve a browser portably.
+#   - verify-spin.js currently reports FAIL on a clean clone (draw does not come back past
+#     the contact point at e.y=0.5, and stun emits a spin event). It needs a decision
+#     before it can gate anything.
+#   - npm run test:unit points at tests/unit/*, which exist in no commit.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  physics:
+    name: Physics core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The toolchain is pinned by rust-toolchain.toml so the wasm build is reproducible:
+      # a different rustc produces different bytes, and the embed check compares bytes.
+      - name: Install the pinned toolchain and wasm target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Build the core
+        run: cargo build --release --target wasm32-unknown-unknown --manifest-path ace-physics/Cargo.toml
+
+      - name: Core unit tests
+        run: cargo test --release --manifest-path ace-physics/Cargo.toml
+
+      - name: The embedded core matches the build
+        run: node verify-wasm-embed.js
+
+      # verify-rust-parity.js prints its verdict and then aborts during process teardown
+      # (libuv UV_HANDLE_CLOSING assertion, exit 9), so the exit code is not a verdict.
+      # Judge it by what it prints: a crash before the summary still fails the step.
+      - name: Physics battery through the wasm
+        run: |
+          set -o pipefail
+          node verify-rust-parity.js 2>&1 | tee parity.log || true
+          grep -q '8/8 passed' parity.log || { echo '::error::the physics battery did not report 8/8 passed'; exit 1; }
+
+  browser:
+    name: Playwright (chromium)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test --project=chromium
+      - name: Upload the report when it fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

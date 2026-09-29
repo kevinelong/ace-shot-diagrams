@@ -1,0 +1,7 @@
+[toolchain]
+# Pinned so the wasm build is reproducible: verify-wasm-embed.js compares the core embedded
+# in index.html against a fresh build, and a different rustc produces different bytes.
+# Bump this deliberately, then rebuild and re-run `node embed-wasm.js`.
+channel = "1.96.0"
+components = ["rustfmt", "clippy"]
+targets = ["wasm32-unknown-unknown"]
