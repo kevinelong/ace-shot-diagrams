@@ -46,9 +46,8 @@ test.describe('Power Control', () => {
   test('should update the displayed value across the range', async ({ page, aceHelper }) => {
     for (const value of [2, 4, 6, 8, 10]) {
       await aceHelper.setPower(value);
-      await page.waitForTimeout(100);
-      const displayed = await page.locator('#forceValue-palette').textContent();
-      expect(parseInt(displayed || '0')).toBe(value);
+      await expect.poll(async () =>
+          parseInt((await page.locator('#forceValue-palette').textContent()) || '0', 10)).toBe(value);
     }
   });
 });

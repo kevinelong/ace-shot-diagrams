@@ -158,8 +158,9 @@ was open only because the identifier `naturalAngle` never existed.
 - [ ] **Two plan docs are unmaintained:** `PLAYWRIGHT_TEST_PLAN.md` has 137 unticked boxes and
       `GAME_MODE_PLAN.md` 29, against a suite that is green. Either reconcile them against the
       specs or prune them and say the specs are the source of truth.
-- [ ] **Fixed waits are the runtime and the flakiness.** 92 `waitForTimeout` calls totalling
-      **57.6 s per pass**.
+- [x] **Fixed waits are the runtime and the flakiness.** 92 `waitForTimeout` calls totalling
+      **57.6 s per pass** -> **4 calls, all deliberate** (see below). Backed by the full suite:
+      **158 passed, 0 flaky, 41.7 s** (was 57.1 s with 1 flaky).
   - [x] **`shot-animation.spec.ts` converted — 15 waits / 32.3 s removed, 0 left** (the top
         offender and the file that flaked). Backed by `--repeat-each=4`: **60/60 passed, 0
         flaky, 41.8 s** (≈10.4 s per pass of 15 tests), against 32.3 s of sleeps per pass
@@ -199,16 +200,22 @@ was open only because the identifier `naturalAngle` never existed.
         shot pockets the cue ball and the app answers "Place cue ball on table first". It now
         requires the app to answer every click (shot start or a warning). Backed by
         `--repeat-each=8`: **8/8 passed in 3.5 s**.
-  - [ ] **Remaining: 28 waits** - `rack-start` 10, `kick-shots` 7, `quick-validation` 6,
-        `mobile` 3, `01-ball-placement` 1, `power-control` 1. Two more are kept deliberately:
-        the three 50 ms gaps in "should recalculate instantly without lag" (they *are* the
-        measurement) and `test-helpers.waitForShotCalculation` (the app exposes no observable
-        for "shot calculated" and its callers read the result, so it needs an app signal first -
-        same shape as the shoot race recorded below).
-        Measured effect so far: the suite's fixed waits went **57.6 s -> 21 s per pass**, wall
-        time 57.1 s -> 42.0 s, and flakiness to at most one retry-passed flake (the palette
-        "minimize all" pile-up is now awaited per palette). Per-test boot of the 552 KB page is
-        the other cost.
+  - [x] **The last six files** (`rack-start` 10, `kick-shots` 7, `quick-validation` 6,
+        `mobile` 3, `01-ball-placement` 1, `power-control` 1): post-goto sleeps became the
+        racked cue ball's `on-table` class (or the board being visible on `?empty=1`), the
+        post-shot ones use the shared `shootAndWait`, the post-Rack one waits for the "Rack set"
+        toast, the palette ones wait for the collapse they act on, and value reads poll. The
+        shot helpers now live in `tests/setup/test-helpers.ts` so specs share them. Backed by
+        those six files at `--repeat-each=2`: **76 passed, STATUS passed, 19.7 s**.
+  - **Kept on purpose (4 calls):** the three 50 ms gaps in "should recalculate instantly
+        without lag" - they *are* the measurement - and `test-helpers.waitForShotCalculation`,
+        which stays a 300 ms wait until the app exposes a signal for "shot calculated".
+  - **Found and recorded, not fixed here:** `kick-shots.spec.ts` has four assertions of the form
+        `expect(count).toBeGreaterThanOrEqual(0)` (lines ~65, ~77, ~107, ~124) that cannot fail -
+        they claim coverage of the mirror overlay, the incoming-angle arc and the kick aim label
+        but assert nothing. Deciding what those optional features should guarantee is a product
+        call, so they are left as they are and listed here.
+  - Per-test boot of the 552 KB page is the other cost.
 - [ ] **Remaining doc drift:** `tests/README.md`'s test tree and its "file:// is the default"
       claim; `claude.md`'s v008 (v009 is tracked) and its "`cargo test` needs MSVC" note (it
       runs here); the Playwright config comment's "76/76" (the suite is 158); the roadmap's
@@ -219,9 +226,10 @@ was open only because the identifier `naturalAngle` never existed.
 
 ## Reference: what the last audit measured
 
-- Playwright **chromium 158/158** green after this cleanup (157 passed + 1 retry-passed
-  flake on the Aids minimize spec, whose fixed waits the file's own comment documents;
-  57 s with artefacts captured on failure only). The app's own in-browser suite is
+- Playwright **chromium 158/158** green after the waits cleanup, **0 flaky, 41.7 s**
+  (from 158/158 with 1-2 flaky and 57.1 s). Fixed waits in the suite: **92 -> 4**,
+  the four remaining being deliberate (three timing gaps that are the measurement,
+  one helper awaiting an app signal). The app's own in-browser suite is
   **40/40**, page errors **0**, duplicate ids **none**.
 - Core: **build 0.43 s**, `cargo test` **5/5**, battery **8/8**.
 - The four browser `verify-*.js` scripts failed here purely on the hardcoded Linux browser path.

@@ -174,7 +174,8 @@ test.describe('Ball Placement - Critical Path', () => {
 
     // Interact with UI (open/close palette)
     await aceHelper.minimizePalette('balls');
-    await page.waitForTimeout(200);
+    // Wait for the collapse itself rather than guessing: that is the state that could move a ball
+    await expect(page.locator('#palette-balls .palette-body')).not.toBeVisible();
 
     // Positions should be unchanged
     const ball0After = await page.locator('#ball-cue').boundingBox();

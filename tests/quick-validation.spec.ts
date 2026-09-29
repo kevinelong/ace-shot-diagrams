@@ -53,7 +53,6 @@ test.describe('Palette Minimize Fix Validation', () => {
 
     // Click the minimize button
     await minimizeBtn.click();
-    await page.waitForTimeout(300);
 
     // Verify palette is minimized
     const paletteBody = savePalette.locator('.palette-body');
@@ -76,8 +75,7 @@ test.describe('Palette Minimize Fix Validation', () => {
 
     // Test expanding back
     await minimizeBtn.click();
-    await page.waitForTimeout(300);
-    
+
     await expect(paletteBody).toBeVisible();
     await expect(minimizeBtn).toHaveText('−');
 
@@ -100,7 +98,6 @@ test.describe('Palette Minimize Fix Validation', () => {
     
     const minimizeBtn = actionsPalette.locator('.palette-btn.minimize');
     await minimizeBtn.click();
-    await page.waitForTimeout(200);
 
     const paletteBody = actionsPalette.locator('.palette-body');
     await expect(paletteBody).not.toBeVisible();
@@ -112,7 +109,6 @@ test.describe('Palette Minimize Fix Validation', () => {
     
     const minimizeBtn = aidsPalette.locator('.palette-btn.minimize');
     await minimizeBtn.click();
-    await page.waitForTimeout(200);
 
     const paletteBody = aidsPalette.locator('.palette-body');
     await expect(paletteBody).not.toBeVisible();
@@ -134,14 +130,13 @@ test.describe('Palette Minimize Fix Validation', () => {
       
       // Verify it's clickable and functional
       await minimizeBtn.click();
-      await page.waitForTimeout(100);
       
       const body = palette.locator('.palette-body');
       await expect(body).not.toBeVisible();
       
-      // Restore for next test
+      // Restore for next test, and wait for it: the next iteration clicks this button again
       await minimizeBtn.click();
-      await page.waitForTimeout(100);
+      await expect(body).toBeVisible();
     }
   });
 });

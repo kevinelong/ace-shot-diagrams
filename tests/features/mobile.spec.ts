@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { shootAndWait } from '../setup/test-helpers';
 
 // Mobile viewport tests
 test.describe('Mobile Responsiveness', () => {
@@ -11,7 +12,7 @@ test.describe('Mobile Responsiveness', () => {
             localStorage.setItem('ace-tour-completed', 'true');
         });
         await page.goto('/');
-        await page.waitForTimeout(500);
+        await expect(page.locator('#ball-cue')).toHaveClass(/on-table/, { timeout: 15000 });
     });
 
     test('should display table on mobile viewport', async ({ page }) => {
@@ -51,11 +52,8 @@ test.describe('Mobile Responsiveness', () => {
     });
 
     test('should execute shot on mobile', async ({ page }) => {
-        // Click shoot button
-        await page.locator('#btnShoot').click();
-
-        // Wait for animation
-        await page.waitForTimeout(3000);
+        // Click shoot button and wait for the app's own result
+        await shootAndWait(page);
 
         // Should show toast
         const toast = page.locator('#toastNotification');
@@ -77,7 +75,7 @@ test.describe('Tablet Responsiveness', () => {
             localStorage.setItem('ace-tour-completed', 'true');
         });
         await page.goto('/');
-        await page.waitForTimeout(500);
+        await expect(page.locator('#ball-cue')).toHaveClass(/on-table/, { timeout: 15000 });
     });
 
     test('should display all palettes on tablet', async ({ page }) => {

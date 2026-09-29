@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { shootAndWait, waitForRackSet } from '../setup/test-helpers';
 
 /**
  * Rack Start Behavior Tests
@@ -19,7 +20,7 @@ test.describe('Rack Start Behavior', () => {
   test('should display 8-ball rack on initial load', async ({ page }) => {
     // Navigate without empty parameter - should show rack
     await page.goto('/');
-    await page.waitForTimeout(300);
+    await expect(page.locator('#ball-cue')).toHaveClass(/on-table/, { timeout: 15000 });
 
     // All 15 object balls should be on table
     for (let i = 1; i <= 15; i++) {
@@ -38,7 +39,7 @@ test.describe('Rack Start Behavior', () => {
 
   test('should position cue ball in kitchen for break', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(300);
+    await expect(page.locator('#ball-cue')).toHaveClass(/on-table/, { timeout: 15000 });
 
     // Cue ball should be in the left quarter of the table (kitchen)
     const cueBall = page.locator('#ball-cue');
@@ -57,7 +58,7 @@ test.describe('Rack Start Behavior', () => {
 
   test('should have 8-ball in center of rack', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(300);
+    await expect(page.locator('#ball-cue')).toHaveClass(/on-table/, { timeout: 15000 });
 
     // 8-ball should be visible
     const eightBall = page.locator('#ball-8');
@@ -78,7 +79,7 @@ test.describe('Rack Start Behavior', () => {
   test('should skip rack when ?empty=1 parameter present', async ({ page }) => {
     // Navigate with empty parameter
     await page.goto('/?empty=1');
-    await page.waitForTimeout(300);
+    await expect(page.locator('#pool-table-svg')).toBeVisible();
 
     // No object balls should be on table
     for (let i = 1; i <= 15; i++) {
@@ -98,7 +99,7 @@ test.describe('Rack Start Behavior', () => {
 
   test('should have all balls in palette when empty', async ({ page }) => {
     await page.goto('/?empty=1');
-    await page.waitForTimeout(300);
+    await expect(page.locator('#pool-table-svg')).toBeVisible();
 
     // Cue ball should be in palette
     const cueBallInPalette = page.locator('#palette-balls .ball[data-ball-id="cue"]');
@@ -115,7 +116,7 @@ test.describe('Rack Start Behavior', () => {
 
   test('should set follow spin for break shot', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(300);
+    await expect(page.locator('#ball-cue')).toHaveClass(/on-table/, { timeout: 15000 });
 
     // Contact point should show top spin (follow) position
     const contactPoint = page.locator('#contact-point');
@@ -129,7 +130,7 @@ test.describe('Rack Start Behavior', () => {
 
   test('should set power to 7 for break shot', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(300);
+    await expect(page.locator('#ball-cue')).toHaveClass(/on-table/, { timeout: 15000 });
 
     // Power slider should be set to 7
     const forceSlider = page.locator('#forceSlider');
@@ -139,15 +140,14 @@ test.describe('Rack Start Behavior', () => {
 
   test('should allow Rack button to reset to rack', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(300);
+    await expect(page.locator('#ball-cue')).toHaveClass(/on-table/, { timeout: 15000 });
 
     // First, shoot to scatter balls
-    await page.locator('#btnShoot').click();
-    await page.waitForTimeout(3000);
+    await shootAndWait(page);
 
     // Click Rack button
     await page.locator('#btnRandomRack').click();
-    await page.waitForTimeout(500);
+    await waitForRackSet(page);
 
     // All 15 balls should be back on table
     for (let i = 1; i <= 15; i++) {

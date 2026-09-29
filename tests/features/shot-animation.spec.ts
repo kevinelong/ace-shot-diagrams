@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { shootAndAwaitStart, waitForShotComplete, shootAndWait } from '../setup/test-helpers';
 
 // This spec records video on purpose (the artefact is the point; no assertion reads it),
 // so it opts back in to what the suite default now leaves on failure only.
@@ -19,46 +20,6 @@ test.use({ video: 'on' });
  */
 
 
-/**
- * Click Shoot until the app accepts it.
- *
- * The app can only execute a shot once its aim (ghost ball) has been computed, and until then
- * it ignores Shoot clicks with no signal at all: the button is never disabled, no toast, no
- * class change - while the toast still reads "Click Shoot to break!". Measured: the aim lands
- * between ~100ms and ~900ms after load, varying run to run, so the fixed 4-5s sleeps this spec
- * used were both slower than needed and unreliable (miss the window and the shot never starts:
- * the flake this replaces). Retrying is deterministic and asserts the app's own "Shot in
- * progress" response instead of assuming one.
- */
-async function shootAndAwaitStart(page: Page, timeout = 20000) {
-    const toast = page.locator('#toastNotification');
-    const deadline = Date.now() + timeout;
-    while (Date.now() < deadline) {
-        await page.locator('#btnShoot').click();
-        try {
-            await expect(toast).toContainText('Shot in progress', { timeout: 1000 });
-            return;
-        } catch {
-            // not accepted yet - the app was still computing the aim
-        }
-    }
-    throw new Error(`the app never accepted Shoot within ${timeout}ms`);
-}
-
-/**
- * Wait for a shot to finish the way the app says it finished: it replaces the "Shot in
- * progress" toast with the result ("No balls pocketed" / "Ball pocketed" / "Scratch") and keeps
- * that text in the DOM while the toast fades, so polling the text is a stable signal.
- */
-async function waitForShotComplete(page: Page, timeout = 20000) {
-    await expect(page.locator('#toastNotification')).not.toContainText('Shot in progress', { timeout });
-}
-
-/** Shoot, then wait for the app's own completion report. */
-async function shootAndWait(page: Page, timeout = 20000) {
-    await shootAndAwaitStart(page, timeout);
-    await waitForShotComplete(page, timeout);
-}
 test.describe('Shot Animation System', () => {
 
     test.beforeEach(async ({ page }) => {

@@ -38,7 +38,6 @@ test.describe('Kick Shots', () => {
     // USER EXPECTATION: "Show me where to aim on the rail"
     
     await aceHelper.enableKickSolver();
-    await page.waitForTimeout(300);
     
     const kickAimIndicator = page.locator('#kick-aim-indicator');
     await expect(kickAimIndicator).toBeVisible();
@@ -48,7 +47,6 @@ test.describe('Kick Shots', () => {
     // USER EXPECTATION: "Show me the path to the rail"
     
     await aceHelper.enableKickSolver();
-    await page.waitForTimeout(300);
     
     const kickPath = page.locator('#actual-kick-path');
     await expect(kickPath).toBeVisible();
@@ -58,7 +56,6 @@ test.describe('Kick Shots', () => {
     // USER LEARNING: "Help me understand kick shot aiming"
     
     await aceHelper.enableKickSolver();
-    await page.waitForTimeout(300);
     
     const mirrorSystem = page.locator('#mirror-system-overlay');
     // Mirror system may be optional feature
@@ -70,7 +67,6 @@ test.describe('Kick Shots', () => {
     // USER UNDERSTANDING: "Show me the angle of approach"
     
     await aceHelper.enableKickSolver();
-    await page.waitForTimeout(300);
     
     const incomingArc = page.locator('#incoming-angle-arc');
     // Optional element — just ensure querying it doesn't error
@@ -82,19 +78,17 @@ test.describe('Kick Shots', () => {
     // USER INTENT: "How does english affect the kick angle?"
     
     await aceHelper.enableKickSolver();
-    await page.waitForTimeout(300);
     
     // Kick aim is computed with center ball
-    const kickPoint1 = await page.locator('#kick-aim-indicator').boundingBox();
-    expect(kickPoint1).toBeTruthy();
+    await expect.poll(async () => await page.locator('#kick-aim-indicator').boundingBox())
+        .toBeTruthy();
 
     // Applying english should not break the kick solution (the aim indicator
     // remains computed). The exact rail-point shift is model-dependent and not
     // asserted to a pixel threshold here.
     await aceHelper.setEnglish(1, 0);
-    await page.waitForTimeout(300);
-    const kickPoint2 = await page.locator('#kick-aim-indicator').boundingBox();
-    expect(kickPoint2).toBeTruthy();
+    await expect.poll(async () => await page.locator('#kick-aim-indicator').boundingBox())
+        .toBeTruthy();
   });
 
   test('should switch between direct and kick mode', async ({ page, aceHelper }) => {
@@ -115,7 +109,6 @@ test.describe('Kick Shots', () => {
     // USER EXPECTATION: "Tell me where this is in words"
     
     await aceHelper.enableKickSolver();
-    await page.waitForTimeout(300);
     
     const kickAimLabel = page.locator('#kick-aim-label');
     // Optional element — just ensure querying it doesn't error
