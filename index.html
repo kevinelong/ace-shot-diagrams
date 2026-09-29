@@ -162,8 +162,7 @@
     #palette-shot .palette-header,
     #palette-legend .palette-header,
     #palette-aids .palette-header,
-    #palette-actions .palette-header,
-    #palette-save .palette-header {
+    #palette-actions .palette-header {
       padding: 12px 18px;
     }
 
@@ -171,8 +170,7 @@
     #palette-shot .palette-title,
     #palette-legend .palette-title,
     #palette-aids .palette-title,
-    #palette-actions .palette-title,
-    #palette-save .palette-title {
+    #palette-actions .palette-title {
       font-size: 13px;
     }
 
@@ -180,8 +178,7 @@
     #palette-shot .palette-body,
     #palette-legend .palette-body,
     #palette-aids .palette-body,
-    #palette-actions .palette-body,
-    #palette-save .palette-body {
+    #palette-actions .palette-body {
       padding: 16px 18px;
     }
 
@@ -290,8 +287,7 @@
     }
 
     /* Legend and Save merged into other palettes */
-    #palette-legend,
-    #palette-save {
+    #palette-legend {
       display: none;
     }
 
@@ -507,16 +503,13 @@
     }
 
     /* Save Palette (bottom center) - compact horizontal */
-    #palette-save {
-      min-width: 220px;
-    }
 
-    #palette-save .export-buttons {
+    #palette-game .export-buttons {
       display: flex;
       gap: 8px;
     }
 
-    #palette-save .export-btn {
+    #palette-game .export-btn {
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -532,27 +525,27 @@
       flex: 1;
     }
 
-    #palette-save .export-btn:hover {
+    #palette-game .export-btn:hover {
       background: rgba(255, 255, 255, 0.1);
       border-color: rgba(255, 255, 255, 0.2);
       color: #fff;
     }
 
-    #palette-save .export-btn:active {
+    #palette-game .export-btn:active {
       transform: scale(0.96);
     }
 
-    #palette-save .export-btn .btn-icon {
+    #palette-game .export-btn .btn-icon {
       font-size: 22px;
     }
 
-    #palette-save .export-btn.primary {
+    #palette-game .export-btn.primary {
       background: rgba(0, 255, 136, 0.15);
       border-color: rgba(0, 255, 136, 0.3);
       color: #0f8;
     }
 
-    #palette-save .export-btn.primary:hover {
+    #palette-game .export-btn.primary:hover {
       background: rgba(0, 255, 136, 0.25);
       border-color: rgba(0, 255, 136, 0.5);
     }
@@ -686,19 +679,19 @@
     }
 
     /* Saved Diagrams Section */
-    #palette-save .saved-diagrams {
+    #palette-game .saved-diagrams {
       margin-top: 12px;
       padding-top: 12px;
       border-top: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    #palette-save .save-input-row {
+    #palette-game .save-input-row {
       display: flex;
       gap: 6px;
       margin-top: 8px;
     }
 
-    #palette-save .save-input-row input {
+    #palette-game .save-input-row input {
       flex: 1;
       padding: 8px 10px;
       background: rgba(0, 0, 0, 0.3);
@@ -708,16 +701,16 @@
       font-size: 12px;
     }
 
-    #palette-save .save-input-row input::placeholder {
+    #palette-game .save-input-row input::placeholder {
       color: #666;
     }
 
-    #palette-save .save-input-row input:focus {
+    #palette-game .save-input-row input:focus {
       outline: none;
       border-color: #0fa;
     }
 
-    #palette-save .save-input-row button {
+    #palette-game .save-input-row button {
       padding: 8px 12px;
       background: rgba(0, 255, 136, 0.2);
       border: 1px solid rgba(0, 255, 136, 0.3);
@@ -728,31 +721,31 @@
       transition: all 0.2s;
     }
 
-    #palette-save .save-input-row button:hover {
+    #palette-game .save-input-row button:hover {
       background: rgba(0, 255, 136, 0.3);
     }
 
-    #palette-save .saved-list {
+    #palette-game .saved-list {
       max-height: 150px;
       overflow-y: auto;
       margin-top: 8px;
     }
 
-    #palette-save .saved-list::-webkit-scrollbar {
+    #palette-game .saved-list::-webkit-scrollbar {
       width: 6px;
     }
 
-    #palette-save .saved-list::-webkit-scrollbar-track {
+    #palette-game .saved-list::-webkit-scrollbar-track {
       background: rgba(0, 0, 0, 0.2);
       border-radius: 3px;
     }
 
-    #palette-save .saved-list::-webkit-scrollbar-thumb {
+    #palette-game .saved-list::-webkit-scrollbar-thumb {
       background: rgba(255, 255, 255, 0.2);
       border-radius: 3px;
     }
 
-    #palette-save .saved-item {
+    #palette-game .saved-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -764,18 +757,18 @@
       transition: all 0.2s;
     }
 
-    #palette-save .saved-item:hover {
+    #palette-game .saved-item:hover {
       background: rgba(255, 255, 255, 0.08);
       border-color: rgba(255, 255, 255, 0.12);
     }
 
-    #palette-save .saved-item-info {
+    #palette-game .saved-item-info {
       flex: 1;
       min-width: 0;
       cursor: pointer;
     }
 
-    #palette-save .saved-item-name {
+    #palette-game .saved-item-name {
       font-size: 12px;
       color: #ddd;
       white-space: nowrap;
@@ -783,19 +776,19 @@
       text-overflow: ellipsis;
     }
 
-    #palette-save .saved-item-date {
+    #palette-game .saved-item-date {
       font-size: 10px;
       color: #666;
       margin-top: 2px;
     }
 
-    #palette-save .saved-item-actions {
+    #palette-game .saved-item-actions {
       display: flex;
       gap: 4px;
       margin-left: 8px;
     }
 
-    #palette-save .saved-item-btn {
+    #palette-game .saved-item-btn {
       width: 24px;
       height: 24px;
       border-radius: 4px;
@@ -810,17 +803,17 @@
       transition: all 0.2s;
     }
 
-    #palette-save .saved-item-btn:hover {
+    #palette-game .saved-item-btn:hover {
       background: rgba(255, 255, 255, 0.2);
       color: #fff;
     }
 
-    #palette-save .saved-item-btn.delete:hover {
+    #palette-game .saved-item-btn.delete:hover {
       background: rgba(255, 80, 80, 0.3);
       color: #f66;
     }
 
-    #palette-save .no-saved {
+    #palette-game .no-saved {
       text-align: center;
       color: #555;
       font-size: 11px;
@@ -3149,45 +3142,6 @@
     </div>
   </div>
 
-  <!-- Palette: Save (Bottom Center) -->
-  <div class="tool-palette" id="palette-save">
-    <div class="palette-header">
-      <span class="palette-title"><span class="palette-title-icon">💾</span> Save</span>
-      <div class="palette-controls">
-        <button class="palette-btn minimize" title="Minimize" aria-label="Minimize panel">−</button>
-      </div>
-    </div>
-    <div class="palette-body">
-      <div class="export-buttons">
-        <button class="export-btn primary" id="btnCopyLink" title="Copy shareable link to clipboard"
-          aria-label="Copy shareable link to clipboard">
-          <span class="btn-icon" aria-hidden="true">🔗</span>
-          <span>Link</span>
-        </button>
-        <button class="export-btn" id="btnExportPNG" title="Download as PNG image"
-          aria-label="Download diagram as PNG image">
-          <span class="btn-icon" aria-hidden="true">🖼️</span>
-          <span>PNG</span>
-        </button>
-        <button class="export-btn" id="btnExportSVG" title="Download as SVG vector"
-          aria-label="Download diagram as SVG vector">
-          <span class="btn-icon" aria-hidden="true">📐</span>
-          <span>SVG</span>
-        </button>
-      </div>
-      <!-- Saved Diagrams -->
-      <div class="saved-diagrams">
-        <div class="section-label">Saved Diagrams</div>
-        <div class="save-input-row">
-          <input type="text" id="saveDiagramName" placeholder="Name..." maxlength="50">
-          <button id="btnSaveDiagram" title="Save current diagram">Save</button>
-        </div>
-        <div class="saved-list" id="savedDiagramsList">
-          <div class="no-saved">No saved diagrams</div>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Palette: Position Aids (Center-Right) - minimized by default -->
   <div class="tool-palette minimized" id="palette-aids" role="region" aria-label="Position aid toggles">
@@ -3274,7 +3228,6 @@
   <button class="palette-restore-btn" id="restore-legend" title="Show Legend">🎨</button>
   <button class="palette-restore-btn" id="restore-game" title="Show Game">🎮</button>
   <button class="palette-restore-btn" id="restore-shot" title="Show Shot Info">📊</button>
-  <button class="palette-restore-btn" id="restore-share" title="Show Share">📤</button>
 
   <script>
     /* ACE_WASM_BEGIN */
@@ -7165,7 +7118,6 @@
         game: document.getElementById('palette-game'),
         shot: document.getElementById('palette-shot'),
         actions: document.getElementById('palette-actions'),
-        save: document.getElementById('palette-save'),
         aids: document.getElementById('palette-aids')
       };
 
@@ -7176,7 +7128,6 @@
         game: document.getElementById('restore-game'),
         shot: document.getElementById('restore-shot'),
         actions: null,  // No restore button for actions palette
-        save: null,     // No restore button for save palette
         aids: null      // No restore button for aids palette
       };
 
@@ -10411,67 +10362,6 @@
         // Initialize saved diagrams list
         renderSavedList();
 
-        // Setup restore button for share palette
-        const restoreShare = document.getElementById('restore-share');
-        const paletteShare = document.getElementById('palette-share');
-        if (restoreShare && paletteShare) {
-          restoreShare.addEventListener('click', () => {
-            paletteShare.style.display = 'block';
-            restoreShare.style.display = 'none';
-          });
-
-          // Setup close button
-          const closeBtn = paletteShare.querySelector('.palette-btn.close');
-          if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-              paletteShare.style.display = 'none';
-              restoreShare.style.display = 'block';
-            });
-          }
-
-          // Setup minimize button
-          const minBtn = paletteShare.querySelector('.palette-btn.minimize');
-          const body = paletteShare.querySelector('.palette-body');
-          if (minBtn && body) {
-            minBtn.addEventListener('click', () => {
-              const isMinimized = body.style.display === 'none';
-              body.style.display = isMinimized ? 'block' : 'none';
-              minBtn.textContent = isMinimized ? '−' : '+';
-            });
-          }
-
-          // Make palette draggable
-          const header = paletteShare.querySelector('.palette-header');
-          if (header) {
-            let isDragging = false;
-            let startX, startY, startLeft, startTop;
-
-            header.addEventListener('mousedown', (e) => {
-              if (e.target.classList.contains('palette-btn')) return;
-              isDragging = true;
-              startX = e.clientX;
-              startY = e.clientY;
-              const rect = paletteShare.getBoundingClientRect();
-              startLeft = rect.left;
-              startTop = rect.top;
-              header.style.cursor = 'grabbing';
-            });
-
-            document.addEventListener('mousemove', (e) => {
-              if (!isDragging) return;
-              const dx = e.clientX - startX;
-              const dy = e.clientY - startY;
-              paletteShare.style.left = (startLeft + dx) + 'px';
-              paletteShare.style.top = (startTop + dy) + 'px';
-              paletteShare.style.right = 'auto';
-            });
-
-            document.addEventListener('mouseup', () => {
-              isDragging = false;
-              header.style.cursor = 'grab';
-            });
-          }
-        }
       }
 
       // Hook into updateShotGeometry to also update position aids
@@ -10618,7 +10508,7 @@
             • <strong>Save</strong> (bottom) - Link, PNG, SVG export & saved diagrams<br>
             • <strong>Actions</strong> (top) - Break rack animation & tour<br><br>
             Try the Break button for a physics-simulated break shot!`,
-          target: '#palette-save',
+          target: '#palette-game',
           position: 'top',
           task: null
         },
@@ -10978,7 +10868,7 @@
           });
 
           await this.test('All palettes exist', () => {
-            const palettes = ['palette-balls', 'palette-cue', 'palette-game', 'palette-shot', 'palette-share'];
+            const palettes = ['palette-balls', 'palette-cue', 'palette-game', 'palette-shot', 'palette-legend', 'palette-aids', 'palette-actions'];
             return palettes.every(id => document.getElementById(id) !== null);
           });
 

@@ -51,6 +51,49 @@ test green by relaxing the test — `verify-spin.js` below is the worked example
       beyond "the intended ball potted": event sequences and final positions, with tolerances.
       Backed by: 7/7 on the clean tree, and **5/7** after perturbing one golden position by
       0.5 units and dropping one event — drift the outcome-only battery cannot see.
+- [x] **Duplicate ids removed at the source: the retired `#palette-save` markup.** A migration
+      moved the export/copy/save controls into `#palette-game` but left the old palette behind,
+      so six ids (`btnCopyLink`, `btnExportPNG`, `btnExportSVG`, `saveDiagramName`,
+      `btnSaveDiagram`, `savedDiagramsList`) existed twice and `getElementById` picked whichever
+      came first. Deleted the stale palette — guarded so that **every id in the deleted block is
+      proven to exist elsewhere** (all six live on in `#palette-game`). Backed by: duplicate ids
+      **none**; all six widgets still present and reachable; `#palette-aids` untouched.
+- [x] **The migrated controls are styled again.** Their CSS still targeted `#palette-save`, so
+      the live copies in `#palette-game` rendered as default browser buttons. Repointed to
+      `#palette-game`. Backed by: computed `6px` radius and theme background, was `0px`/grey.
+- [x] **Re-verified the widgets end to end after the deletion** (they are the reason the old
+      markup could not simply be dropped): Export PNG downloads `shot-diagram.png`; Copy Link
+      fills the clipboard with the `#v1|…` share string; typing a name and clicking Save lists
+      the entry under `#savedDiagramsList`; Aids toggles still drive their checkbox; the legend
+      element and its CSS are untouched (still `display: none` by default, as shipped).
+- [x] **Stale palette wiring removed**: the dead share-palette close/restore/drag block (it
+      looked up `palette-share`, an id the app never had), the retired `save:` registry entry,
+      the `restore-share` button, and a tour step retargeted from the deleted `#palette-save`
+      to `#palette-game`.
+- [x] **The app's own in-browser suite is green: 40/40** (was 39 passed / 1 failed). The failing
+      test asserted a `palette-share` id that never existed; it now asserts the seven palettes
+      the app actually ships (balls, cue, game, shot, legend, aids, actions) — measured, not assumed.
+
+## Retracted findings (my measurements, not the app's bugs)
+
+Three findings from the review pass were **wrong**, and the plan of record should say so:
+
+- **"The spin-type label is invisible at 0.13px."** False. `#spinTypeInner` is an SVG
+  `<text font-size="0.13">` in the cue wheel's own coordinates, where its siblings use
+  `0.09`–`0.12`; it renders at roughly 18px. The pixel heuristic read SVG *user units* as CSS
+  pixels. No fix applied, nothing to fix.
+- **"Export PNG/SVG, Copy Link and Save are unreachable."** False. Those controls live in the
+  `🎮 Game` palette, which starts minimized; clicking Export PNG there downloads
+  `shot-diagram.png` before any of this work. The claim came from reading `visibleAt: []` at
+  startup without expanding the palette. The real (smaller) defect was the duplicate ids plus
+  the lost styling, both fixed above.
+- **"`palette-aids` is referenced but never produced."** False. `#palette-aids` is in the
+  markup ("Position aid toggles", minimized by default) and its wiring works: the spec's
+  per-resolution Aids tests pass. The earlier probe read the DOM before the panel existed.
+
+Process note for the next audit: query the runtime DOM **after** expanding the panel, and never
+conclude "unreachable" or "missing" from a hidden container's visibility alone.
+
 
 ## Needs you (blocked on a decision, credentials, or a remote write)
 
@@ -106,7 +149,10 @@ test green by relaxing the test — `verify-spin.js` below is the worked example
 
 ## Reference: what the last audit measured
 
-- Playwright **chromium 158/158** green with the re-embedded core (7.0 min).
+- Playwright **chromium 158/158** green after this cleanup (157 passed + 1 retry-passed
+  flake on the Aids minimize spec, whose fixed waits the file's own comment documents;
+  57 s with artefacts captured on failure only). The app's own in-browser suite is
+  **40/40**, page errors **0**, duplicate ids **none**.
 - Core: **build 0.43 s**, `cargo test` **5/5**, battery **8/8**.
 - The four browser `verify-*.js` scripts failed here purely on the hardcoded Linux browser path.
 - Files: 77 tracked, 86 commits; `index.html` 552 KB with ~100 KB of embedded wasm.

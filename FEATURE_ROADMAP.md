@@ -29,6 +29,9 @@
 ### Phase 1: Quick Wins (High Value, Low Effort)
 
 #### 1.1 PNG/SVG Export — ✅ shipped (toDataURL/toBlob/createObjectURL in index.html)
+- *Palette cleanup 2026-09-29*: the export/copy/save controls live in the `🎮 Game` palette,
+  which starts minimized. The migration into it had left duplicate ids behind and lost their
+  CSS; both fixed, and the flows re-verified (PNG download, share link, saved-diagram list).
 - **Value**: HIGH - Users need to share diagrams on forums, social media, coaching materials
 - **Effort**: 2-3 hours
 - **Details**: Export current table state as image file
