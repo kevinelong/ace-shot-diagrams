@@ -45,8 +45,8 @@ test.describe('Palette Minimize - Cross Resolution Tests', () => {
         await page.goto('/');
         await page.waitForSelector('#pool-table-svg', { state: 'visible' });
 
-        // Wait for initial setup
-        await page.waitForTimeout(500);
+        // Initial setup is done once the rack's cue ball is on the table
+        await expect(page.locator('#ball-cue')).toHaveClass(/on-table/, { timeout: 15000 });
 
         // Normalize: some palettes (Game, Aids) start minimized by design.
         // Expand all so the minimize tests begin from a known expanded state.
@@ -74,7 +74,6 @@ test.describe('Palette Minimize - Cross Resolution Tests', () => {
             await cueBall.dragTo(page.locator('#pool-table-svg'), {
               targetPosition: { x: 400, y: 300 }
             });
-            await page.waitForTimeout(300);
           }
 
           // Get ball positions before clicking minimize
@@ -100,7 +99,6 @@ test.describe('Palette Minimize - Cross Resolution Tests', () => {
 
           // Click the minimize button
           await minimizeBtn.click();
-          await page.waitForTimeout(300);
 
           // Verify palette is minimized (body should be hidden)
           const paletteBody = paletteElement.locator('.palette-body');
@@ -131,7 +129,6 @@ test.describe('Palette Minimize - Cross Resolution Tests', () => {
 
           // Test expanding (clicking + button)
           await minimizeBtn.click();
-          await page.waitForTimeout(300);
 
           // Verify palette is expanded again
           await expect(paletteBody).toBeVisible();
@@ -158,7 +155,6 @@ test.describe('Palette Minimize - Cross Resolution Tests', () => {
 
           // Minimize the target palette
           await minimizeBtn.click();
-          await page.waitForTimeout(200);
 
           // Check that other palettes are still in their original state
           for (const otherPalette of PALETTES) {
@@ -179,7 +175,6 @@ test.describe('Palette Minimize - Cross Resolution Tests', () => {
           const paletteElement = page.locator(`#${palette.id}`);
           const minimizeBtn = paletteElement.locator('.palette-btn.minimize');
           await minimizeBtn.click();
-          await page.waitForTimeout(100);
         }
 
         // Verify all are minimized
@@ -201,11 +196,9 @@ test.describe('Palette Minimize - Cross Resolution Tests', () => {
         await cueBall.dragTo(page.locator('#pool-table-svg'), {
           targetPosition: { x: 400, y: 300 }
         });
-        await page.waitForTimeout(300);
 
         // Double-click to select the cue ball
         await cueBall.dblclick();
-        await page.waitForTimeout(200);
 
         // Get cue ball position
         const positionBefore = await cueBall.evaluate((el: any) => ({
@@ -217,7 +210,9 @@ test.describe('Palette Minimize - Cross Resolution Tests', () => {
         const gamePalette = page.locator('#palette-game');
         const minimizeBtn = gamePalette.locator('.palette-btn.minimize');
         await minimizeBtn.click();
-        await page.waitForTimeout(300);
+        // Wait for the collapse this test is about, then compare: a plain sleep could return
+        // before a delayed move and miss exactly the bug under test
+        await expect(gamePalette.locator('.palette-body')).not.toBeVisible();
 
         // Verify ball hasn't moved
         const positionAfter = await cueBall.evaluate((el: any) => ({
@@ -240,7 +235,7 @@ test.describe('Palette UI/UX Visual Regression', () => {
       });
       await page.goto('/');
       await page.waitForSelector('#pool-table-svg', { state: 'visible' });
-      await page.waitForTimeout(500);
+      await expect(page.locator('#ball-cue')).toHaveClass(/on-table/, { timeout: 15000 });
 
       // Normalize default-minimized palettes (Game, Aids) to expanded
       await page.evaluate(() => {
@@ -267,15 +262,15 @@ test.describe('Palette UI/UX Visual Regression', () => {
         // Minimize and screenshot
         const minimizeBtn = paletteElement.locator('.palette-btn.minimize');
         await minimizeBtn.click();
-        await page.waitForTimeout(200);
-        
+        await expect(paletteElement.locator('.palette-body')).not.toBeVisible();
+
         await paletteElement.screenshot({
           path: `tests/ui-ux/screenshots/${palette.id}-minimized-${resolution.width}x${resolution.height}.png`
         });
 
         // Restore
         await minimizeBtn.click();
-        await page.waitForTimeout(200);
+        await expect(paletteElement.locator('.palette-body')).toBeVisible();
       }
     }
   });
@@ -290,7 +285,8 @@ test.describe('Palette Positioning at Different Resolutions', () => {
       });
       await page.goto('/');
       await page.waitForSelector('#pool-table-svg', { state: 'visible' });
-      await page.waitForTimeout(500);
+      await expect(page.locator('#ball-cue')).toHaveClass(/on-table/, { timeout: 15000 });
+      await expect(page.locator(`#${PALETTES[0].id}`)).toBeVisible();
 
       // Check that palettes don't overflow viewport
       for (const palette of PALETTES) {
