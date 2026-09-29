@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 // This spec records video on purpose (the artefact is the point; no assertion reads it),
 // so it opts back in to what the suite default now leaves on failure only.
@@ -18,6 +18,47 @@ test.use({ video: 'on' });
  * - Video recording for visual confirmation
  */
 
+
+/**
+ * Click Shoot until the app accepts it.
+ *
+ * The app can only execute a shot once its aim (ghost ball) has been computed, and until then
+ * it ignores Shoot clicks with no signal at all: the button is never disabled, no toast, no
+ * class change - while the toast still reads "Click Shoot to break!". Measured: the aim lands
+ * between ~100ms and ~900ms after load, varying run to run, so the fixed 4-5s sleeps this spec
+ * used were both slower than needed and unreliable (miss the window and the shot never starts:
+ * the flake this replaces). Retrying is deterministic and asserts the app's own "Shot in
+ * progress" response instead of assuming one.
+ */
+async function shootAndAwaitStart(page: Page, timeout = 20000) {
+    const toast = page.locator('#toastNotification');
+    const deadline = Date.now() + timeout;
+    while (Date.now() < deadline) {
+        await page.locator('#btnShoot').click();
+        try {
+            await expect(toast).toContainText('Shot in progress', { timeout: 1000 });
+            return;
+        } catch {
+            // not accepted yet - the app was still computing the aim
+        }
+    }
+    throw new Error(`the app never accepted Shoot within ${timeout}ms`);
+}
+
+/**
+ * Wait for a shot to finish the way the app says it finished: it replaces the "Shot in
+ * progress" toast with the result ("No balls pocketed" / "Ball pocketed" / "Scratch") and keeps
+ * that text in the DOM while the toast fades, so polling the text is a stable signal.
+ */
+async function waitForShotComplete(page: Page, timeout = 20000) {
+    await expect(page.locator('#toastNotification')).not.toContainText('Shot in progress', { timeout });
+}
+
+/** Shoot, then wait for the app's own completion report. */
+async function shootAndWait(page: Page, timeout = 20000) {
+    await shootAndAwaitStart(page, timeout);
+    await waitForShotComplete(page, timeout);
+}
 test.describe('Shot Animation System', () => {
 
     test.beforeEach(async ({ page }) => {
@@ -29,8 +70,8 @@ test.describe('Shot Animation System', () => {
         // Navigate to the application
         await page.goto('/');
 
-        // Wait for initial setup to complete
-        await page.waitForTimeout(500);
+        // App is interactive once the racked cue ball is on the table
+        await expect(page.locator('#ball-cue')).toBeVisible({ timeout: 15000 });
 
         // Force-hide any tour elements that might be showing
         await page.evaluate(() => {
@@ -109,9 +150,6 @@ test.describe('Shot Animation System', () => {
     test('should show cue-ghost line targeting head ball', async ({ page }) => {
         // USER INTENT: "I want to see my aim line for the break shot"
 
-        // Wait for shot geometry calculation and ball positioning
-        await page.waitForTimeout(500);
-
         // Verify cue-ghost line is rendered. NOTE: the break aim is horizontal
         // (cue and ghost share y), so the SVG path has a zero-height bbox and
         // toBeVisible() reports false — assert via attributes instead.
@@ -135,14 +173,10 @@ test.describe('Shot Animation System', () => {
         await expect(contactPoint).toBeVisible();
 
         // Top spin should have negative Y coordinate (above center)
-        const cy = await contactPoint.getAttribute('cy');
-        const cyValue = parseFloat(cy || '0');
-        expect(cyValue).toBeLessThan(0); // Negative = top spin
+        await expect(contactPoint).toHaveAttribute('cy', /^-\d*\.?\d+$/); // negative Y = above centre
 
         // Verify spin type display shows "Follow" or top spin indicator
-        const spinDisplay = page.locator('#spinType');
-        const spinText = await spinDisplay.textContent();
-        expect(spinText).toContain('Follow');
+        await expect(page.locator('#spinType')).toContainText('Follow');   // set during setup
     });
 
     test('should execute shot animation when Shoot button clicked', async ({ page }) => {
@@ -153,19 +187,15 @@ test.describe('Shot Animation System', () => {
         const initialCueBallBox = await cueBall.boundingBox();
 
         // Click the Shoot button
-        const shootButton = page.locator('#btnShoot');
-        await shootButton.click();
-
-        // Wait for animation to start (cue stick should appear)
-        await page.waitForTimeout(100);
+        await shootAndAwaitStart(page);
 
         // Verify toast notification appears (with emoji)
         const toast = page.locator('#toastNotification');
         await expect(toast).toHaveClass(/show/);
         await expect(toast).toContainText('Shot in progress');
 
-        // Wait for animation to complete (physics simulation)
-        await page.waitForTimeout(4000);
+        // Wait for the app to report the shot result
+        await waitForShotComplete(page);
 
         // Verify cue ball moved from initial position
         const finalCueBallBox = await cueBall.boundingBox();
@@ -189,12 +219,8 @@ test.describe('Shot Animation System', () => {
         const initialBallCount = ballsBeforeShot.length;
         expect(initialBallCount).toBe(15); // All 15 balls racked
 
-        // Execute shot
-        const shootButton = page.locator('#btnShoot');
-        await shootButton.click();
-
-        // Wait for full animation (including ball travel and pocketing)
-        await page.waitForTimeout(4000);
+        // Execute shot (the app only accepts it once its aim is computed - see helper)
+        await shootAndWait(page);
 
         // Count visible balls after shot
         const ballsAfterShot = [];
@@ -216,12 +242,8 @@ test.describe('Shot Animation System', () => {
     test('should show completion toast after animation', async ({ page }) => {
         // USER INTENT: "I want feedback when my shot is complete"
 
-        // Execute shot
-        const shootButton = page.locator('#btnShoot');
-        await shootButton.click();
-
-        // Wait for animation to complete (180 frames at 60fps = 3s + extra buffer)
-        await page.waitForTimeout(5000);
+        // Execute shot (the app only accepts it once its aim is computed - see helper)
+        await shootAndWait(page);
 
         // Verify completion toast appears (check within 2s window before it fades)
         const toast = page.locator('#toastNotification');
@@ -240,12 +262,8 @@ test.describe('Shot Animation System', () => {
     test('should clear selections after shot completes', async ({ page }) => {
         // USER INTENT: "After my shot, I want a clean slate to set up the next shot"
 
-        // Execute shot
-        const shootButton = page.locator('#btnShoot');
-        await shootButton.click();
-
-        // Wait for animation to complete
-        await page.waitForTimeout(4000);
+        // Execute shot (the app only accepts it once its aim is computed - see helper)
+        await shootAndWait(page);
 
         // Verify no balls are selected (no selection ring)
         const selectedBalls = page.locator('.ball.selected');
@@ -263,18 +281,7 @@ test.describe('Shot Animation System', () => {
 
         for (let shotNum = 1; shotNum <= 3; shotNum++) {
             // Click Shoot button
-            const shootButton = page.locator('#btnShoot');
-
-            // Button might not be clickable if animation is running
-            const isClickable = await shootButton.isEnabled();
-            if (!isClickable) {
-                await page.waitForTimeout(1000);
-            }
-
-            await shootButton.click();
-
-            // Wait for shot to complete
-            await page.waitForTimeout(2000);
+            await shootAndWait(page);
 
             // Verify no errors occurred
             const toast = page.locator('#toastNotification');
@@ -291,11 +298,11 @@ test.describe('Shot Animation System', () => {
         const palette = page.locator('#palette-balls');
 
         await cueBall.dragTo(palette);
-        await page.waitForTimeout(200);
+        // Back in the palette, the app drops the rack-time 'on-table' class
+        await expect(cueBall).not.toHaveClass(/on-table/);
 
-        // Try to shoot
-        const shootButton = page.locator('#btnShoot');
-        await shootButton.click();
+        // Try to shoot (not retried: the warning IS the expected response)
+        await page.locator('#btnShoot').click();
 
         // Should show warning toast
         const toast = page.locator('#toastNotification');
@@ -308,8 +315,7 @@ test.describe('Shot Animation System', () => {
 
         // Verify force slider is set to 7
         const forceSlider = page.locator('#forceSlider');
-        const sliderValue = await forceSlider.inputValue();
-        expect(sliderValue).toBe('7');
+        await expect(forceSlider).toHaveValue('7');   // the app sets the break preset during setup
 
         // Verify force display shows 7/10
         const forceDisplay = page.locator('#forceValue');
@@ -322,16 +328,11 @@ test.describe('Shot Animation System', () => {
         // This test ensures video recording captures the full sequence
 
         // 1. Initial state
-        await page.waitForTimeout(500);
         const cueBall = page.locator('#ball-cue');
         await expect(cueBall).toBeVisible();
 
-        // 2. Click Shoot
-        const shootButton = page.locator('#btnShoot');
-        await shootButton.click();
-
-        // 3. Watch animation unfold (180 frames at 60fps = 3s + buffer)
-        await page.waitForTimeout(4000);
+        // 2. Click Shoot, then watch the animation unfold to the app's own result
+        await shootAndWait(page);
 
         // 4. Verify completion toast (check before it fades at 2s)
         const toast = page.locator('#toastNotification');
@@ -352,23 +353,22 @@ test.describe('Rack Button Functionality', () => {
         });
 
         await page.goto('/');
-        await page.waitForTimeout(500);
+        // App is interactive once the racked cue ball is on the table
+        await expect(page.locator('#ball-cue')).toBeVisible({ timeout: 15000 });
     });
 
     test('should reset table to 8-ball rack when Rack clicked', async ({ page }) => {
         // USER INTENT: "I want to reset the table to practice break shots"
 
         // First, execute a shot to scatter balls
-        const shootButton = page.locator('#btnShoot');
-        await shootButton.click();
-        await page.waitForTimeout(4000);
+        await shootAndWait(page);
 
         // Now click Rack button
         const rackButton = page.locator('#btnRandomRack');
         await rackButton.click();
 
-        // Wait for rack animation
-        await page.waitForTimeout(2000);
+        // The rack announces itself with its own toast
+        await expect(page.locator('#toastNotification')).toContainText('Rack set', { timeout: 15000 });
 
         // Verify all 15 balls are back on table in rack formation
         for (let i = 1; i <= 15; i++) {

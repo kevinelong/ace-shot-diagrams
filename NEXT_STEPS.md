@@ -104,6 +104,18 @@ conclude "unreachable" or "missing" from a hidden container's visibility alone. 
 was open only because the identifier `naturalAngle` never existed.
 
 
+## App findings measured while removing the test sleeps
+
+- **Shoot is silently ignored for up to ~1 s after load.** `executeShot()` returns without a
+  word when `ballPositions['ghost']` is not yet computed; the button is never disabled and the
+  toast says "Click Shoot to break!" while clicks do nothing. Measured: ghost element visible
+  at ~70 ms, first accepted click between ~550 ms and ~940 ms, varying per run. A disabled
+  state (or the existing "No aim point" message) for that window would make the UI honest;
+  the spec side now retries, so this is a product question, not a test one.
+- **The app writes to the clipboard on load.** The first toast after `goto('/')` is
+  "Link copied to clipboard!" - the share URL is copied without the user asking. Recorded for
+  a decision: keep it (share-first UX) or make it an explicit action.
+
 ## Needs you (blocked on a decision, credentials, or a remote write)
 
 - [ ] **Push the commits.** 11 un-pushed as of 2026-09-29 (`git log origin/main..main --oneline`);
@@ -147,10 +159,25 @@ was open only because the identifier `naturalAngle` never existed.
       `GAME_MODE_PLAN.md` 29, against a suite that is green. Either reconcile them against the
       specs or prune them and say the specs are the source of truth.
 - [ ] **Fixed waits are the runtime and the flakiness.** 92 `waitForTimeout` calls totalling
-      **57.6 s per pass**, 32.3 s of them in `shot-animation.spec.ts` (4 s waits on the break
-      sequence — and that is the test that came back flaky). Replacing them with web-first
-      waits (`expect.poll`, event/state assertions) would cut the wall time and remove the
-      retry noise at the same time. Per-test boot of the 552 KB page is the other cost.
+      **57.6 s per pass**.
+  - [x] **`shot-animation.spec.ts` converted — 15 waits / 32.3 s removed, 0 left** (the top
+        offender and the file that flaked). Backed by `--repeat-each=4`: **60/60 passed, 0
+        flaky, 41.8 s** (≈10.4 s per pass of 15 tests), against 32.3 s of sleeps per pass
+        before. What the sleeps were really waiting for, measured through the app: it accepts
+        a shot only once its ghost-ball aim exists, which lands **~100–900 ms after load,
+        varying per run**, and it says nothing while refusing - no disabled state, no toast,
+        no class - so a fixed sleep was both slower than needed and the flake. The spec now
+        clicks until the app itself reports `Shot in progress` (`shootAndAwaitStart`), waits
+        for its result toast (`waitForShotComplete`), and asserts setup-dependent values by
+        polling (`toHaveValue` / `toContainText` / `toHaveAttribute`) instead of reading once.
+  - [x] Dead check removed with it: the "button might not be clickable while animating"
+        branch never ran - `#btnShoot` is never disabled (measured across a shot's whole
+        animation).
+  - [ ] **Remaining: 77 waits / 25.3 s** in `rack-start` (5.9 s), `mobile` (4.0 s),
+        `palette-minimize` (3.9 s - flaked twice on 2026-09-29), `critical-path/03` (3.2 s),
+        `critical-path/02` (2.5 s), `kick-shots` (2.1 s), `quick-validation` (2.0 s),
+        `test-helpers` (1.0 s), `power-control` (0.5 s), `critical-path/01` (0.2 s).
+        Per-test boot of the 552 KB page is the other cost.
 - [ ] **Remaining doc drift:** `tests/README.md`'s test tree and its "file:// is the default"
       claim; `claude.md`'s v008 (v009 is tracked) and its "`cargo test` needs MSVC" note (it
       runs here); the Playwright config comment's "76/76" (the suite is 158); the roadmap's
