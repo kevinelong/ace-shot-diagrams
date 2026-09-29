@@ -1,5 +1,8 @@
 # UX Fixes Plan — June 2026
 
+> **Status (2026-09-29): applied.** The walkthrough and its fixes are described in the README,
+> and mobile has its own spec (`tests/features/mobile.spec.ts`). See `NEXT_STEPS.md`.
+
 From the Playwright UX walkthrough (`ux-walkthrough.js`, captures in `ux-shots/`).
 Order of execution: #1, #3, then #2, #4, #5/#6. Each verified headlessly and
 committed on its own. Then design rolling-ball physics.

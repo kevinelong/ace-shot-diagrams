@@ -1,0 +1,105 @@
+# Next Steps — audited 2026-09-29
+
+The plan of record for finishing up `ace-shot-diagrams`, and the audit trail behind it.
+
+**How to keep this file honest.** An item is ticked only when a command's output backs it — the
+command is named next to the tick. When an item here corresponds to one in an older plan
+(`FEATURE_ROADMAP.md`, `PLAN.md`, `PLAN-two-phase-physics.md`, `PLAYWRIGHT_TEST_PLAN.md`,
+`GAME_MODE_PLAN.md`, `UX_FIXES_PLAN.md`), tick it there too, in the same commit. Items that
+need a human decision are marked **needs you** and stay unticked until then. Do not tick a
+test green by relaxing the test — `verify-spin.js` below is the worked example.
+
+---
+
+## Done in this pass
+
+- [x] **Re-embed the physics core.** `index.html` carried a build that no longer matched
+      `ace-physics/` (75378 embedded vs 75365 built, differing inside the code sections).
+      Backed by: `node verify-wasm-embed.js` → `ok: embedded core matches the current build`.
+- [x] **Guard against that drift recurring.** `verify-wasm-embed.js` compares the embedded
+      core against a fresh build with custom sections stripped (so build paths don't matter).
+      Backed by: it failed before the fix (exit 1) and passes after.
+- [x] **CI.** `.github/workflows/ci.yml`: pinned toolchain → build → `cargo test` → embed
+      check → battery (judged by stdout, because the script aborts in teardown) and Playwright
+      chromium with the report uploaded on failure.
+- [x] **Reproducible toolchain.** `rust-toolchain.toml` pins rustc 1.96.0, because the embed
+      check compares bytes and a different compiler produces different ones.
+- [x] **LICENSE.** MIT, as already claimed by `Cargo.toml` and `package.json`.
+- [x] **Duplicate screenshot removed.** `screenshot-kick.png` was md5-identical to
+      `screenshot-english-diff.png` and referenced nowhere.
+- [x] **Merged branch pruned.** `origin/physics-two-phase-friction` was fully merged.
+- [x] **`kball-preset` merged.** It was the newest work in the repo (2026-08-16) and main had
+      stopped 2026-07-07.
+- [x] **Roadmap reconciled.** `FEATURE_ROADMAP.md` Phase 1 marked against the code.
+- [x] **Dead npm script replaced.** `test:unit` pointed at `tests/unit/*`, which exist in no
+      commit; replaced by `test:core`, which runs checks that actually exist.
+- [x] **Playwright recording defaults.** `video`/`trace`/`screenshot` no longer record for
+      every test across every project, and `shot-animation.spec.ts` opts back in to video
+      because that artefact is its point. Backed by that spec's run: **14 passed, 1 flaky**
+      (the video test, a fixed-wait test that passed on its retry; no spec asserts on
+      artefacts, so nothing else could break).
+- [x] **`playwright-core` pinned to the test runner's version**, so the repo installs one copy.
+      Backed by: `npm install` → `playwright-core now 1.57.0` (`package-lock.json` updated).
+- [x] **`verify-*.js` find a browser portably.** They hardcoded `/usr/bin/chromium`, so they
+      could not run on Windows at all and behaved differently on CI. `CHROMIUM_PATH` still
+      wins when set. Backed by, on Windows for the first time: `verify-consistency.js` 9/9
+      (exit 0), `verify-animation.js` PASS (exit 0), `verify-ux-fixes.js` PASS (exit 0).
+      The fourth, `verify-sim-make.js`, now runs but reports FAIL — see the open items.
+- [x] **Golden trajectory regression.** `verify-trajectories.js` freezes the core's behaviour
+      beyond "the intended ball potted": event sequences and final positions, with tolerances.
+      Backed by: 7/7 on the clean tree, and **5/7** after perturbing one golden position by
+      0.5 units and dropping one event — drift the outcome-only battery cannot see.
+
+## Needs you (blocked on a decision, credentials, or a remote write)
+
+- [ ] **Push the five commits.** The public demo at
+      <https://kevinelong.github.io/ace-shot-diagrams/> serves `index.html` from `main`, so it
+      has been running the *stale* core; pushing is what fixes the live tool. `git push origin main`
+- [ ] **Release + discovery.** No tags exist at all (`git tag` is empty) and the repo's homepage
+      field is unset, so the deployed demo is undiscoverable from the repo. No version number
+      has ever been chosen (there are no tags), so that name is yours to pick;
+      `git tag -a vX.Y.Z -m "..." && git push origin vX.Y.Z` once you have, plus
+      `git push origin --delete <branch>` for the merged branches.
+- [x] **A trustworthy exit code for the battery.** `verify-rust-parity.js` prints its verdict
+      and then aborts in teardown (exit 3221226505 = 0xC0000409); `verify-core.js` judges what
+      each wasm check printed (the battery and the trajectory golden), and CI plus
+      `npm run test:core` go through it. Backed by:
+      `npm run test:core` → `ok: battery 8/8`, **exit 0**.
+- [ ] **Two harnesses report FAIL** (both runnable now, neither blocked by portability):
+      `verify-spin.js` and `verify-sim-make.js`, while `verify-consistency.js` (9/9),
+      `verify-animation.js` (PASS), `verify-ux-fixes.js` (PASS), the battery (8/8) and the
+      Playwright suite (158/158) are green. Decide per harness whether the model or the
+      harness is wrong — and fix that side, never the assertion.
+- [ ] **`verify-spin.js` semantics.** Red on a clean clone, and it must not be made green by
+      relaxing it. Measured through the core at the script's own setup (contact x≈42.8):
+      english 0.4 → cue ends 44.3, 0.5 → 44.0, 0.6 → 42.8, 0.7 → 41.0, so its `draw < contact−3`
+      clause needs more english than it uses; and a `spin` event fires for *every* english
+      including center ball, so its `!sSpin` clause cannot hold. Decide whether the event means
+      "english applied" or "slide→roll transition", then align the model's event or the script.
+- [ ] **Two engines.** The Rust core plus a JS fixed-timestep fallback whose mirroring is
+      deferred (`PLAN-two-phase-physics.md` item D). Keep both with parity in CI, or drop the
+      fallback now that wasm is universal.
+- [ ] **Three unmerged branches, all with content:** `lineart-print-tooling` (+120 lines,
+      improves an existing main script — merge candidate), `claude/calendar-ascii-pro-design-een0rn`
+      (497 lines, a Columbia Cue Club calendar generator), and
+      `claude/recent-changes-review-wurocf` (972 lines including a 226-line tournament-platform
+      spec, which pairs with the merged `scoresheet.html` and the separate `15ball-scoresheet` repo).
+- [ ] **Roadmap 1.4, natural angle line** — the only Phase 1 item still open (`naturalAngle`
+      has zero hits in `index.html`; their estimate is 1 hour).
+- [ ] **Two plan docs are unmaintained:** `PLAYWRIGHT_TEST_PLAN.md` has 137 unticked boxes and
+      `GAME_MODE_PLAN.md` 29, against a suite that is green. Either reconcile them against the
+      specs or prune them and say the specs are the source of truth.
+- [ ] **Remaining doc drift:** `tests/README.md`'s test tree and its "file:// is the default"
+      claim; `claude.md`'s v008 (v009 is tracked) and its "`cargo test` needs MSVC" note (it
+      runs here); the Playwright config comment's "76/76" (the suite is 158); the roadmap's
+      anti-feature "Video Recording/Playback" next to shipped `record-video.cjs`.
+- [ ] **Bigger bets:** split the 552 KB inline app into modules with a build that still emits
+      one self-contained file (the pattern already used in the Go project); publish the
+      zero-dependency physics core as a crate so other tools can reuse it.
+
+## Reference: what the last audit measured
+
+- Playwright **chromium 158/158** green with the re-embedded core (7.0 min).
+- Core: **build 0.43 s**, `cargo test` **5/5**, battery **8/8**.
+- The four browser `verify-*.js` scripts failed here purely on the hardcoded Linux browser path.
+- Files: 77 tracked, 86 commits; `index.html` 552 KB with ~100 KB of embedded wasm.

@@ -4,6 +4,9 @@ An interactive pool/billiards shot diagramming tool with physics-based shot solv
 
 ![ACE Shot Diagrams Preview](preview.png)
 
+**[Live demo →](https://kevinelong.github.io/ace-shot-diagrams/)** — no install, no build;
+the page carries its own physics core.
+
 ## Quick Start
 
 1. Open `index.html` in any modern browser

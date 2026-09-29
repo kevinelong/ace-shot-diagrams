@@ -1,5 +1,9 @@
 # ACE Shot Diagrams - Feature Roadmap
 
+> **Audited 2026-09-29** against the code. A marker here is only added with the evidence in
+> brackets next to it; see `NEXT_STEPS.md` for the plan of record. `⬜ open` items have no
+> trace in `index.html`, which is not the same as "not wanted".
+
 ## Current State (What We Have)
 - Interactive drag-and-drop ball placement
 - Automatic kick shot solving (1-rail and 2-rail)
@@ -24,32 +28,32 @@
 
 ### Phase 1: Quick Wins (High Value, Low Effort)
 
-#### 1.1 PNG/SVG Export
+#### 1.1 PNG/SVG Export — ✅ shipped (toDataURL/toBlob/createObjectURL in index.html)
 - **Value**: HIGH - Users need to share diagrams on forums, social media, coaching materials
 - **Effort**: 2-3 hours
 - **Details**: Export current table state as image file
 
-#### 1.2 URL State Sharing
+#### 1.2 URL State Sharing — ✅ shipped (location.hash ×4); no spec covers it
 - **Value**: HIGH - Instant sharing without file downloads
 - **Effort**: 3-4 hours
 - **Details**: Encode ball positions, pocket selection, settings in URL hash
 
-#### 1.3 Tangent Line Toggle
+#### 1.3 Tangent Line Toggle — ✅ shipped (tangent, 40 references); no spec covers it
 - **Value**: MEDIUM - Fundamental teaching tool for position play
 - **Effort**: 1-2 hours
 - **Details**: Show 90° line from contact point (where CB goes with stop shot)
 
-#### 1.4 Natural Angle Line
+#### 1.4 Natural Angle Line — ⬜ OPEN (naturalAngle has no hits) — the only Phase 1 item left
 - **Value**: MEDIUM - Shows where CB goes with center-ball follow
 - **Effort**: 1 hour
 - **Details**: 30° deflection from tangent based on cut angle
 
-#### 1.5 Shot Make Probability Display
+#### 1.5 Shot Make Probability Display — ✅ shipped (makePercentage in index.html; 3 specs reference it)
 - **Value**: MEDIUM - More intuitive than abstract "difficulty score"
 - **Effort**: 2 hours
 - **Details**: Convert difficulty score to percentage (e.g., "78% make rate")
 
-#### 1.6 Random Rack Button
+#### 1.6 Random Rack Button — ✅ shipped (rackRandom ×6); rack is covered by 5 specs, random-rack is not asserted
 - **Value**: MEDIUM - Practice tool for random scenarios
 - **Effort**: 1 hour
 - **Details**: Scatter balls randomly on table (respecting physics)
@@ -58,27 +62,27 @@
 
 ### Phase 2: Core Enhancements (High Value, Medium Effort)
 
-#### 2.1 Shape Zone Visualization
+#### 2.1 Shape Zone Visualization — ✅ shipped (shapeZone ×13); no spec covers it
 - **Value**: HIGH - Critical for teaching position play
 - **Effort**: 4-6 hours
 - **Details**: Triangular zone showing where CB can be to make next shot
 
-#### 2.2 Safety Shot Mode
+#### 2.2 Safety Shot Mode — ⬜ open (no snooker/safetyZone hits)
 - **Value**: HIGH - No competitor does this well
 - **Effort**: 6-8 hours
 - **Details**: Show snooker zones, optimal defensive positions
 
-#### 2.3 Multi-Shot Sequences
+#### 2.3 Multi-Shot Sequences — ⬜ open (no hits)
 - **Value**: HIGH - Plan entire run-outs
 - **Effort**: 8-10 hours
 - **Details**: Chain shots together, show numbered sequence
 
-#### 2.4 Local Storage Save/Load
+#### 2.4 Local Storage Save/Load — 🟡 partial (localStorage ×6; named save/load not verified)
 - **Value**: HIGH - Persist work between sessions
 - **Effort**: 3-4 hours
 - **Details**: Save named diagrams to browser localStorage
 
-#### 2.5 Drill Mode with Scoring
+#### 2.5 Drill Mode with Scoring — ⬜ open (no hits)
 - **Value**: MEDIUM - Structured practice
 - **Effort**: 6-8 hours
 - **Details**: Pre-built drills with success tracking
@@ -87,22 +91,22 @@
 
 ### Phase 3: Advanced Features (Medium Value, Higher Effort)
 
-#### 3.1 Undo/Redo System
+#### 3.1 Undo/Redo System — ⬜ open (no undo/redo in index.html)
 - **Value**: MEDIUM - Quality of life improvement
 - **Effort**: 4-5 hours
 - **Details**: Track state changes, allow reversal
 
-#### 3.2 Table Size Options
+#### 3.2 Table Size Options — ⬜ open (no tableSize/7ft/8ft/9ft hits)
 - **Value**: MEDIUM - Support 7ft, 8ft, 9ft tables
 - **Effort**: 3-4 hours
 - **Details**: Adjust dimensions while maintaining ball scale
 
-#### 3.3 Print-Friendly View
+#### 3.3 Print-Friendly View — 🟡 partial (@media print ×1; the print tooling is a separate offline path)
 - **Value**: MEDIUM - Physical handouts for coaching
 - **Effort**: 2-3 hours
 - **Details**: CSS print stylesheet, clean B&W option
 
-#### 3.4 Keyboard Shortcuts
+#### 3.4 Keyboard Shortcuts — 🟡 minimal (2 keydown handlers)
 - **Value**: LOW-MEDIUM - Power user efficiency
 - **Effort**: 2-3 hours
 - **Details**: Arrow keys for fine positioning, hotkeys for tools

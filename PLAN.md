@@ -1,5 +1,11 @@
 # Improvement Plan — June 2026
 
+> **Status (2026-09-29): all five phases have shipped.** Phase 1 — `verify-consistency.js`
+> (9/9) and the throw-compensated aim; Phase 2 — `render-impacts.js` and
+> `ROLLING_BALL_DESIGN.md`; Phase 3 — annotations in the state encoding; Phase 4 —
+> `tests/battery.json` and `kball-scenarios.json`; Phase 5 — `ace-physics/` on main.
+> See `NEXT_STEPS.md`.
+
 Five phases, executed in order, each gated by its own test before commit.
 
 **Status: all five phases complete.** Battery 9/9 (verify-consistency.js),

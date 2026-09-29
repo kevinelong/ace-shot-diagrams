@@ -96,7 +96,7 @@ contact) and the two targets round to opposite sides. Consequences:
   reduce threshold-snap sensitivity (`s=v` overshoot test, `SLIP_EPS`, the stop
   test) that fp noise can flip. This is a stability + modeling task, not tuning.
 
-### C. Persist the render/verify tooling on this box
+### C. Persist the render/verify tooling on this box — ✅ DONE (the render/verify scripts are tracked, and the browser checks now resolve a browser portably)
 `verify-shots.cjs`/`record-shot.cjs` already use `playwright-core` + system
 chromium (default `/usr/bin/chromium-browser`). `render-scenarios.js` /
 `render-impacts.js` import `@playwright/test` and call `chromium.launch()` with

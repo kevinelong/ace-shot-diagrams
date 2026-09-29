@@ -1,5 +1,9 @@
 # Game Mode Selection & Combination Shots Implementation Plan
 
+> **Status (2026-09-29):** five modes ship (9-Ball, 8-Ball, 10-Ball, Straight Pool, One
+> Pocket) plus the K-Ball rotation preset merged from `kball-preset`. The 29 checkboxes below
+> are unmaintained. See `NEXT_STEPS.md`.
+
 ## Research Summary
 
 ### Game Rules & Legal Target Balls

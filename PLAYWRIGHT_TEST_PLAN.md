@@ -1,5 +1,9 @@
 # Playwright UX Test Plan - ACE Shot Diagrams
 
+> **Status (2026-09-29): the suite is 158/158 green on chromium.** The 137 checkboxes below
+> have not been maintained and read as a design document, not a task list; either reconcile
+> them section by section or treat the specs as the source of truth. See `NEXT_STEPS.md`.
+
 ## Overview
 Comprehensive user-oriented visual tests focusing on **user intent and experience**, not just code execution. Every feature must be tested from the perspective of: "What is the user trying to accomplish?" and "Does the UI clearly communicate what's happening?"
 
