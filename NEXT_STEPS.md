@@ -106,9 +106,12 @@ was open only because the identifier `naturalAngle` never existed.
 
 ## Needs you (blocked on a decision, credentials, or a remote write)
 
-- [ ] **Push the five commits.** The public demo at
-      <https://kevinelong.github.io/ace-shot-diagrams/> serves `index.html` from `main`, so it
-      has been running the *stale* core; pushing is what fixes the live tool. `git push origin main`
+- [ ] **Push the commits.** 11 un-pushed as of 2026-09-29 (`git log origin/main..main --oneline`);
+      the figure is stale the moment it is written, so re-measure before acting. The public demo
+      at <https://kevinelong.github.io/ace-shot-diagrams/> serves `index.html` from `main`, so it
+      is running the *stale* core and still carries the duplicate-id bug: `origin/main`'s
+      `index.html` differs from the working tree by **+109/-146** lines. Pushing is what fixes the
+      live tool. `git push origin main`
 - [ ] **Release + discovery.** No tags exist at all (`git tag` is empty) and the repo's homepage
       field is unset, so the deployed demo is undiscoverable from the repo. No version number
       has ever been chosen (there are no tags), so that name is yours to pick;
