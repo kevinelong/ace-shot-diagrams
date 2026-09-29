@@ -30,9 +30,12 @@ export default defineConfig({
     // Base URL for the application
     baseURL: 'http://localhost:8080',
 
-    // Artefact recording: on failure, and on the first retry. Recording everything for
-    // every test across five projects is what made a local run of 158 tests take 7 minutes;
-    // specs that want a video deliberately opt in with test.use({ video: 'on' }).
+    // Artefact recording: on failure, and on the first retry. Recording every test across
+    // five projects costs disk and time for nothing when everything passes; specs that want a
+    // video deliberately opt in with test.use({ video: 'on' }). Measured effect of this change:
+    // the chromium suite went 7.0 -> 6.4 min, so the runtime is not recording but the specs'
+    // own fixed waits (92 calls, 57.6 s per pass, 32.3 s of it in shot-animation.spec.ts) and
+    // the per-test boot cost. See NEXT_STEPS.md.
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     trace: 'on-first-retry',

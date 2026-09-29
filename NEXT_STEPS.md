@@ -37,7 +37,9 @@ test green by relaxing the test — `verify-spin.js` below is the worked example
       every test across every project, and `shot-animation.spec.ts` opts back in to video
       because that artefact is its point. Backed by that spec's run: **14 passed, 1 flaky**
       (the video test, a fixed-wait test that passed on its retry; no spec asserts on
-      artefacts, so nothing else could break).
+      artefacts, so nothing else could break). **Measured effect: the chromium suite went
+      7.0 → 6.4 min.** Real, but small — the recording was not the bottleneck, and the plan's
+      earlier claim that it was has been corrected in `playwright.config.ts` too.
 - [x] **`playwright-core` pinned to the test runner's version**, so the repo installs one copy.
       Backed by: `npm install` → `playwright-core now 1.57.0` (`package-lock.json` updated).
 - [x] **`verify-*.js` find a browser portably.** They hardcoded `/usr/bin/chromium`, so they
@@ -89,6 +91,11 @@ test green by relaxing the test — `verify-spin.js` below is the worked example
 - [ ] **Two plan docs are unmaintained:** `PLAYWRIGHT_TEST_PLAN.md` has 137 unticked boxes and
       `GAME_MODE_PLAN.md` 29, against a suite that is green. Either reconcile them against the
       specs or prune them and say the specs are the source of truth.
+- [ ] **Fixed waits are the runtime and the flakiness.** 92 `waitForTimeout` calls totalling
+      **57.6 s per pass**, 32.3 s of them in `shot-animation.spec.ts` (4 s waits on the break
+      sequence — and that is the test that came back flaky). Replacing them with web-first
+      waits (`expect.poll`, event/state assertions) would cut the wall time and remove the
+      retry noise at the same time. Per-test boot of the 552 KB page is the other cost.
 - [ ] **Remaining doc drift:** `tests/README.md`'s test tree and its "file:// is the default"
       claim; `claude.md`'s v008 (v009 is tracked) and its "`cargo test` needs MSVC" note (it
       runs here); the Playwright config comment's "76/76" (the suite is 158); the roadmap's
