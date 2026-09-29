@@ -48,7 +48,7 @@
 - **Effort**: 1 hour
 - **Details**: 30° deflection from tangent based on cut angle
 
-#### 1.5 Shot Make Probability Display — ✅ shipped (makePercentage in index.html; 3 specs reference it)
+#### 1.5 Shot Make Probability Display — ✅ shipped (calculateMakeProbability / updateMakePercentage in index.html, and "Make %" appears in the UI; 3 specs reference it)
 - **Value**: MEDIUM - More intuitive than abstract "difficulty score"
 - **Effort**: 2 hours
 - **Details**: Convert difficulty score to percentage (e.g., "78% make rate")
