@@ -8378,7 +8378,9 @@
         }
 
         // Follow line: CB continues forward ~30° from tangent (toward OB direction)
-        // The angle depends on the cut angle - steeper cuts = less follow effect
+        // The angle depends on the cut angle - steeper cuts = less follow effect.
+        // This is the natural-angle (30°) rule for a rolling cue ball - the roadmap's
+        // 1.4 'Natural Angle Line', which ships under this label ("Follow Line (top)").
         const cutAngle = angleBetweenVectors(cueToGhost, vectorSubtract(objBallPos, ghostPos));
         const followAngleDeg = 30 * Math.cos(cutAngle * Math.PI / 180); // Reduces at steep cuts
 

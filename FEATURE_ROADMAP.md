@@ -46,7 +46,11 @@
 - **Effort**: 1-2 hours
 - **Details**: Show 90° line from contact point (where CB goes with stop shot)
 
-#### 1.4 Natural Angle Line — ⬜ OPEN (naturalAngle has no hits) — the only Phase 1 item left
+#### 1.4 Natural Angle Line — ✅ shipped as the Follow-Line aid (`followAngleDeg = 30 * Math.cos(cutAngle)`, toggle **Follow Line (top)** in the Aids palette)
+- *Audit correction 2026-09-29*: this was called open because the audit searched for the
+  literal name `naturalAngle`, which never existed — the capability ships under the
+  "Follow Line (top)" label. Measured through the UI at a 19.6° cut: the drawn line sits
+  **28.23°** off the tangent against the formula's **28.26°** (the 30° rule, `30·cos(cut)`).
 - **Value**: MEDIUM - Shows where CB goes with center-ball follow
 - **Effort**: 1 hour
 - **Details**: 30° deflection from tangent based on cut angle

@@ -70,6 +70,14 @@ test green by relaxing the test — `verify-spin.js` below is the worked example
       looked up `palette-share`, an id the app never had), the retired `save:` registry entry,
       the `restore-share` button, and a tour step retargeted from the deleted `#palette-save`
       to `#palette-game`.
+- [x] **Roadmap 1.4 "Natural Angle Line" is not an open feature — it ships as the Follow-Line
+      aid.** The audit marked it open because it searched for the literal name `naturalAngle`;
+      the capability is `followAngleDeg = 30 * Math.cos(cutAngle)` (`index.html:8383`), toggled
+      as **"Follow Line (top)"** in the Aids palette. Backed by: driven through the UI at a 19.6°
+      cut, the drawn line sits **28.23°** off the tangent against the formula's **28.26°**; both
+      aid lines render (`STOP`/`FOLLOW` labels) with **0 page errors**; `verify-consistency.js`
+      **9/9** and the wasm embed check still pass. A code comment now names the 30° rule so the
+      next audit cannot miss it the same way.
 - [x] **The app's own in-browser suite is green: 40/40** (was 39 passed / 1 failed). The failing
       test asserted a `palette-share` id that never existed; it now asserts the seven palettes
       the app actually ships (balls, cue, game, shot, legend, aids, actions) — measured, not assumed.
@@ -92,7 +100,8 @@ Three findings from the review pass were **wrong**, and the plan of record shoul
   per-resolution Aids tests pass. The earlier probe read the DOM before the panel existed.
 
 Process note for the next audit: query the runtime DOM **after** expanding the panel, and never
-conclude "unreachable" or "missing" from a hidden container's visibility alone.
+conclude "unreachable" or "missing" from a hidden container's visibility alone. Call a feature "open" only when its *behaviour* is absent — roadmap 1.4
+was open only because the identifier `naturalAngle` never existed.
 
 
 ## Needs you (blocked on a decision, credentials, or a remote write)
