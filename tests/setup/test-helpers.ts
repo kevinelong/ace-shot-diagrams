@@ -28,13 +28,11 @@ export class AceShotHelper {
    */
   async gotoEmpty() {
     await this.page.goto('/?empty=1');
-    // Wait for page to fully load and initialize
     await this.page.waitForLoadState('networkidle');
-    await this.page.waitForTimeout(300);
     await this.hideTourElements();
     await this.repositionPalettesForTesting();
-    // Additional wait for app initialization
-    await this.page.waitForTimeout(200);
+    // The board being up is the app's own signal that setup finished
+    await this.page.locator('#pool-table-svg').waitFor({ state: 'visible' });
   }
 
   /**
@@ -43,9 +41,9 @@ export class AceShotHelper {
    */
   async gotoWithRack() {
     await this.page.goto('/');
-    await this.page.waitForTimeout(200);
     await this.hideTourElements();
     await this.repositionPalettesForTesting();
+    await this.page.locator('#pool-table-svg').waitFor({ state: 'visible' });
   }
 
   /**

@@ -173,11 +173,42 @@ was open only because the identifier `naturalAngle` never existed.
   - [x] Dead check removed with it: the "button might not be clickable while animating"
         branch never ran - `#btnShoot` is never disabled (measured across a shot's whole
         animation).
-  - [ ] **Remaining: 77 waits / 25.3 s** in `rack-start` (5.9 s), `mobile` (4.0 s),
-        `palette-minimize` (3.9 s - flaked twice on 2026-09-29), `critical-path/03` (3.2 s),
-        `critical-path/02` (2.5 s), `kick-shots` (2.1 s), `quick-validation` (2.0 s),
-        `test-helpers` (1.0 s), `power-control` (0.5 s), `critical-path/01` (0.2 s).
-        Per-test boot of the 552 KB page is the other cost.
+  - [x] **`palette-minimize.spec.ts` converted — 13 waits removed** (the file that flaked twice
+        on 2026-09-29). Sleeps in front of polling assertions are gone; the ones guarding reads
+        or screenshots now wait for the state they were guessing at (the palette body
+        collapsing/expanding, the racked cue ball's `on-table` class). Backed by
+        `--repeat-each=2`: **151/152 passed, 1 retry-passed flake, 42 s**, against the same
+        command on the previous revision (**149/152 with 2 flaky and a hard failure, 72 s**).
+  - [x] **The shared navigation sleeps and the read-once races.** `test-helpers.ts`'s
+        `gotoEmpty`/`gotoWithRack` sleeps are now the board-visible wait (most critical-path
+        specs go through them); the three visibility races in `02-pocket-selection` use
+        `expect.poll`; `power-control` polls the force display; two sleeps left
+        `quick-validation`. Backed by those four specs at `--repeat-each=2`: **62 passed,
+        STATUS passed**.
+  - [x] **The read-race files converted: `02-pocket-selection` + `03-shot-calculation` (22
+        waits).** Their sleeps sat in front of reads (`getCutAngle()`, `getSelectedPocket()`,
+        `textContent()`/`boundingBox()`) that raced the app's recalculation, so they became
+        polling assertions (`expect.poll`), and "the angle changed" now polls *until* it
+        changes - which is the assertion. Also repaired a **vacuous assertion** found there: the
+        "impossible shot" test's `statusMessage !== null` is always true because `textContent()`
+        returns `''`, not null; it now requires a status message or the target line. Backed by
+        `--repeat-each=2`: **44 passed, STATUS passed, 17.1 s**.
+  - [x] **`shot-animation`'s consecutive-shots test had a broken premise** (found because the
+        new waits refused to sleep through it): it clicked Shoot three times and only checked the
+        toast never said "Error" - which passed even when the app refused the shot, e.g. after a
+        shot pockets the cue ball and the app answers "Place cue ball on table first". It now
+        requires the app to answer every click (shot start or a warning). Backed by
+        `--repeat-each=8`: **8/8 passed in 3.5 s**.
+  - [ ] **Remaining: 28 waits** - `rack-start` 10, `kick-shots` 7, `quick-validation` 6,
+        `mobile` 3, `01-ball-placement` 1, `power-control` 1. Two more are kept deliberately:
+        the three 50 ms gaps in "should recalculate instantly without lag" (they *are* the
+        measurement) and `test-helpers.waitForShotCalculation` (the app exposes no observable
+        for "shot calculated" and its callers read the result, so it needs an app signal first -
+        same shape as the shoot race recorded below).
+        Measured effect so far: the suite's fixed waits went **57.6 s -> 21 s per pass**, wall
+        time 57.1 s -> 42.0 s, and flakiness to at most one retry-passed flake (the palette
+        "minimize all" pile-up is now awaited per palette). Per-test boot of the 552 KB page is
+        the other cost.
 - [ ] **Remaining doc drift:** `tests/README.md`'s test tree and its "file:// is the default"
       claim; `claude.md`'s v008 (v009 is tracked) and its "`cargo test` needs MSVC" note (it
       runs here); the Playwright config comment's "76/76" (the suite is 158); the roadmap's

@@ -31,11 +31,8 @@ test.describe('Shot Calculation - Critical Path', () => {
     await aceHelper.selectObjectBall(1);
     await aceHelper.selectPocket('MR'); // side-bottom pocket (directly below)
 
-    await page.waitForTimeout(300);
-
-    // Cut angle should be very low (straight shot)
-    const cutAngle = await aceHelper.getCutAngle();
-    expect(cutAngle).toBeLessThan(10); // Near-straight shot
+    // Cut angle should be very low (straight shot) - poll: the app calculates it on selection
+    await expect.poll(() => aceHelper.getCutAngle()).toBeLessThan(10);
 
     // Ghost ball should be directly behind object ball
     expect(await aceHelper.isGhostBallVisible()).toBe(true);
@@ -54,12 +51,9 @@ test.describe('Shot Calculation - Critical Path', () => {
     await aceHelper.selectObjectBall(5);
     await aceHelper.selectPocket('TR'); // top-right pocket
 
-    await page.waitForTimeout(300);
-
-    // Should have measurable cut angle
-    const cutAngle = await aceHelper.getCutAngle();
-    expect(cutAngle).toBeGreaterThan(15);
-    expect(cutAngle).toBeLessThan(60);
+    // Should have measurable cut angle (poll the lower bound, then read the settled value)
+    await expect.poll(() => aceHelper.getCutAngle()).toBeGreaterThan(15);
+    expect(await aceHelper.getCutAngle()).toBeLessThan(60);
 
     // Ghost ball should be visible and offset
     expect(await aceHelper.isGhostBallVisible()).toBe(true);
@@ -72,8 +66,6 @@ test.describe('Shot Calculation - Critical Path', () => {
     await aceHelper.dragBallToTable(1, 60, 25);
     await aceHelper.selectObjectBall(1);
     await aceHelper.selectPocket('TR');
-
-    await page.waitForTimeout(300);
 
     // Difficulty information should be displayed in shot palette
     // Use specific locator since ID is duplicated in HTML
@@ -94,16 +86,12 @@ test.describe('Shot Calculation - Critical Path', () => {
     await aceHelper.selectObjectBall(1);
     await aceHelper.selectPocket('TR');
 
-    await page.waitForTimeout(200);
     const angle1 = await aceHelper.getCutAngle();
 
-    // Move cue ball to different position
+    // Move cue ball to different position: poll until the recalculation lands, which is the
+    // change under test (a fixed sleep could return before it and pass or fail at random)
     await aceHelper.dragBallToTable(0, 25, 42);
-    await page.waitForTimeout(200);
-    const angle2 = await aceHelper.getCutAngle();
-
-    // Angle should have changed
-    expect(angle1).not.toBe(angle2);
+    await expect.poll(() => aceHelper.getCutAngle()).not.toBe(angle1);
   });
 
   test('should calculate and display shot info in palette', async ({ page, aceHelper }) => {
@@ -114,11 +102,8 @@ test.describe('Shot Calculation - Critical Path', () => {
     await aceHelper.selectObjectBall(1);
     await aceHelper.selectPocket('TR');
 
-    await page.waitForTimeout(300);
-
     // Shot info palette should show relevant data
-    const cutAngle = await aceHelper.getCutAngle();
-    expect(cutAngle).toBeGreaterThan(0);
+    await expect.poll(() => aceHelper.getCutAngle()).toBeGreaterThan(0);
 
     // Make probability should be displayed (use specific parent since ID is duplicated)
     const makeProb = page.locator('#palette-shot #makeProbabilityDisplay');
@@ -134,8 +119,6 @@ test.describe('Shot Calculation - Critical Path', () => {
     await aceHelper.dragBallToTable(1, 60, 25);
     await aceHelper.selectObjectBall(1);
     await aceHelper.selectPocket('TR');
-
-    await page.waitForTimeout(300);
 
     // Final positions should be calculated and shown
     const cbFinal = page.locator('#cb-final-position');
@@ -153,16 +136,12 @@ test.describe('Shot Calculation - Critical Path', () => {
     await aceHelper.selectObjectBall(1);
     await aceHelper.selectPocket('TR');
 
-    await page.waitForTimeout(300);
-
     // Mini instructions in palette should update from default (use specific parent since ID is duplicated)
     const miniInstructions = page.locator('#palette-shot #shotMiniInstructions');
     await expect(miniInstructions).toBeVisible();
-
-    const instructionText = await miniInstructions.textContent();
-    expect(instructionText).toBeTruthy();
-    // Should not be the default "Place balls and select a pocket" anymore
-    expect(instructionText?.toLowerCase()).not.toContain('place balls');
+    // The update is the point: poll until it leaves the default text, then inspect it
+    await expect(miniInstructions).not.toHaveText(/place balls/i, { timeout: 10000 });
+    expect(await miniInstructions.textContent()).toBeTruthy();
   });
 
   test('should handle impossible shots gracefully', async ({ page, aceHelper }) => {
@@ -175,15 +154,14 @@ test.describe('Shot Calculation - Critical Path', () => {
     await aceHelper.selectObjectBall(1);
     await aceHelper.selectPocket('TR');
 
-    await page.waitForTimeout(300);
-
     // Should provide feedback about difficulty or alternative
-    // App might show warning or suggest kick shot
-    const statusMessage = await page.locator('#statusMessage').textContent();
-
-    // Some indication should be present
-    // (Exact message depends on implementation)
-    expect(statusMessage !== null || await aceHelper.isTargetLineVisible()).toBe(true);
+    // App might show warning or suggest kick shot.
+    // Some indication should be present (exact message depends on implementation). The old
+    // assertion here was vacuous: textContent() returns '' rather than null, so it always passed.
+    await expect.poll(async () => {
+        const msg = ((await page.locator('#statusMessage').textContent()) ?? '').trim();
+        return msg !== '' || await aceHelper.isTargetLineVisible();
+    }, { message: 'an impossible shot must still give some indication' }).toBe(true);
   });
 
   test('should calculate object ball path to pocket', async ({ page, aceHelper }) => {
@@ -193,8 +171,6 @@ test.describe('Shot Calculation - Critical Path', () => {
     await aceHelper.dragBallToTable(1, 60, 25);
     await aceHelper.selectObjectBall(1);
     await aceHelper.selectPocket('TR');
-
-    await page.waitForTimeout(300);
 
     // Object ball path line should be visible
     const objBallPath = page.locator('#obj-ball-path');
@@ -240,15 +216,10 @@ test.describe('Shot Calculation - Critical Path', () => {
     await aceHelper.selectObjectBall(1);
     await aceHelper.selectPocket('TR');
 
-    await page.waitForTimeout(300);
-
     // Shot type should be displayed in palette (use specific parent since ID is duplicated)
     const shotType = page.locator('#palette-shot #shotTypeDisplay-palette');
     await expect(shotType).toBeVisible();
-
-    const shotTypeText = await shotType.textContent();
-    expect(shotTypeText).toBeTruthy();
-    // Should show something like "Direct" or "Kick" etc.
-    expect(shotTypeText).not.toBe('--');
+    // Poll for the classification: '--' is the placeholder before the app calculates it
+    await expect(shotType).not.toHaveText('--', { timeout: 10000 });
   });
 });

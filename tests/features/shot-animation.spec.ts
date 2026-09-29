@@ -280,11 +280,28 @@ test.describe('Shot Animation System', () => {
         // USER INTENT: "I want to shoot multiple times to test different scenarios"
 
         for (let shotNum = 1; shotNum <= 3; shotNum++) {
-            // Click Shoot button
-            await shootAndWait(page);
+            // Click Shoot and require the app to answer: an accepted click reports
+            // "Shot in progress", a refused one warns ("Place cue ball on table first" once a
+            // shot has pocketed the cue ball - which is why this loop cannot demand a completed
+            // shot per iteration). Watching for "the toast text changed" does not work: results
+            // repeat, so the text legitimately stays identical between iterations.
+            const toast = page.locator('#toastNotification');
+            const answered = /Shot in progress|Place cue ball|No aim point/;
+            let answeredOnce = false;
+            const deadline = Date.now() + 20000;
+            while (!answeredOnce && Date.now() < deadline) {
+                await page.locator('#btnShoot').click();
+                try {
+                    await expect.poll(async () => answered.test(((await toast.textContent()) ?? '')),
+                        { timeout: 1000 }).toBe(true);
+                    answeredOnce = true;
+                } catch {
+                    // the app was not ready to accept the click yet
+                }
+            }
+            expect(answeredOnce, 'the app never answered the Shoot click').toBe(true);
 
             // Verify no errors occurred
-            const toast = page.locator('#toastNotification');
             const toastText = await toast.textContent();
             expect(toastText).not.toContain('Error');
         }

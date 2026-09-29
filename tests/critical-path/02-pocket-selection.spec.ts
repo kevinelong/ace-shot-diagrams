@@ -20,9 +20,7 @@ test.describe('Pocket Selection - Critical Path', () => {
 
     // Setup: Place balls for testing (SVG coordinates: x 0-100, y 0-50)
     await aceHelper.dragBallToTable(0, 30, 35); // cue ball - lower left area
-    await page.waitForTimeout(200);
     await aceHelper.dragBallToTable(1, 60, 25); // object ball - center right area
-    await page.waitForTimeout(200);
     await aceHelper.selectObjectBall(1);
   });
 
@@ -57,10 +55,9 @@ test.describe('Pocket Selection - Critical Path', () => {
 
     // Select pocket
     await aceHelper.selectPocket('TR');
-    await page.waitForTimeout(200);
 
     // Ghost ball appears showing aim point
-    expect(await aceHelper.isGhostBallVisible()).toBe(true);
+    await expect.poll(() => aceHelper.isGhostBallVisible()).toBe(true);
 
     // Ghost ball should be positioned correctly (between cue and object ball)
     await expect(page.locator('#ghost-ball-indicator')).toBeVisible();
@@ -71,11 +68,9 @@ test.describe('Pocket Selection - Critical Path', () => {
 
     // Select first pocket
     await aceHelper.selectPocket('TR');
-    await page.waitForTimeout(200);
 
     // Select different pocket
     await aceHelper.selectPocket('TL');
-    await page.waitForTimeout(200);
 
     // Only second pocket should be selected
     const topRight = page.locator(`.pocket-target[data-pocket="${POCKETS.TR}"]`);
@@ -89,10 +84,9 @@ test.describe('Pocket Selection - Critical Path', () => {
     // USER EXPECTATION: "Show me the path the ball will travel"
 
     await aceHelper.selectPocket('TR');
-    await page.waitForTimeout(200);
 
     // Target line should be visible
-    expect(await aceHelper.isTargetLineVisible()).toBe(true);
+    await expect.poll(() => aceHelper.isTargetLineVisible()).toBe(true);
 
     // Line should connect object ball to selected pocket
     const targetLine = page.locator('#target-line');
@@ -103,10 +97,9 @@ test.describe('Pocket Selection - Critical Path', () => {
     // USER EXPECTATION: "Show me where to hit from"
 
     await aceHelper.selectPocket('TR');
-    await page.waitForTimeout(200);
 
     // Cue ball path should be visible
-    expect(await aceHelper.isCueBallPathVisible()).toBe(true);
+    await expect.poll(() => aceHelper.isCueBallPathVisible()).toBe(true);
   });
 
   test('should work with all corner pockets', async ({ page, aceHelper }) => {
@@ -116,18 +109,16 @@ test.describe('Pocket Selection - Critical Path', () => {
 
     for (const pocketId of cornerPockets) {
       await aceHelper.selectPocket(pocketId);
-      await page.waitForTimeout(150);
 
       // Each pocket selection should:
       // 1. Be selected
-      const selected = await aceHelper.getSelectedPocket();
-      expect(selected).toBe(POCKETS[pocketId]);
+      await expect.poll(() => aceHelper.getSelectedPocket()).toBe(POCKETS[pocketId]);
 
       // 2. Show ghost ball
-      expect(await aceHelper.isGhostBallVisible()).toBe(true);
+      await expect.poll(() => aceHelper.isGhostBallVisible()).toBe(true);
 
       // 3. Show target line
-      expect(await aceHelper.isTargetLineVisible()).toBe(true);
+      await expect.poll(() => aceHelper.isTargetLineVisible()).toBe(true);
     }
   });
 
@@ -138,12 +129,10 @@ test.describe('Pocket Selection - Critical Path', () => {
 
     for (const pocketId of sidePockets) {
       await aceHelper.selectPocket(pocketId);
-      await page.waitForTimeout(150);
 
-      const selected = await aceHelper.getSelectedPocket();
-      expect(selected).toBe(POCKETS[pocketId]);
+      await expect.poll(() => aceHelper.getSelectedPocket()).toBe(POCKETS[pocketId]);
 
-      expect(await aceHelper.isGhostBallVisible()).toBe(true);
+      await expect.poll(() => aceHelper.isGhostBallVisible()).toBe(true);
     }
   });
 
@@ -157,7 +146,6 @@ test.describe('Pocket Selection - Critical Path', () => {
 
     // Hover over pocket
     await pocket.hover();
-    await page.waitForTimeout(100);
 
     // Visual feedback should change (via CSS hover effects)
     // This verifies the element is interactive
@@ -170,16 +158,13 @@ test.describe('Pocket Selection - Critical Path', () => {
 
     // Select first pocket and get cut angle
     await aceHelper.selectPocket('TR');
-    await page.waitForTimeout(200);
     const angle1 = await aceHelper.getCutAngle();
 
     // Select opposite pocket - angle should change
     await aceHelper.selectPocket('TL');
-    await page.waitForTimeout(200);
-    const angle2 = await aceHelper.getCutAngle();
 
-    // Cut angles should be different
-    expect(angle1).not.toBe(angle2);
+    // Cut angles should be different - poll, since a fixed sleep could read the old value
+    await expect.poll(() => aceHelper.getCutAngle()).not.toBe(angle1);
   });
 
   test('should maintain pocket selection when balls move', async ({ page, aceHelper }) => {
@@ -187,16 +172,13 @@ test.describe('Pocket Selection - Critical Path', () => {
 
     // Select pocket
     await aceHelper.selectPocket('TR');
-    await page.waitForTimeout(200);
 
     // Move object ball slightly (would need to implement move function)
     // For now, verify pocket remains selected after some interaction
     // Click on a button inside a palette (buttons have pointer-events: auto)
     await page.locator('#palette-balls .palette-btn.minimize').click();
-    await page.waitForTimeout(100);
 
     // Pocket should still be selected
-    const selectedPocket = await aceHelper.getSelectedPocket();
-    expect(selectedPocket).toBe(POCKETS.TR);
+    await expect.poll(() => aceHelper.getSelectedPocket()).toBe(POCKETS.TR);
   });
 });

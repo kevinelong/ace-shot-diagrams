@@ -35,14 +35,12 @@ test.describe('Power Control', () => {
 
   test('should set a soft power (3/10)', async ({ page, aceHelper }) => {
     await aceHelper.setPower(3);
-    await page.waitForTimeout(200);
-    expect(await page.locator('#forceValue-palette').textContent()).toContain('3');
+    await expect(page.locator('#forceValue-palette')).toContainText('3');
   });
 
   test('should set maximum power (10/10)', async ({ page, aceHelper }) => {
     await aceHelper.setPower(10);
-    await page.waitForTimeout(200);
-    expect(await page.locator('#forceValue-palette').textContent()).toContain('10');
+    await expect(page.locator('#forceValue-palette')).toContainText('10');
   });
 
   test('should update the displayed value across the range', async ({ page, aceHelper }) => {

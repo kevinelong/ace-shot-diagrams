@@ -175,6 +175,9 @@ test.describe('Palette Minimize - Cross Resolution Tests', () => {
           const paletteElement = page.locator(`#${palette.id}`);
           const minimizeBtn = paletteElement.locator('.palette-btn.minimize');
           await minimizeBtn.click();
+          // Wait for each collapse before clicking the next: six rapid clicks that only get
+          // checked at the end turn a lagging palette into a test failure under load.
+          await expect(paletteElement.locator('.palette-body')).not.toBeVisible();
         }
 
         // Verify all are minimized

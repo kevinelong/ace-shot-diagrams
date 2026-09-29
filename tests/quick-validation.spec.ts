@@ -9,7 +9,6 @@ test.describe('Palette Minimize Fix Validation', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForSelector('#pool-table-svg', { state: 'visible', timeout: 10000 });
-    await page.waitForTimeout(500);
     // Suppress tour and normalize default-minimized palettes (Game, Aids) to expanded
     await page.evaluate(() => {
       for (const id of ['tourTooltip', 'tourOverlay']) {
@@ -32,7 +31,6 @@ test.describe('Palette Minimize Fix Validation', () => {
       sourcePosition: { x: 20, y: 20 },
       targetPosition: { x: 400, y: 300 }
     });
-    await page.waitForTimeout(300);
 
     // Get cue ball position before minimize click
     const positionBefore = await page.evaluate(() => {
