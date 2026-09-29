@@ -30,11 +30,12 @@ export default defineConfig({
     // Base URL for the application
     baseURL: 'http://localhost:8080',
 
-    // Screenshot and video settings
-    // Videos will be recorded for animation tests
-    screenshot: 'on',  // Capture screenshots for all tests
-    video: 'on',       // Record all test videos
-    trace: 'on',       // Record all test traces
+    // Artefact recording: on failure, and on the first retry. Recording everything for
+    // every test across five projects is what made a local run of 158 tests take 7 minutes;
+    // specs that want a video deliberately opt in with test.use({ video: 'on' }).
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+    trace: 'on-first-retry',
 
     // Viewport size (desktop)
     viewport: { width: 1920, height: 1080 },

@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test';
 
+// This spec records video on purpose (the artefact is the point; no assertion reads it),
+// so it opts back in to what the suite default now leaves on failure only.
+test.use({ video: 'on' });
+
 /**
  * Shot Animation Tests
  * 

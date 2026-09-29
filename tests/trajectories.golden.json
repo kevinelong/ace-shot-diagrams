@@ -1,0 +1,214 @@
+{
+  "straight-stun": {
+    "final": {
+      "1": {
+        "x": 62.8,
+        "y": 25
+      },
+      "cue": {
+        "x": 59.05,
+        "y": 25
+      }
+    },
+    "events": [
+      {
+        "type": "spin",
+        "t": 0.023,
+        "a": "cue",
+        "b": null
+      },
+      {
+        "type": "ball-ball",
+        "t": 1.8,
+        "a": null,
+        "b": null
+      },
+      {
+        "type": "spin",
+        "t": 1.803,
+        "a": "1",
+        "b": null
+      }
+    ]
+  },
+  "straight-follow": {
+    "final": {
+      "1": {
+        "x": 77.5,
+        "y": 25
+      },
+      "cue": {
+        "x": 60.17,
+        "y": 25
+      }
+    },
+    "events": [
+      {
+        "type": "spin",
+        "t": 0.01,
+        "a": "cue",
+        "b": null
+      },
+      {
+        "type": "ball-ball",
+        "t": 0.74,
+        "a": null,
+        "b": null
+      },
+      {
+        "type": "spin",
+        "t": 0.743,
+        "a": "cue",
+        "b": null
+      },
+      {
+        "type": "spin",
+        "t": 0.753,
+        "a": "1",
+        "b": null
+      }
+    ]
+  },
+  "straight-draw": {
+    "final": {
+      "1": {
+        "x": 60,
+        "y": 25
+      },
+      "cue": {
+        "x": 41.03,
+        "y": 25
+      }
+    },
+    "events": [
+      {
+        "type": "spin",
+        "t": 0.057,
+        "a": "cue",
+        "b": null
+      }
+    ]
+  },
+  "straight-left-english": {
+    "final": {
+      "1": {
+        "x": 62.8,
+        "y": 25.07
+      },
+      "cue": {
+        "x": 59.05,
+        "y": 25
+      }
+    },
+    "events": [
+      {
+        "type": "spin",
+        "t": 0.023,
+        "a": "cue",
+        "b": null
+      },
+      {
+        "type": "ball-ball",
+        "t": 1.8,
+        "a": null,
+        "b": null
+      },
+      {
+        "type": "spin",
+        "t": 1.803,
+        "a": "1",
+        "b": null
+      }
+    ]
+  },
+  "cut-to-the-right": {
+    "final": {
+      "1": {
+        "x": 60,
+        "y": 33
+      },
+      "cue": {
+        "x": 60.28,
+        "y": 30.77
+      }
+    },
+    "events": [
+      {
+        "type": "spin",
+        "t": 0.02,
+        "a": "cue",
+        "b": null
+      },
+      {
+        "type": "ball-ball",
+        "t": 2.57,
+        "a": null,
+        "b": null
+      },
+      {
+        "type": "ball-ball",
+        "t": 2.573,
+        "a": null,
+        "b": null
+      }
+    ]
+  },
+  "cut-to-the-left": {
+    "final": {
+      "1": {
+        "x": 60,
+        "y": 17
+      },
+      "cue": {
+        "x": 60.28,
+        "y": 19.23
+      }
+    },
+    "events": [
+      {
+        "type": "spin",
+        "t": 0.02,
+        "a": "cue",
+        "b": null
+      },
+      {
+        "type": "ball-ball",
+        "t": 2.57,
+        "a": null,
+        "b": null
+      },
+      {
+        "type": "ball-ball",
+        "t": 2.573,
+        "a": null,
+        "b": null
+      }
+    ]
+  },
+  "rail-runner": {
+    "final": {
+      "1": {
+        "x": 60,
+        "y": 14
+      },
+      "cue": {
+        "x": 49.34,
+        "y": 40.26
+      }
+    },
+    "events": [
+      {
+        "type": "spin",
+        "t": 0.023,
+        "a": "cue",
+        "b": null
+      },
+      {
+        "type": "rail",
+        "t": 0.657,
+        "a": "cue",
+        "b": null
+      }
+    ]
+  }
+}

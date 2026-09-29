@@ -11,7 +11,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const indexUrl = pathToFileURL(join(__dirname, 'index.html')).href
 const battery = JSON.parse(readFileSync(join(__dirname, 'tests', 'battery.json'), 'utf-8'))
 
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', args: ['--no-sandbox', '--disable-gpu'] })
+// CHROMIUM_PATH wins when set (a system browser); otherwise playwright-core uses the
+// browser it manages. The old default of '/usr/bin/chromium' made these Linux-only.
+const launchOptions = { args: ['--no-sandbox', '--disable-gpu'] }
+if (process.env.CHROMIUM_PATH) launchOptions.executablePath = process.env.CHROMIUM_PATH
+const browser = await chromium.launch(launchOptions)
 const context = await browser.newContext()
 await context.addInitScript(() => localStorage.setItem('ace-tour-completed', 'true'))
 const page = await context.newPage()

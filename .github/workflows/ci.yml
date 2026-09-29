@@ -38,14 +38,11 @@ jobs:
       - name: The embedded core matches the build
         run: node verify-wasm-embed.js
 
-      # verify-rust-parity.js prints its verdict and then aborts during process teardown
-      # (libuv UV_HANDLE_CLOSING assertion, exit 9), so the exit code is not a verdict.
-      # Judge it by what it prints: a crash before the summary still fails the step.
+      # verify-rust-parity.js prints its verdict and then aborts during process teardown,
+      # so its exit code is not a verdict; verify-core.js judges what it printed instead and
+      # still fails if the crash happens before the summary.
       - name: Physics battery through the wasm
-        run: |
-          set -o pipefail
-          node verify-rust-parity.js 2>&1 | tee parity.log || true
-          grep -q '8/8 passed' parity.log || { echo '::error::the physics battery did not report 8/8 passed'; exit 1; }
+        run: node verify-core.js
 
   browser:
     name: Playwright (chromium)
