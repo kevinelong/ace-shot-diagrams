@@ -147,6 +147,9 @@
 - **Why Not**: Large file sizes, hosting costs, complex UI
 - **Effort**: 15+ hours
 - **Alternative**: Users can screen record if needed
+- *Update 2026-09-29*: this refers to an **in-app** feature, which stays declined. The repo
+  does ship *recording tooling* for tests and demos (`record-video.cjs`, `record-shot.cjs`,
+  `record-break.cjs`); that is not the feature described here.
 
 ### 6. Projection System Integration
 - **Why Not**: Requires hardware (projector + Raspberry Pi), niche audience

@@ -273,10 +273,24 @@ was open only because the identifier `naturalAngle` never existed.
         navigate themselves) now wait for the preset itself - the app saying "setup done" -
         before the test body runs.
   - Per-test boot of the 552 KB page is the other cost.
-- [ ] **Remaining doc drift:** `tests/README.md`'s test tree and its "file:// is the default"
-      claim; `claude.md`'s v008 (v009 is tracked) and its "`cargo test` needs MSVC" note (it
-      runs here); the Playwright config comment's "76/76" (the suite is 158); the roadmap's
-      anti-feature "Video Recording/Playback" next to shipped `record-video.cjs`.
+- [x] **Remaining doc drift - all four fixed.** `tests/README.md`'s test tree now matches the
+      twelve real files and its protocol section says what the config does (the suite always runs
+      against `npx http-server -p 8080`; `file://` is for the standalone harnesses, not the
+      specs); `claude.md` says v009 (the tracked template version) and no longer claims
+      `cargo test` needs MSVC (it runs here, battery 5/5); `playwright.config.ts`'s comment no
+      longer says "76/76" (the suite is 158); the roadmap's "Video Recording/Playback"
+      anti-feature now says it refers to an in-app feature, which stays declined, while the
+      repo's recording *tooling* ships.
+- [x] **The write-only flags and the callerless leftovers are gone.** The break-state block and
+      `frozenRackPending` write (nothing read them since the stepper went), plus eight functions
+      that appear exactly once - definition only - and are referenced nowhere outside
+      `index.html`: `updateMakeProbability` (a legacy duplicate of the live updater at ~8518),
+      `checkShotRailCollisions` (the last fragment of the JS shot model), `setupDemoShot`,
+      `isDirectPathClear`, `getBlockingBalls`, `calculateReflectionAngle`,
+      `calculateActualKickDestination`, `findLegalCombinationShots`.
+      `index.html`: **10586 -> 10317 lines**. `calculateMakeProbability` was kept - the app's own
+      self-test asserts on it. Backed by `verify-consistency.js` 9/9, `verify-shots.cjs`
+      **6/6 shots potted as intended**, and the full suite.
 - [ ] **Bigger bets:** split the 552 KB inline app into modules with a build that still emits
       one self-contained file (the pattern already used in the Go project); publish the
       zero-dependency physics core as a crate so other tools can reuse it.

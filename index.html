@@ -3591,16 +3591,8 @@
 
       // Check if direct shot to ghost ball is blocked by any obstacle
       // Returns true if the path is clear, false if blocked
-      function isDirectPathClear(cuePos, ghostPos, targetBallId) {
-        const excludeIds = ['cue', 'ghost', targetBallId];
-        const result = isPathBlockedByAnyBall(cuePos, ghostPos, excludeIds);
-        return !result.blocked;
-      }
 
       // Get list of all blocking balls for a path
-      function getBlockingBalls(start, end, excludeBallIds = []) {
-        return isPathBlockedByAnyBall(start, end, excludeBallIds).blockingBalls;
-      }
 
       // Mirror a point across a rail for kick/bank aim calculation.
       // COR-aware: a cushion bounce damps only the normal velocity component
@@ -4089,12 +4081,6 @@
 
       // Calculate the natural reflection angle off a rail (no english)
       // Returns angle in degrees from rail direction (0 = parallel to rail)
-      function calculateReflectionAngle(incomingDir, railName) {
-        const rail = RAILS[railName];
-        // Angle of incoming direction relative to rail normal
-        const dotNormal = dotProduct(incomingDir, rail.normal);
-        return Math.acos(Math.abs(dotNormal)) * (180 / Math.PI);
-      }
 
       // Calculate required english to achieve a specific exit angle
       // Returns english value from -1 (full left) to +1 (full right)
@@ -4180,18 +4166,6 @@
 
       // Calculate actual kick path endpoint given user's english
       // Returns where the CB will actually end up after bouncing off the rail
-      function calculateActualKickDestination(cuePos, aimPoint, railName, userEnglish) {
-        // Direction from cue to aim point
-        const incomingDir = vectorNormalize(vectorSubtract(aimPoint, cuePos));
-
-        // Calculate exit direction with user's english
-        const exitDir = calculateExitDirection(incomingDir, railName, userEnglish);
-
-        // Project the exit direction to find where it would go
-        // (extend to a reasonable distance)
-        const projectionDist = 100;  // Project far enough to cross the table
-        return vectorAdd(aimPoint, vectorScale(exitDir, projectionDist));
-      }
 
       // Calculate how far off-target the user's english will be for a kick shot
       // Returns { actualEndpoint, error, errorAngle }
@@ -4954,28 +4928,6 @@
       }
 
       // Find all legal combination shots for current game state
-      function findLegalCombinationShots(cuePos, pocketId) {
-        const allCombos = [];
-
-        // Get balls that could be pocketed
-        const ballsOnTable = Object.keys(ballPositions).filter(id =>
-          id !== 'cue' && id !== 'ghost' && ballPositions[id]
-        );
-
-        for (const targetBallId of ballsOnTable) {
-          const combos = findCombinationShots(cuePos, targetBallId, pocketId);
-
-          for (const combo of combos) {
-            const legality = isComboLegalForGameMode(combo);
-            if (legality.legal) {
-              allCombos.push(combo);
-            }
-          }
-        }
-
-        // Sort by score
-        return allCombos.sort((a, b) => b.score - a.score);
-      }
 
       // Solver preference enum
       const SOLVER_MODE = {
@@ -6998,98 +6950,6 @@
       // APPROACH ANGLE TEST: Tests per-rail cut angle calculation
       // Different rails give different approach angles to the ghost ball
       // The solver should pick the rail that best aligns with the pocket direction
-      function setupDemoShot() {
-        // Initial 8-ball rack setup - British style
-        // Rack at foot spot, cue ball in kitchen, aiming at head ball
-
-        const FOOT_SPOT = { x: 75, y: 25 };
-        const BALL_D = BALL_RADIUS * 2;
-        const ROW_SPACING = BALL_D * Math.sin(Math.PI / 3);
-
-        // Generate British-style 8-ball rack
-        const trianglePattern = [
-          [0],                          // Row 0: 1 ball (apex)
-          [-0.5, 0.5],                  // Row 1: 2 balls
-          [-1, 0, 1],                   // Row 2: 3 balls (8 in center)
-          [-1.5, -0.5, 0.5, 1.5],       // Row 3: 4 balls
-          [-2, -1, 0, 1, 2]             // Row 4: 5 balls
-        ];
-
-        // British 8-ball rack rules:
-        // - 8-ball in center (row 2, position 1)
-        // - Solid on one back corner, stripe on other back corner
-        // - Alternating pattern for visual appeal
-        const solids = ['1', '2', '3', '4', '5', '6', '7'];
-        const stripes = ['9', '10', '11', '12', '13', '14', '15'];
-
-        // Define specific positions for proper rack
-        const rackLayout = [
-          '1',          // Row 0: apex (1-ball)
-          '9', '2',     // Row 1: stripe, solid
-          '3', '8', '10', // Row 2: solid, 8-ball, stripe
-          '11', '4', '5', '12', // Row 3: stripe, solid, solid, stripe
-          '6', '13', '7', '14', '15'  // Row 4: solid, stripe, solid, stripe, stripe
-        ];
-
-        // Calculate positions
-        const rackPositions = {};
-        let layoutIndex = 0;
-        for (let row = 0; row < trianglePattern.length; row++) {
-          for (let col = 0; col < trianglePattern[row].length; col++) {
-            const x = FOOT_SPOT.x + row * ROW_SPACING;
-            const y = FOOT_SPOT.y + trianglePattern[row][col] * BALL_D;
-            const ballId = rackLayout[layoutIndex++];
-            rackPositions[ballId] = { x, y };
-          }
-        }
-
-        // Place racked balls on table
-        for (const ballId in rackPositions) {
-          ballPositions[ballId] = rackPositions[ballId];
-          const ball = document.getElementById(`ball-${ballId}`);
-          if (ball) {
-            positionBallOnTable(ball, rackPositions[ballId].x, rackPositions[ballId].y);
-            ball.style.display = '';
-          }
-        }
-
-        // Place cue ball in kitchen break area (behind head string, center-ish)
-        const cueBallX = 20;  // Behind second diamond
-        const cueBallY = 25;  // Center of table
-        ballPositions['cue'] = { x: cueBallX, y: cueBallY };
-        const cueBall = document.getElementById('ball-cue');
-        if (cueBall) {
-          positionBallOnTable(cueBall, cueBallX, cueBallY);
-          cueBall.style.display = '';
-        }
-
-        // Calculate ghost ball position for aiming at head ball (1-ball at apex)
-        const headBallPos = rackPositions['1'];
-        const ghostBallX = headBallPos.x - BALL_D - 0.1;  // Just in front of head ball
-        const ghostBallY = headBallPos.y;
-        ballPositions['ghost'] = { x: ghostBallX, y: ghostBallY };
-
-        // Don't select a ball initially - leave them all in the rack/tray
-        selectedBallId = null;
-        selectedPocket = null;
-
-        // Set top spin (12 o'clock / follow) for the break
-        contactOffset = { x: 0, y: -0.4 };
-        contactPoint.setAttribute('cx', contactOffset.x);
-        contactPoint.setAttribute('cy', contactOffset.y);
-        updateSpinDisplay(getSpinType(contactOffset));
-
-        // Set medium-high force for break
-        shotForce = 7;
-        forceSlider.value = shotForce;
-        forceValueDisplay.textContent = shotForce;
-
-        // Update all visualizations
-        updateCueGhostLine();
-
-        // Highlight legal balls based on game mode
-        highlightLegalBalls();
-      }
 
       // Initialize
       updateBallSizes();  // Calculate ball size based on current SVG scale
@@ -8467,28 +8327,6 @@
         return Math.round(probability);
       }
 
-      function updateMakeProbability(shotData) {
-        // Use querySelector to target the correct palette (ID is duplicated)
-        const shotPalette = document.getElementById('palette-shot');
-        const display = shotPalette ? shotPalette.querySelector('#makeProbabilityDisplay') : null;
-        if (!display) return;
-
-        const prob = calculateMakeProbability(shotData);
-        if (prob === null) {
-          display.textContent = '--';
-          display.style.color = '#888';
-          return;
-        }
-
-        display.textContent = prob + '%';
-
-        // Color code by probability
-        if (prob >= 80) display.style.color = '#0f8';
-        else if (prob >= 60) display.style.color = '#8f0';
-        else if (prob >= 40) display.style.color = '#ff0';
-        else if (prob >= 20) display.style.color = '#f80';
-        else display.style.color = '#f44';
-      }
 
       // ── Live Monte Carlo make % (empirical, from the physics core) ──
       // Fires a small batch of aim-perturbed strokes through the embedded
@@ -8582,12 +8420,6 @@
       // Ball state during animation
       let breakAnimationId = null;
       let isBreakAnimating = false;
-
-      // Written by the shot setup below, read by nothing since the JS stepper was removed;
-      // kept declared so the assignments stay in scope (see NEXT_STEPS.md - delete both
-      // once the writes go too).
-      let breakBallStates = {};    // { ballId: { x, y, vx, vy } }
-      let frozenRackPending = false;  // Flag to apply empirical break physics on first contact
 
       // Shot animation state (for regular shots)
       let shotBallStates = {};
@@ -9296,80 +9128,6 @@
       // Check ball-to-ball collisions for shot
 
       // Check rail collisions for shot
-      function checkShotRailCollisions() {
-        for (const ballId in shotBallStates) {
-          const ball = shotBallStates[ballId];
-          if (!ball || ball.pocketed) continue;
-
-          const ballR = BALL_RADIUS;
-
-          // Check pockets first - use realistic pocket radius for detection
-          const POCKET_DETECT_RADIUS = 4.0;  // Match visual pocket size
-          for (const pocketName in pocketCenters) {
-            const pocket = pocketCenters[pocketName];
-            const dx = ball.x - pocket.x;
-            const dy = ball.y - pocket.y;
-            const distToPocket = Math.sqrt(dx * dx + dy * dy);
-
-            if (distToPocket < POCKET_DETECT_RADIUS) {
-              ball.pocketed = true;
-              ball.vx = 0;
-              ball.vy = 0;
-              recordShotEvent('pocket', { id: ballId, pocket: pocketName });
-              break;
-            }
-          }
-
-          if (ball.pocketed) continue;
-
-          // Inside a pocket mouth the cushion gives way to the pocket — skip
-          // rail bounces there so the ball can run in and be captured, instead
-          // of rattling off a phantom full-length wall across the opening.
-          const POCKET_MOUTH_RADIUS = 5.0;
-          let inPocketMouth = false;
-          for (const pocketName in pocketCenters) {
-            const pk = pocketCenters[pocketName];
-            const mdx = ball.x - pk.x;
-            const mdy = ball.y - pk.y;
-            if (mdx * mdx + mdy * mdy < POCKET_MOUTH_RADIUS * POCKET_MOUTH_RADIUS) {
-              inPocketMouth = true;
-              break;
-            }
-          }
-          if (inPocketMouth) continue;
-
-          // Rail bounces. NOTE: the RAILS constants are already ball-radius
-          // adjusted ("ball bounces when center.y >= 46.875") — compare the
-          // CENTER against them; adding ballR again put the effective cushion
-          // 1.125" too far onto the table and made corner shots rattle out.
-          // (Events recorded only for meaningful impact speeds, so a ball
-          // rolling along a cushion doesn't spam the log.)
-          const RAIL_EVENT_MIN_SPEED = 0.05;
-          if (ball.y <= RAILS.top.y) {
-            ball.y = RAILS.top.y;
-            ball.vy = -ball.vy * BREAK_PHYSICS.RAIL_COR;
-            if (Math.abs(ball.vy) > RAIL_EVENT_MIN_SPEED) recordShotEvent('rail', { id: ballId, rail: 'top' });
-          }
-
-          if (ball.y >= RAILS.bottom.y) {
-            ball.y = RAILS.bottom.y;
-            ball.vy = -ball.vy * BREAK_PHYSICS.RAIL_COR;
-            if (Math.abs(ball.vy) > RAIL_EVENT_MIN_SPEED) recordShotEvent('rail', { id: ballId, rail: 'bottom' });
-          }
-
-          if (ball.x <= RAILS.left.x) {
-            ball.x = RAILS.left.x;
-            ball.vx = -ball.vx * BREAK_PHYSICS.RAIL_COR;
-            if (Math.abs(ball.vx) > RAIL_EVENT_MIN_SPEED) recordShotEvent('rail', { id: ballId, rail: 'left' });
-          }
-
-          if (ball.x >= RAILS.right.x) {
-            ball.x = RAILS.right.x;
-            ball.vx = -ball.vx * BREAK_PHYSICS.RAIL_COR;
-            if (Math.abs(ball.vx) > RAIL_EVENT_MIN_SPEED) recordShotEvent('rail', { id: ballId, rail: 'right' });
-          }
-        }
-      }
 
       // Animation loop for regular shot: fixed-timestep accumulator.
       // rAF fires; leftover time becomes the render interpolation alpha.
@@ -9546,38 +9304,12 @@
         if (fsp) fsp.value = shotForce;
         if (fvp) fvp.textContent = shotForce;
 
-        // Initialize break ball states
-        breakBallStates = {};
-        for (const ballId of gameBalls) {
-          if (rackPositions[ballId]) {
-            breakBallStates[ballId] = {
-              x: rackPositions[ballId].x,
-              y: rackPositions[ballId].y,
-              vx: 0,
-              vy: 0,
-              pocketed: false
-            };
-          }
-        }
-
-        // Add cue ball to break states
-        if (ballPositions['cue']) {
-          breakBallStates['cue'] = {
-            x: ballPositions['cue'].x,
-            y: ballPositions['cue'].y,
-            vx: 0,
-            vy: 0,
-            pocketed: false
-          };
-        }
-
         // Clear selections
         selectedBallId = null;
         selectedPocket = null;
 
         // Set break mode to preserve ghost ball position
         isBreakSetup = true;
-        frozenRackPending = true;  // Enable empirical break physics on first contact
 
         // Update visualizations
         updateCueGhostLine();

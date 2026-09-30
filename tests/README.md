@@ -16,16 +16,22 @@ Every test asks:
 ```
 tests/
 ├── setup/
-│   └── test-helpers.ts          # Shared utilities and AceShotHelper class
+│   └── test-helpers.ts          # AceShotHelper, the shot/rack waits, readiness helpers
 ├── critical-path/               # Must-work features
 │   ├── 01-ball-placement.spec.ts
 │   ├── 02-pocket-selection.spec.ts
 │   └── 03-shot-calculation.spec.ts
-└── features/                    # Individual features
-    ├── english-controls.spec.ts
-    ├── power-control.spec.ts
-    └── shot-types/
-        └── kick-shots.spec.ts
+├── features/                    # Individual features
+│   ├── english-controls.spec.ts
+│   ├── mobile.spec.ts           # Mobile + tablet viewports
+│   ├── power-control.spec.ts
+│   ├── rack-start.spec.ts
+│   ├── shot-animation.spec.ts   # Records video on purpose (the artefact is its point)
+│   └── shot-types/
+│       └── kick-shots.spec.ts
+├── ui-ux/
+│   └── palette-minimize.spec.ts # Palette behaviour across five resolutions
+└── quick-validation.spec.ts     # Smoke checks
 ```
 
 ## Installation
@@ -193,16 +199,15 @@ Configuration in `.github/workflows/` (to be created).
 
 ## Common Issues
 
-### File:// Protocol
-The app runs as a single HTML file. If tests can't load:
-```bash
-# Option 1: Serve via HTTP (recommended for CI)
-python -m http.server 8000
-# Then update playwright.config.ts baseURL to http://localhost:8000
+### Protocol
+The suite never loads the app from disk for the reason the old note gave. It is
+`file://` that is *not* the default: `playwright.config.ts` starts its own server
+(`npx http-server -p 8080 -c-1`) and every spec navigates to `/` on
+`http://localhost:8080`, so no manual server or `baseURL` edit is needed.
 
-# Option 2: Use file:// (default)
-# Works locally, may have issues in some CI environments
-```
+The app is one self-contained HTML file, so a `file://` URL is fine for a quick manual
+look (the `verify-*.js` / `verify-shots.cjs` harnesses do exactly that), just not for the
+specs.
 
 ### Timing Issues
 If tests are flaky:

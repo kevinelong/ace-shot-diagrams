@@ -5,9 +5,9 @@ Pool table SVG template for creating interactive shot diagrams with physics-base
 ## Project Structure
 
 - `index.html` - Main interactive shot diagram application (all-in-one HTML/CSS/JS)
-- `pool-table-template.svg` - Main SVG template (v008)
+- `pool-table-template.svg` - Main SVG template (v009)
 - `pool-table-labeled.svg` - Labeled version for reference
-- `versions/` - Version history (v001-v008)
+- `versions/` - Version history (v001-v009)
 - `GAME_MODE_PLAN.md` - Implementation plan for game modes & combos
 - `FEATURE_ROADMAP.md` - Feature roadmap with priorities and implementation details
 
@@ -208,7 +208,8 @@ rust-lld alone:
 ABI: `alloc_f64(n)` + `simulate_raw(ptr,len)` -> packed u64 (ptr<<32|len) of
 a JSON string; flat-f64 input (see verify-rust-parity.js for the loader).
 Validate: `node verify-rust-parity.js` (battery through the wasm).
-`cargo test` has native unit tests but needs MSVC Build Tools installed.
+`cargo test` has native unit tests and runs here (battery measured 5/5); the earlier note
+that it needs MSVC Build Tools was wrong for this setup.
 In-app integration: the wasm is base64-embedded in index.html (between the
 ACE_WASM markers) by `node embed-wasm.js` — re-run it after every core
 rebuild. The app loads it (loadAcePhysics), resolves each shot up front
