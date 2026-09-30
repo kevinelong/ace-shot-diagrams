@@ -2,14 +2,14 @@ name: CI
 
 # Two jobs, because the physics core needs no npm and the browser suite needs no Rust.
 #
-# Deliberately NOT in here, each for a reason worth fixing rather than hiding:
-#   - verify-animation.js, verify-consistency.js, verify-sim-make.js, verify-ux-fixes.js
-#     launch a hardcoded /usr/bin chromium path, so they only run on a Linux box that has
-#     one. They are useful locally; wire them up once they resolve a browser portably.
-#   - verify-spin.js currently reports FAIL on a clean clone (draw does not come back past
-#     the contact point at e.y=0.5, and stun emits a spin event). It needs a decision
-#     before it can gate anything.
-#   - npm run test:unit points at tests/unit/*, which exist in no commit.
+# The two exclusions this file used to carry are both resolved, and the reasons are worth
+# keeping because they are the kind of thing that reappears:
+#   - the app-side harnesses launched a hardcoded /usr/bin chromium, so they could not run here;
+#     they resolve a browser portably now and run in the browser job through verify-app.js.
+#   - verify-spin.js reported FAIL on a clean clone. It was not the model: its english values
+#     (+-0.5) ended just inside its own thresholds. Fixed, and it is judged by verify-core.js.
+# verify-doc-claims.js and verify-test-hygiene.js exist because five doc claims and several
+# assertions that could not fail were found in one pass - they guard the habits now.
 
 on:
   push:
@@ -56,6 +56,10 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test --project=chromium
+      - name: App-side harnesses (Shoot, the break, shot types)
+        run: node verify-app.js
+      - name: Doc claims and test hygiene
+        run: node verify-doc-claims.js && node verify-test-hygiene.js
       - name: Upload the report when it fails
         if: failure()
         uses: actions/upload-artifact@v4

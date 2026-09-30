@@ -17,6 +17,8 @@
     "test:visual": "playwright test tests/visual",
     "test:update-snapshots": "playwright test --update-snapshots",
     "test:core": "node verify-wasm-embed.js && node verify-core.js",
+    "test:app": "node verify-app.js",
+    "test:hygiene": "node verify-doc-claims.js && node verify-test-hygiene.js",
     "report": "playwright show-report",
     "install": "playwright install"
   },

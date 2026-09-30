@@ -188,12 +188,15 @@ test.describe('Shot Calculation - Critical Path', () => {
     const startTime = Date.now();
 
     await aceHelper.selectPocket('TR');
+    // hygiene-allow deliberate timing gap: the wait *is* the measurement, asserted below
     await page.waitForTimeout(50);
 
     await aceHelper.selectPocket('TL');
+    // hygiene-allow deliberate timing gap: the wait *is* the measurement, asserted below
     await page.waitForTimeout(50);
 
     await aceHelper.selectPocket('BR');
+    // hygiene-allow deliberate timing gap: the wait *is* the measurement, asserted below
     await page.waitForTimeout(50);
 
     const endTime = Date.now();

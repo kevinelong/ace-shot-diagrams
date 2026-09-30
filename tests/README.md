@@ -26,6 +26,7 @@ tests/
 │   ├── mobile.spec.ts           # Mobile + tablet viewports
 │   ├── power-control.spec.ts
 │   ├── rack-start.spec.ts
+│   ├── safety-zones.spec.ts      # Snooker zones (roadmap 2.2)
 │   ├── shot-animation.spec.ts   # Records video on purpose (the artefact is its point)
 │   └── shot-types/
 │       └── kick-shots.spec.ts
