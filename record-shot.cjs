@@ -4,7 +4,7 @@
 //   SHOT=<hash-suffix> OUTDIR=<name> node record-shot.cjs
 // Same virtualized-rAF clock trick: one virtual frame per screenshot, so the
 // playback is smooth and deterministic regardless of screenshot wall-time.
-const { chromium } = require('playwright-core');
+const { launchHarnessBrowser } = require('./harness-browser.cjs');
 const { join } = require('path');
 const { pathToFileURL } = require('url');
 const fs = require('fs');
@@ -29,7 +29,7 @@ function installVClock() {
 
 (async () => {
   const s = { frames: 0, done: false };
-  const browser = await chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}), args: ['--no-sandbox', '--disable-gpu', '--force-color-profile=srgb'] });
+  const browser = await launchHarnessBrowser({ args: ['--no-sandbox', '--disable-gpu', '--force-color-profile=srgb'] });
   const ctx = await browser.newContext({ viewport: { width: 1100, height: 640 } });
   await ctx.addInitScript(() => localStorage.setItem('ace-tour-completed', 'true'));
   await ctx.addInitScript(installVClock);

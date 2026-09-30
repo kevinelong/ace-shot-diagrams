@@ -2,7 +2,7 @@
 // the analytic solver rates makeable; this harness runs each through the
 // real physics and asserts the intended ball drops in the intended pocket.
 // Failures mean the simulation contradicts what the app tells the player.
-import { chromium } from 'playwright-core'
+import { launchHarnessBrowser } from './harness-browser.cjs'
 import { readFileSync } from 'fs'
 import { join, dirname } from 'path'
 import { pathToFileURL, fileURLToPath } from 'url'
@@ -11,11 +11,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const indexUrl = pathToFileURL(join(__dirname, 'index.html')).href
 const battery = JSON.parse(readFileSync(join(__dirname, 'tests', 'battery.json'), 'utf-8'))
 
-// CHROMIUM_PATH wins when set (a system browser); otherwise playwright-core uses the
-// browser it manages. The old default of '/usr/bin/chromium' made these Linux-only.
-const launchOptions = { args: ['--no-sandbox', '--disable-gpu'] }
-if (process.env.CHROMIUM_PATH) launchOptions.executablePath = process.env.CHROMIUM_PATH
-const browser = await chromium.launch(launchOptions)
+// CHROMIUM_PATH wins when set; otherwise playwright-core resolves the browser it manages.
+const browser = await launchHarnessBrowser()
 const context = await browser.newContext()
 await context.addInitScript(() => localStorage.setItem('ace-tour-completed', 'true'))
 const page = await context.newPage()

@@ -6,8 +6,8 @@
 // not geometric.
 //
 //   node verify-shots.cjs            run all cases
-// Uses playwright-core + system chromium (no @playwright/test browser download).
-const { chromium } = require('playwright-core');
+// Uses the shared harness-browser launcher (playwright-core; CHROMIUM_PATH wins when set).
+const { launchHarnessBrowser } = require('./harness-browser.cjs');
 const { join } = require('path');
 const { pathToFileURL } = require('url');
 
@@ -57,13 +57,7 @@ async function runCase(ctx, c) {
 }
 
 (async () => {
-  // Linux/WSL default; override with CHROMIUM_PATH on other OSes (e.g. Windows:
-  // set CHROMIUM_PATH to the Playwright chrome.exe under %LOCALAPPDATA%\ms-playwright)
-  // CHROMIUM_PATH wins when set (a system browser); otherwise playwright-core uses its
-  // own resolution - the hardcoded /usr/bin/chromium-browser fallback made this
-  // unrunnable on Windows, the same bug the verify-*.js family was fixed for.
-  const exe = process.env.CHROMIUM_PATH;
-  const browser = await chromium.launch({ executablePath: exe, args: ['--no-sandbox', '--disable-gpu'] });
+  const browser = await launchHarnessBrowser();
   const ctx = await browser.newContext({ viewport: { width: 1100, height: 640 } });
   await ctx.addInitScript(() => localStorage.setItem('ace-tour-completed', 'true'));
   let pass = 0;

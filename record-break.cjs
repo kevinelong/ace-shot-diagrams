@@ -8,7 +8,7 @@
 // pump it by a fixed dt per frame, so the animation advances exactly one frame
 // per screenshot no matter how long the screenshot takes. Result: deterministic,
 // smooth 30fps capture. Frames land in out/frames/ for ffmpeg.
-const { chromium } = require('playwright-core');
+const { launchHarnessBrowser } = require('./harness-browser.cjs');
 const { join } = require('path');
 const { pathToFileURL } = require('url');
 const fs = require('fs');
@@ -45,10 +45,7 @@ function installVClock() {
 
 (async () => {
   const summary = { frames: 0, done: false, pending: null };
-  const browser = await chromium.launch({
-    ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}),
-    args: ['--no-sandbox', '--disable-gpu', '--force-color-profile=srgb'],
-  });
+  const browser = await launchHarnessBrowser({ args: ['--no-sandbox', '--disable-gpu', '--force-color-profile=srgb'] });
   const context = await browser.newContext({ viewport: { width: 1100, height: 640 } });
   await context.addInitScript(() => localStorage.setItem('ace-tour-completed', 'true'));
   await context.addInitScript(installVClock);

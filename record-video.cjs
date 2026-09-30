@@ -9,9 +9,9 @@
 //   SCENARIOS=kball-scenarios.json OUT=out/kball.mp4 node record-video.cjs
 //   SCENE=03-break-results node record-video.cjs        # render one scene only
 //
-// Requires: playwright-core, ffmpeg on PATH, chromium-browser (already used by record-shot.cjs).
+// Requires: playwright-core (via harness-browser.cjs), ffmpeg on PATH.
 
-const { chromium } = require('playwright-core');
+const { launchHarnessBrowser } = require('./harness-browser.cjs');
 const { join } = require('path');
 const { pathToFileURL } = require('url');
 const fs = require('fs');
@@ -114,10 +114,7 @@ function applyAnnotations(annotations) {
 }
 
 (async () => {
-  const browser = await chromium.launch({
-    ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}),
-    args: ['--no-sandbox','--disable-gpu','--force-color-profile=srgb']
-  });
+  const browser = await launchHarnessBrowser({ args: ['--no-sandbox', '--disable-gpu', '--force-color-profile=srgb'] });
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   await ctx.addInitScript(() => localStorage.setItem('ace-tour-completed','true'));
   await ctx.addInitScript(installVClock);
@@ -164,10 +161,11 @@ function applyAnnotations(annotations) {
 
     // Encode this scene to an intermediate mp4
     const clipMp4 = join(framesRoot, `${scene.name}.mp4`);
+      // ffmpeg parses the filter string itself, so a quote inside it needs a backslash
+      const title = String(scene.title || '').replace(/'/g, "\\'");
     execFileSync('ffmpeg', ['-y','-framerate', String(FPS),
       '-i', join(dir, 'f%04d.png'),
-      '-vf', `pad=ceil(iw/2)*2:ceil(ih/2)*2,drawtext=text='${(scene.title||'').replace(/'/g,'\\\\\\'')}'` +
-             `:fontcolor=white:fontsize=32:x=(w-tw)/2:y=20:box=1:boxcolor=black@0.5:boxborderw=8`,
+      '-vf', `pad=ceil(iw/2)*2:ceil(ih/2)*2,drawtext=text='${title}':fontcolor=white:fontsize=32:x=(w-tw)/2:y=20:box=1:boxcolor=black@0.5:boxborderw=8`,
       '-c:v','libx264','-pix_fmt','yuv420p','-preset','veryfast','-crf','20', clipMp4],
       { stdio: 'inherit' });
     partClips.push(clipMp4);
@@ -177,7 +175,9 @@ function applyAnnotations(annotations) {
 
   // Concat all parts into the final mp4
   const listPath = join(framesRoot, 'concat.txt');
-  fs.writeFileSync(listPath, partClips.map(p => `file '${p.replace(/'/g,\"'\\\\''\")}'`).join('\n'));
+  // ffconcat wants single-quoted paths, so a quote inside one needs the '\'' dance
+  const concatPath = (p) => `file '${String(p).replace(/'/g, "'\\''")}'`;
+  fs.writeFileSync(listPath, partClips.map(concatPath).join('\n'));
   fs.mkdirSync(join(__dirname, 'out'), { recursive: true });
   execFileSync('ffmpeg', ['-y','-f','concat','-safe','0','-i', listPath, '-c','copy', OUT], { stdio: 'inherit' });
   console.log('\u2713 wrote', OUT);

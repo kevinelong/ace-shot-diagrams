@@ -258,6 +258,21 @@ was open only because the identifier `naturalAngle` never existed.
   DOM/markup as runtime behaviour.
 ## Open gaps I noticed (not in the user's list)
 
+- [x] **One browser launcher, eleven harnesses, and two scripts that could never run.** The
+      launch logic (CHROMIUM_PATH or let playwright-core resolve) was copied into eleven scripts;
+      consolidating it onto `harness-browser.cjs` showed three of the copies still defaulted to
+      `/usr/bin/chromium`, so `render-heatmap.js`, `render-impacts.js` and `render-scenarios.js`
+      could not run here at all - the same bug fixed in the other families earlier in the day.
+      All eleven now go through the one module and every top-level script parses.
+      Two more scripts were found dead on arrival, both pre-existing (verified against HEAD, not
+      my edits): `record-video.cjs` carried two syntax errors - an unterminated string in its
+      ffmpeg `drawtext` escaping and an invalid token in its ffconcat path escaping - so it had
+      never parsed, let alone run. Both expressions are rewritten with named helpers instead of
+      inline escape soup. Its ffmpeg/ffconcat *runtime* behaviour is still unverified: that needs
+      a real ffmpeg run, which this box cannot do headlessly here.
+      On the "delete what the repo marks as dead" item: measured, nothing is left. The only two
+      hits for DEAD CODE / commented out / kept for reference / legacy are legitimate comments,
+      and the 269-line marked block went with the engine cutover.
 - [x] **CI now runs the app-side harnesses, and two guards stop the drift that produced five wrong
       claims in one pass.** `verify-app.js` spawns the five harnesses and judges their *printed*
       verdicts (the same reason `verify-core.js` exists: these abort in libuv teardown, so exit
@@ -366,7 +381,7 @@ was open only because the identifier `naturalAngle` never existed.
   **40/40**, page errors **0**, duplicate ids **none**.
 - Core: **build 0.43 s**, `cargo test` **5/5**, battery **8/8**.
 - The browser `verify-*.js` scripts run on Windows now (portable browser lookup): `verify-consistency` 9/9, `verify-animation` PASS, `verify-ux-fixes` PASS; `verify-spin` and `verify-sim-make` report FAIL - see the open items.
-- Files: 77 tracked; `index.html` **10394 lines / 508 KB** with ~100 KB of embedded wasm
+- Files: 77 tracked; `index.html` **10401 lines / 509 KB** with ~100 KB of embedded wasm
   (11174 / 552 KB before the JS fallback and its dead neighbours went; this line is verified
   against the file by `verify-doc-claims.js`).
 - The harnesses write screenshots into the repo, including `verify-after-break.png`, which is

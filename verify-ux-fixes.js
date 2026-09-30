@@ -2,18 +2,15 @@
 //  #1 Shot Info panel visible by default and its fields populate.
 //  #3 A shared state link does NOT auto-rack (only configured balls present).
 //  #2 A ball can be dragged out of the rack onto the table.
-import { chromium } from 'playwright-core'
+import { launchHarnessBrowser } from './harness-browser.cjs'
 import { join, dirname } from 'path'
 import { pathToFileURL, fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const indexUrl = pathToFileURL(join(__dirname, 'index.html')).href
 
-// CHROMIUM_PATH wins when set (a system browser); otherwise playwright-core uses the
-// browser it manages. The old default of '/usr/bin/chromium' made these Linux-only.
-const launchOptions = { args: ['--no-sandbox', '--disable-gpu'] }
-if (process.env.CHROMIUM_PATH) launchOptions.executablePath = process.env.CHROMIUM_PATH
-const browser = await chromium.launch(launchOptions)
+// CHROMIUM_PATH wins when set; otherwise playwright-core resolves the browser it manages.
+const browser = await launchHarnessBrowser()
 const context = await browser.newContext()
 await context.addInitScript(() => localStorage.setItem('ace-tour-completed', 'true'))
 const page = await context.newPage()
