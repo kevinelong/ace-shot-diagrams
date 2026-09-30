@@ -46,7 +46,7 @@ function installVClock() {
 (async () => {
   const summary = { frames: 0, done: false, pending: null };
   const browser = await chromium.launch({
-    executablePath: '/usr/bin/chromium-browser',
+    ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}),
     args: ['--no-sandbox', '--disable-gpu', '--force-color-profile=srgb'],
   });
   const context = await browser.newContext({ viewport: { width: 1100, height: 640 } });

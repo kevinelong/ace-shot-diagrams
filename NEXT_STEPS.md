@@ -48,6 +48,12 @@ test green by relaxing the test — `verify-spin.js` below is the worked example
       wins when set. Backed by, on Windows for the first time: `verify-consistency.js` 9/9
       (exit 0), `verify-animation.js` PASS (exit 0), `verify-ux-fixes.js` PASS (exit 0).
       The fourth, `verify-sim-make.js`, now runs but reports FAIL — see the open items.
+      *(Correction 2026-09-29: that fix covered the `verify-*.js` family only. `verify-shots.cjs`
+      and the three `record-*.cjs` harnesses still passed a hardcoded
+      `/usr/bin/chromium-browser`, so they could not run here at all. Now fixed the same way —
+      `CHROMIUM_PATH` wins, otherwise `executablePath` is omitted and playwright-core resolves
+      its own browser — and `verify-shots.cjs` runs on Windows: **6/6 shots potted as intended**
+      (direct cuts, banks, kick, combo; right pocket, no scratch, 0 errors).)*
 - [x] **Golden trajectory regression.** `verify-trajectories.js` freezes the core's behaviour
       beyond "the intended ball potted": event sequences and final positions, with tolerances.
       Backed by: 7/7 on the clean tree, and **5/7** after perturbing one golden position by

@@ -115,7 +115,7 @@ function applyAnnotations(annotations) {
 
 (async () => {
   const browser = await chromium.launch({
-    executablePath: '/usr/bin/chromium-browser',
+    ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}),
     args: ['--no-sandbox','--disable-gpu','--force-color-profile=srgb']
   });
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
