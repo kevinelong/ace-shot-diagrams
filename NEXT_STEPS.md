@@ -37,7 +37,8 @@ test green by relaxing the test — `verify-spin.js` below is the worked example
       every test across every project, and `shot-animation.spec.ts` opts back in to video
       because that artefact is its point. Backed by that spec's run: **14 passed, 1 flaky**
       (the video test, a fixed-wait test that passed on its retry; no spec asserts on
-      artefacts, so nothing else could break). **Measured effect: the chromium suite went
+      artefacts, so nothing else could break). *That flake is gone — the wait was replaced by
+      the app's own completion toast, see the fixed-waits item.* **Measured effect: the chromium suite went
       7.0 → 6.4 min.** Real, but small — the recording was not the bottleneck, and the plan's
       earlier claim that it was has been corrected in `playwright.config.ts` too.
 - [x] **`playwright-core` pinned to the test runner's version**, so the repo installs one copy.
@@ -134,6 +135,12 @@ was open only because the identifier `naturalAngle` never existed.
       each wasm check printed (the battery and the trajectory golden), and CI plus
       `npm run test:core` go through it. Backed by:
       `npm run test:core` → `ok: battery 8/8`, **exit 0**.
+- [ ] **Make the Shoot button honest for its dead window.** For up to ~1 s after load the app
+      ignores Shoot clicks completely - no disabled state, no message - while the toast reads
+      "Click Shoot to break!" (measured; see the app findings below). Two small options: disable
+      `#btnShoot` until `ballPositions['ghost']` exists, or route that case into the existing
+      "⚠️ No aim point - position cue ball to aim" message. The specs no longer depend on which
+      you pick (they retry), so this is purely a UX call.
 - [ ] **Two harnesses report FAIL** (both runnable now, neither blocked by portability):
       `verify-spin.js` and `verify-sim-make.js`, while `verify-consistency.js` (9/9),
       `verify-animation.js` (PASS), `verify-ux-fixes.js` (PASS), the battery (8/8) and the
@@ -153,8 +160,6 @@ was open only because the identifier `naturalAngle` never existed.
       (497 lines, a Columbia Cue Club calendar generator), and
       `claude/recent-changes-review-wurocf` (972 lines including a 226-line tournament-platform
       spec, which pairs with the merged `scoresheet.html` and the separate `15ball-scoresheet` repo).
-- [ ] **Roadmap 1.4, natural angle line** — the only Phase 1 item still open (`naturalAngle`
-      has zero hits in `index.html`; their estimate is 1 hour).
 - [ ] **Two plan docs are unmaintained:** `PLAYWRIGHT_TEST_PLAN.md` has 137 unticked boxes and
       `GAME_MODE_PLAN.md` 29, against a suite that is green. Either reconcile them against the
       specs or prune them and say the specs are the source of truth.
@@ -232,5 +237,5 @@ was open only because the identifier `naturalAngle` never existed.
   one helper awaiting an app signal). The app's own in-browser suite is
   **40/40**, page errors **0**, duplicate ids **none**.
 - Core: **build 0.43 s**, `cargo test` **5/5**, battery **8/8**.
-- The four browser `verify-*.js` scripts failed here purely on the hardcoded Linux browser path.
+- The browser `verify-*.js` scripts run on Windows now (portable browser lookup): `verify-consistency` 9/9, `verify-animation` PASS, `verify-ux-fixes` PASS; `verify-spin` and `verify-sim-make` report FAIL - see the open items.
 - Files: 77 tracked, 86 commits; `index.html` 552 KB with ~100 KB of embedded wasm.
