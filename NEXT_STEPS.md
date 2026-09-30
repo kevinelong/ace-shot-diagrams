@@ -85,10 +85,131 @@ test green by relaxing the test — `verify-spin.js` below is the worked example
       aid lines render (`STOP`/`FOLLOW` labels) with **0 page errors**; `verify-consistency.js`
       **9/9** and the wasm embed check still pass. A code comment now names the 30° rule so the
       next audit cannot miss it the same way.
+- [x] **Fixed waits are the runtime and the flakiness.** 92 `waitForTimeout` calls totalling
+  - [x] **`shot-animation.spec.ts` converted - 15 waits / 32.3 s removed, 0 left** (the top
+        offender and the file that flaked): `--repeat-each=4` gave **60/60 passed, 0 flaky**,
+        41.8 s (~10.4 s per pass of 15 tests) against 32.3 s of sleeps per pass before. The sleeps
+        were hiding a race: the app accepts a shot only once its ghost-ball aim exists (~100-900 ms
+        after load, varying per run) and refuses silently, so the spec now clicks until the app
+        reports `Shot in progress` and waits for its result toast.
+  - [x] **`palette-minimize.spec.ts` converted - 13 waits removed** (the file that flaked twice on
+        2026-09-29): `--repeat-each=2` gave **151/152 passed, 1 retry-passed flake, 42 s** against
+        the same command on the previous revision: **149/152 with 2 flaky and a hard failure,
+        72 s**. `--repeat-each=3` afterwards: **224 passed** (18.5 s per pass vs 38.9 s).
+      **57.6 s per pass** -> **3 calls, all deliberate** (see below). Backed by the full suite:
+      **158 passed, 0 flaky, 39.4 s** (was 57.1 s with 1 flaky). The count covers
+      `waitForTimeout` in the specs; the helpers' hidden per-action sleeps are gone too.
+  - [x] **`shot-animation.spec.ts` converted — 15 waits / 32.3 s removed, 0 left** (the top
+        offender and the file that flaked). Backed by `--repeat-each=4`: **60/60 passed, 0
+        flaky, 41.8 s** (≈10.4 s per pass of 15 tests), against 32.3 s of sleeps per pass
+        before. What the sleeps were really waiting for, measured through the app: it accepts
+        a shot only once its ghost-ball aim exists, which lands **~100–900 ms after load,
+        varying per run**, and it says nothing while refusing - no disabled state, no toast,
+        no class - so a fixed sleep was both slower than needed and the flake. The spec now
+        clicks until the app itself reports `Shot in progress` (`shootAndAwaitStart`), waits
+        for its result toast (`waitForShotComplete`), and asserts setup-dependent values by
+        polling (`toHaveValue` / `toContainText` / `toHaveAttribute`) instead of reading once.
+  - [x] Dead check removed with it: the "button might not be clickable while animating"
+        branch never ran - `#btnShoot` is never disabled (measured across a shot's whole
+        animation).
+  - [x] **`palette-minimize.spec.ts` converted — 13 waits removed** (the file that flaked twice
+        on 2026-09-29). Sleeps in front of polling assertions are gone; the ones guarding reads
+        or screenshots now wait for the state they were guessing at (the palette body
+        collapsing/expanding, the racked cue ball's `on-table` class). Backed by
+        `--repeat-each=2`: **151/152 passed, 1 retry-passed flake, 42 s**, against the same
+        command on the previous revision (**149/152 with 2 flaky and a hard failure, 72 s**).
+        The "minimize all" test still occasionally needs its retry under parallel load (its six
+        collapses are now awaited one by one, so it is no longer a hard failure); every other
+        flake in this file is gone.
+  - [x] **The shared navigation sleeps and the read-once races.** `test-helpers.ts`'s
+        `gotoEmpty`/`gotoWithRack` sleeps are now the board-visible wait (most critical-path
+        specs go through them); the three visibility races in `02-pocket-selection` use
+        `expect.poll`; `power-control` polls the force display; two sleeps left
+        `quick-validation`. Backed by those four specs at `--repeat-each=2`: **62 passed,
+        STATUS passed**.
+  - [x] **The read-race files converted: `02-pocket-selection` + `03-shot-calculation` (22
+        waits).** Their sleeps sat in front of reads (`getCutAngle()`, `getSelectedPocket()`,
+        `textContent()`/`boundingBox()`) that raced the app's recalculation, so they became
+        polling assertions (`expect.poll`), and "the angle changed" now polls *until* it
+        changes - which is the assertion. Also repaired a **vacuous assertion** found there: the
+        "impossible shot" test's `statusMessage !== null` is always true because `textContent()`
+        returns `''`, not null; it now requires a status message or the target line. Backed by
+        `--repeat-each=2`: **44 passed, STATUS passed, 17.1 s**.
+  - [x] **`shot-animation`'s consecutive-shots test had a broken premise** (found because the
+        new waits refused to sleep through it): it clicked Shoot three times and only checked the
+        toast never said "Error" - which passed even when the app refused the shot, e.g. after a
+        shot pockets the cue ball and the app answers "Place cue ball on table first". It now
+        requires the app to answer every click (shot start or a warning). Backed by
+        `--repeat-each=8`: **8/8 passed in 3.5 s**.
+  - [x] **The last six files** (`rack-start` 10, `kick-shots` 7, `quick-validation` 6,
+        `mobile` 3, `01-ball-placement` 1, `power-control` 1): post-goto sleeps became the
+        racked cue ball's `on-table` class (or the board being visible on `?empty=1`), the
+        post-shot ones use the shared `shootAndWait`, the post-Rack one waits for the "Rack set"
+        toast, the palette ones wait for the collapse they act on, and value reads poll. The
+        shot helpers now live in `tests/setup/test-helpers.ts` so specs share them. Backed by
+        those six files at `--repeat-each=2`: **76 passed, STATUS passed, 19.7 s**.
+  - **Kept on purpose (3 calls):** the three 50 ms gaps in "should recalculate instantly
+        without lag" - they *are* the measurement. `test-helpers.waitForShotCalculation` is gone
+        (its callers wait on the app's state instead).
+  - **Found and recorded, not fixed here:** `kick-shots.spec.ts` has **three** assertions of the
+        form `expect(count).toBeGreaterThanOrEqual(0)` (`:63` mirror overlay, `:74` incoming-angle
+        arc, `:116` kick aim label) that cannot fail — they claim coverage of optional features
+        while asserting nothing. What those features should guarantee is a product call, so they
+        are left as they are and listed here.
+  - [x] **The bigger half of the fixed cost was inside `test-helpers.ts`'s actions - now gone.**
+        Seven methods (`dragBallToTable`, `selectObjectBall`, `selectPocket`, `setEnglish`,
+        `setPower`, `enableKickSolver`, `setGameMode`) each called a shared 300 ms sleep right
+        after driving the app's `DEBUG` API, so every place/select/set paid it (~1.2 s per
+        critical-path test). They now wait for their own effect in the app's own state
+        (`DEBUG.state().ballPositions/selectedBallId/selectedPocket/solver`, the force display,
+        the contact point), and the shared sleep is deleted. Backed by the full suite:
+        **158 passed, 0 flaky, 39.4 s** (41.7 s before this change).
+  - [x] **The sleep was hiding a second silent-refusal window** (found because the new waits
+        refused to sleep through it): the app ignores `DEBUG.placeBall`/`selectBall`/
+        `selectPocket` until its initial setup completes - the same ~100-900 ms window in which
+        it ignores the Shoot button - and reports nothing. The polls failed with exactly that
+        ("1 should land at 65,30", "corner-br should be the selected pocket"). The helpers now
+        *retry the action until the app's state reflects it* (`actUntilApplied`), which is
+        deterministic and fails loudly with the last observed state if it never applies.
+  - [x] `setEnglish` gets **no** wait: `DEBUG.state()` carries no english field, and the contact
+        point is a rendering effect (it moves in `cx` for side english, `cy` for top/bottom), so
+        polling it was both wrong for side english and a flake source. Callers assert the effect
+        they care about, by polling (`english-controls`' six label reads became `toContainText`
+        polls, its contact-point read an `expect.poll`).
+  - [x] The app's break preset (follow spin, power 7) lands *after* load and overwrote values
+        tests had just set once the helpers got faster. `gotoWithRack` (and the two specs that
+        navigate themselves) now wait for the preset itself - the app saying "setup done" -
+        before the test body runs.
+  - Per-test boot of the 552 KB page is the other cost.
+
+- [x] **The dead weight the engine cutover orphaned is gone.** Eight functions that appeared
+      exactly once - definition only, referenced nowhere in the repo - plus the break-state block
+      and `frozenRackPending` write that nothing read: `updateMakeProbability` (a legacy duplicate
+      of the live make-% updater), `checkShotRailCollisions`, `setupDemoShot`, `isDirectPathClear`,
+      `getBlockingBalls`, `calculateReflectionAngle`, `calculateActualKickDestination`,
+      `findLegalCombinationShots`. `index.html`: **10586 -> 10317** (and 11174 before the engine
+      cutover). `calculateMakeProbability` was kept - the app's own self-test asserts on it.
+      Backed by `verify-consistency.js` 9/9, `verify-shots.cjs` **6/6 shots potted as intended**,
+      and the full suite.
+- [x] **Doc drift, all four fixed.** `tests/README.md`'s tree now matches the twelve real files
+      and its protocol section states what the config does (the suite always runs against
+      `npx http-server -p 8080`; `file://` is for the standalone harnesses, not the specs);
+      `claude.md` says v009 and no longer claims `cargo test` needs MSVC (it runs here);
+      `playwright.config.ts`'s comment no longer says "76/76" (the suite is 158); the roadmap's
+      "Video Recording/Playback" anti-feature now distinguishes the declined in-app feature from
+      the shipped recording tooling.
+
 - [x] **The app's own in-browser suite is green: 40/40** (was 39 passed / 1 failed). The failing
       test asserted a `palette-share` id that never existed; it now asserts the seven palettes
       the app actually ships (balls, cue, game, shot, legend, aids, actions) — measured, not assumed.
 
+- [x] **The three `kick-shots` tautologies are gone** (decided: delete the two with no contract,
+      make the third real). The mirror-overlay and incoming-angle-arc tests asserted `count >= 0`,
+      which cannot fail, and are deleted - both elements *do* exist in the markup, so those two
+      aids now have **no coverage**; asserting them needs someone to say what they must guarantee.
+      The kick-aim-label test asserts `toBeVisible()` - real markup the app writes
+      (`index.html:5849/5889`), which the sibling indicator test proves is showing. Backed by that
+      file at `--repeat-each=3`: **18 passed, 0 flaky**.
 ## Retracted findings (my measurements, not the app's bugs)
 
 Three findings from the review pass were **wrong**, and the plan of record should say so:
@@ -128,33 +249,26 @@ was open only because the identifier `naturalAngle` never existed.
   DOM/markup as runtime behaviour.
 ## Needs you (blocked on a decision, credentials, or a remote write)
 
-- [ ] **Push the commits.** 11 un-pushed as of 2026-09-29 (`git log origin/main..main --oneline`);
-      the figure is stale the moment it is written, so re-measure before acting. The public demo
-      at <https://kevinelong.github.io/ace-shot-diagrams/> serves `index.html` from `main`, so it
-      is running the *stale* core and still carries the duplicate-id bug: `origin/main`'s
-      `index.html` differs from the working tree by **+109/-146** lines. Pushing is what fixes the
-      live tool. `git push origin main`
-- [ ] **Release + discovery.** No tags exist at all (`git tag` is empty) and the repo's homepage
-      field is unset, so the deployed demo is undiscoverable from the repo. No version number
-      has ever been chosen (there are no tags), so that name is yours to pick;
-      `git tag -a vX.Y.Z -m "..." && git push origin vX.Y.Z` once you have, plus
-      `git push origin --delete <branch>` for the merged branches.
+- [x] **Push the commits - done, and the live tool is fixed.** All of it is on `main` (0
+      un-pushed) and the Pages demo was re-checked after the rebuild: the old `#palette-save`
+      markup marker is gone and the new build is being served, so the live tool has the corrected
+      core, the palette fix and the single engine.
+- [x] **Release + discovery - done.** **v1.0.0** tagged and pushed (annotated: what ships, the
+      verified numbers, the two known-red harnesses); the repo homepage set to the demo URL and
+      verified through the API; the two merged remote branches (`kball-preset`,
+      `lineart-print-tooling`) deleted. Remote holds `main` plus the two out-of-scope `claude/*`
+      branches, recorded as such above.
 - [x] **A trustworthy exit code for the battery.** `verify-rust-parity.js` prints its verdict
       and then aborts in teardown (exit 3221226505 = 0xC0000409); `verify-core.js` judges what
       each wasm check printed (the battery and the trajectory golden), and CI plus
       `npm run test:core` go through it. Backed by:
       `npm run test:core` → `ok: battery 8/8`, **exit 0**.
-- [ ] **Make the app honest for its startup window (Shoot *and* the DEBUG API).** The same
-      ~100-900 ms window swallows `DEBUG.placeBall`/`selectBall`/`selectPocket` as well. The
-      specs handle both now (retry until the app's state reflects it), so this is a product
-      question, not a test one. Original wording below.
 - [x] **The startup window is gone - no app change needed.** Re-measured after the engine
       cutover: clicks at **300 ms and 600 ms** are all accepted (`executeShot() called` ->
       "Shot in progress", 4/4), where the same probe measured silent refusals at ~550 ms before
       it. So the window belonged to the JS stepper's setup path, not to the core. The spec-side
       retry stays as belt and braces (it is deterministic and costs nothing when the app is
       ready). Original wording kept below, and the DEBUG half is moot for the same reason.
-- [ ] **Make the app honest for its startup window (Shoot *and* the DEBUG API).**
 - [ ] **Two harnesses report FAIL** (both runnable now, neither blocked by portability):
       `verify-spin.js` and `verify-sim-make.js`, while `verify-consistency.js` (9/9),
       `verify-animation.js` (PASS), `verify-ux-fixes.js` (PASS), the battery (8/8) and the
