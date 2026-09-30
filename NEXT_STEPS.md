@@ -156,9 +156,23 @@ was open only because the identifier `naturalAngle` never existed.
       clause needs more english than it uses; and a `spin` event fires for *every* english
       including center ball, so its `!sSpin` clause cannot hold. Decide whether the event means
       "english applied" or "slide→roll transition", then align the model's event or the script.
-- [ ] **Two engines.** The Rust core plus a JS fixed-timestep fallback whose mirroring is
-      deferred (`PLAN-two-phase-physics.md` item D). Keep both with parity in CI, or drop the
-      fallback now that wasm is universal.
+- [x] **Two engines -> one. Decision (user, 2026-09-29): drop the JS fallback, keep the seam.**
+      `executeShot` now resolves through the core or **refuses the shot with a message**; it no
+      longer silently plays back a different physics model (the fallback was a single-`FRICTION`
+      approximation of the two-phase model, so "falling back" meant simulating a different game).
+      Removed with it, in one pass: the JS stepper (`animateShot`) and its accumulator state, the
+      269-line legacy break-animation block the repo itself had marked "DEAD CODE … safe to
+      delete", and the JS shot-model guts it was the only caller of (`stepShotPhysics` 48 lines,
+      `checkShotCollisions` 142, `applyFrozenRackBreakPhysics` 77, `renderShotBalls` 20) plus the
+      constants only they used. `index.html`: **11174 -> 10579 lines**. The seam is intact -
+      `computeShotPlan`, the Rust-core hooks and `window.ACE_SHOT` are unchanged, so re-adding an
+      engine stays a contained job. Backed by `verify-consistency.js` **9/9** (it clicks Shoot,
+      i.e. the break, which now resolves through the core) and the full Playwright suite.
+      `PLAN-two-phase-physics.md` item D is **closed** - there is no JS stepper left to mirror.
+  - Follow-ups recorded: `breakBallStates` / `frozenRackPending` are now written by the shot
+      setup and read by nothing (kept declared so the writes stay in scope); and the same
+      "no callers left?" sweep should be run once more over the shot-animation helpers now that
+      the stepper is gone.
 - [ ] **Three unmerged branches, all with content:** `lineart-print-tooling` (+120 lines,
       improves an existing main script — merge candidate), `claude/calendar-ascii-pro-design-een0rn`
       (497 lines, a Columbia Cue Club calendar generator), and
@@ -270,4 +284,5 @@ was open only because the identifier `naturalAngle` never existed.
   **40/40**, page errors **0**, duplicate ids **none**.
 - Core: **build 0.43 s**, `cargo test` **5/5**, battery **8/8**.
 - The browser `verify-*.js` scripts run on Windows now (portable browser lookup): `verify-consistency` 9/9, `verify-animation` PASS, `verify-ux-fixes` PASS; `verify-spin` and `verify-sim-make` report FAIL - see the open items.
-- Files: 77 tracked, 86 commits; `index.html` 552 KB with ~100 KB of embedded wasm.
+- Files: 77 tracked; `index.html` **10585 lines / 516 KB** with ~100 KB of embedded wasm
+  (was 11174 / 552 KB: the JS fallback and its dead neighbours went).

@@ -105,7 +105,14 @@ and `launch({ executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium' }
 Keep `playwright-core` + `pngjs` in `package.json` (added). Add a short README/
 "how to render a shot" note. Low effort, unlocks repeatable visual checks.
 
-### D. Mirror the two-phase model into the JS fallback — ⏸ DEFERRED (low value)
+### D. Mirror the two-phase model into the JS fallback — ✅ CLOSED 2026-09-29 (fallback deleted)
+**Resolution:** the JS fallback no longer exists. `executeShot` resolves through the Rust core
+or refuses the shot with a message, and the stepper (`animateShot`), the legacy break-animation
+block and the JS shot-model helpers it was the only caller of have been deleted
+(`index.html` 11174 -> 10579 lines). Nothing to mirror, and no second engine to keep in parity:
+the live pipeline is `executeShot -> loadAcePhysics/aceSimulate -> animateShotWasm` over the
+core's own trajectories. The original analysis is kept below for the record.
+
 **Premise corrected:** `verify-consistency.js` clicks the app's Shoot button,
 which resolves through the **wasm** (`aceSimulate`/`loadAcePhysics`), *not* the JS
 stepper. So it does **not** test the JS fallback — it validates the wasm over the
@@ -152,7 +159,7 @@ centre hit. Now `verify-rust-parity` **8/8**, `verify-consistency` **9/9**,
   visual loop). ← NEXT
 - **B** — draw-dynamics model fix, iterated with rendering (the meaty one).
 - **E** — decide the cut-45 / combo cue scratch (informed by B).
-- **D** — mirror the two-phase model into the JS fallback.
+- **D** — mirror the two-phase model into the JS fallback. *(Closed 2026-09-29: the fallback was deleted, so there is nothing to mirror.)*
 - **F** — evaluate the Han cushion / masse extensions.
 
 Merge to `main` only after B+D land and the harnesses are green (or intentionally,

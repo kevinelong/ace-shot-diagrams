@@ -8574,33 +8574,27 @@
         BALL_COR: 0.95,            // Coefficient of restitution for ball-ball collision
         MIN_VELOCITY: 0.02,        // Minimum velocity before ball stops
         BALL_DIAMETER: BALL_RADIUS * 2,
-        FRAME_RATE: 60,            // Target FPS
         FORCE_MULTIPLIER: 0.8,     // 3/4 force = 7.5 * 0.8 = 6 initial speed
         COLLISION_ITERATIONS: 8    // Multiple passes for frozen rack momentum propagation
       };
 
-      // Fixed-timestep animation timing. The physics constants above are tuned
-      // per-step at FRAME_RATE steps/sec; the accumulator in animateShot keeps
-      // the step count tied to wall-clock time, so playback speed no longer
-      // depends on the display refresh rate (rAF fires at 120/144Hz+ on many
-      // monitors, which used to run the whole simulation that much faster).
-      const PHYSICS_STEP_MS = 1000 / BREAK_PHYSICS.FRAME_RATE;
-      const MAX_FRAME_MS = 100;                      // clamp stalls (tab switch, GC pause)
-      const MAX_SUBSTEP_TRAVEL = BALL_RADIUS * 0.9;  // anti-tunneling cap on movement per collide pass
 
       // Ball state during animation
-      let breakBallStates = {};    // { ballId: { x, y, vx, vy } }
       let breakAnimationId = null;
       let isBreakAnimating = false;
+
+      // Written by the shot setup below, read by nothing since the JS stepper was removed;
+      // kept declared so the assignments stay in scope (see NEXT_STEPS.md - delete both
+      // once the writes go too).
+      let breakBallStates = {};    // { ballId: { x, y, vx, vy } }
+      let frozenRackPending = false;  // Flag to apply empirical break physics on first contact
 
       // Shot animation state (for regular shots)
       let shotBallStates = {};
       let shotAnimationId = null;
       let isShotAnimating = false;
       let shotAnimationFrames = 0;
-      const MAX_SHOT_FRAMES = 120; // physics steps (2s at 60 steps/sec) - ensures completion in tests
       let isBreakSetup = false;  // Flag to prevent ghost ball clearing during break setup
-      let frozenRackPending = false;  // Flag to apply empirical break physics on first contact
       let rackBallPositions = {};  // Store rack positions with row/col for break physics
 
       // Cue stick element
@@ -8796,83 +8790,6 @@
       // In a frozen rack, forces propagate instantly through touching balls
       // Center balls (like 8-ball) barely move because forces pass through them
       // Corner balls get maximum velocity because they only receive outward forces
-      function applyFrozenRackBreakPhysics(cueVelocity) {
-        const FOOT_SPOT = { x: 75, y: 25 };
-        const cueSpeed = Math.sqrt(cueVelocity.vx * cueVelocity.vx + cueVelocity.vy * cueVelocity.vy);
-
-        // Base velocity factor from cue speed
-        const baseVel = cueSpeed * 0.7;
-
-        for (const ballId in shotBallStates) {
-          if (ballId === 'cue') continue;
-
-          const ball = shotBallStates[ballId];
-          if (!ball || ball.pocketed) continue;
-
-          // Calculate position relative to foot spot
-          const relX = ball.x - FOOT_SPOT.x;  // + means behind foot spot (toward back of rack)
-          const relY = ball.y - FOOT_SPOT.y;  // + means below center, - means above
-
-          // Determine row in rack (approximate based on x position)
-          const rowSpacing = BALL_RADIUS * 2 * Math.sin(Math.PI / 3);
-          const row = Math.round(relX / rowSpacing);
-
-          // Determine lateral position (how far from center line)
-          const lateralPos = Math.abs(relY) / (BALL_RADIUS * 2);
-
-          // Calculate velocity based on position
-          // Key insight: center balls (low lateral position) get less velocity
-          // Edge balls (high lateral position) get more velocity
-
-          // Row factor: back rows get slightly more energy
-          const rowFactor = 0.5 + row * 0.12;
-
-          // Lateral factor: edge balls get more, center balls get less
-          // This is the key to making 8-ball (center) stay still
-          const lateralFactor = 0.1 + lateralPos * 0.5;
-
-          // Combined velocity magnitude
-          const velMag = baseVel * rowFactor * lateralFactor;
-
-          // Direction: mostly outward from center, slightly forward
-          const outwardAngle = Math.atan2(relY, 1);  // Angle from center line
-          const spreadAngle = outwardAngle * (0.8 + row * 0.1);  // More spread for back rows
-
-          // Apply velocity
-          ball.vx = Math.cos(spreadAngle) * velMag + baseVel * 0.3;  // Forward component
-          ball.vy = Math.sin(spreadAngle) * velMag;
-
-          // Special handling for 8-ball (or any center ball) - minimal movement
-          if (ballId === '8' || ballId === '9' || ballId === '10') {
-            // Check if truly centered (low lateral position)
-            if (Math.abs(relY) < BALL_RADIUS) {
-              ball.vx *= 0.15;  // Drastically reduce center ball movement
-              ball.vy *= 0.15;
-            }
-          }
-        }
-
-        // Cue ball behavior based on english
-        const cueBall = shotBallStates['cue'];
-        if (cueBall && cueBall.english) {
-          if (cueBall.english.y > 0) {
-            // Draw - cue ball comes back
-            cueBall.vx *= -0.4;
-            cueBall.vy *= -0.4;
-          } else if (cueBall.english.y < 0) {
-            // Follow - cue ball continues forward
-            cueBall.vx *= 0.5;
-            cueBall.vy *= 0.5;
-          } else {
-            // Stop/stun
-            cueBall.vx *= 0.1;
-            cueBall.vy *= 0.1;
-          }
-          cueBall.english = null;
-        }
-
-        frozenRackPending = false;
-      }
 
       // Create or get cue stick SVG element
       function getCueStick() {
@@ -8964,275 +8881,6 @@
         cue.style.visibility = 'hidden';
       }
 
-      // ══════════════════════════════════════════════════════════════════
-      //  DEAD CODE — legacy break animation system (commented out)
-      //
-      //  Nothing calls animateBreak(). Breaks run through the live shot
-      //  pipeline: executeShot → animateShot → stepShotPhysics, where
-      //  frozenRackPending triggers applyFrozenRackBreakPhysics on first
-      //  cue contact. This whole chain (checkBallCollisions,
-      //  checkRailCollisions, isBallInPocket, updateBreakPhysics,
-      //  animateBreak, finalizeBreakPositions) is only referenced
-      //  internally by itself.
-      //
-      //  It also predates the fixed-timestep refactor (one step per rAF
-      //  frame, no interpolation, no anti-tunneling substeps) — if ever
-      //  revived, port it to the accumulator pattern used by animateShot.
-      //  Kept for reference; safe to delete.
-      // ══════════════════════════════════════════════════════════════════
-      /*
-      // Ball-ball collision detection and response
-      // Uses multiple iterations to simulate momentum propagation through frozen rack
-      // Key insight: In a frozen rack, momentum cascades through touching balls almost instantly
-      // Iteration 1: Cue→1-ball, Iteration 2: 1-ball→row2, Iteration 3: row2→row3, etc.
-      function checkBallCollisions() {
-        const ballIds = Object.keys(breakBallStates);
-
-        // Multiple iterations allow momentum to CASCADE through chain of touching balls
-        // Each iteration, newly-moving balls can hit the next layer
-        for (let iter = 0; iter < BREAK_PHYSICS.COLLISION_ITERATIONS; iter++) {
-          let hadCollision = false;
-
-          for (let i = 0; i < ballIds.length; i++) {
-            for (let j = i + 1; j < ballIds.length; j++) {
-              const ball1 = breakBallStates[ballIds[i]];
-              const ball2 = breakBallStates[ballIds[j]];
-
-              if (!ball1 || !ball2 || ball1.pocketed || ball2.pocketed) continue;
-
-              const dx = ball2.x - ball1.x;
-              const dy = ball2.y - ball1.y;
-              const dist = Math.sqrt(dx * dx + dy * dy);
-
-              // Check if balls are touching/overlapping
-              if (dist < BREAK_PHYSICS.BALL_DIAMETER && dist > 0) {
-                const id1 = ballIds[i];
-                const id2 = ballIds[j];
-
-                // Normal vector (from ball1 to ball2)
-                const nx = dx / dist;
-                const ny = dy / dist;
-
-                // Relative velocity
-                const dvx = ball1.vx - ball2.vx;
-                const dvy = ball1.vy - ball2.vy;
-
-                // Relative velocity along collision normal
-                const dvn = dvx * nx + dvy * ny;
-
-                // Only resolve if balls are approaching
-                if (dvn > 0) {
-                  hadCollision = true;
-
-                  // Full impulse - DO NOT divide by iterations!
-                  // Each iteration processes NEW collisions from cascading momentum
-                  const impulse = dvn * BREAK_PHYSICS.BALL_COR;
-
-                  ball1.vx -= impulse * nx;
-                  ball1.vy -= impulse * ny;
-                  ball2.vx += impulse * nx;
-                  ball2.vy += impulse * ny;
-
-                  // collision-induced throw (mirrors MU_BALL in the wasm core)
-                  const ctx = -ny, cty = nx;
-                  const dvt = (ball1.vx - ball2.vx) * ctx + (ball1.vy - ball2.vy) * cty;
-                  const jt = Math.min(THROW_MU * impulse, Math.abs(dvt) * 0.5) * Math.sign(dvt);
-                  ball1.vx -= jt * ctx; ball1.vy -= jt * cty;
-                  ball2.vx += jt * ctx; ball2.vy += jt * cty;
-
-                  // Apply english effect when cue ball first hits rack
-                  if (id1 === 'cue' && ball1.english !== undefined && ball1.english !== null) {
-                    const english = ball1.english;
-                    const followFactor = 1 + english * 0.5;
-                    ball1.vx *= followFactor;
-                    ball1.vy *= followFactor;
-                    ball1.english = null;
-                  } else if (id2 === 'cue' && ball2.english !== undefined && ball2.english !== null) {
-                    const english = ball2.english;
-                    const followFactor = 1 + english * 0.5;
-                    ball2.vx *= followFactor;
-                    ball2.vy *= followFactor;
-                    ball2.english = null;
-                  }
-
-                  // Separate overlapping balls fully
-                  const overlap = BREAK_PHYSICS.BALL_DIAMETER - dist;
-                  if (overlap > 0) {
-                    const separationX = (overlap / 2 + 0.01) * nx;
-                    const separationY = (overlap / 2 + 0.01) * ny;
-                    ball1.x -= separationX;
-                    ball1.y -= separationY;
-                    ball2.x += separationX;
-                    ball2.y += separationY;
-                  }
-                }
-              }
-            }
-          }
-
-          // If no collisions occurred, no need for more iterations
-          if (!hadCollision) break;
-        }
-      }
-
-      // Rail collision detection and response
-      function checkRailCollisions() {
-        const RAIL_TOP = 2 + BALL_RADIUS;
-        const RAIL_BOTTOM = 48 - BALL_RADIUS;
-        const RAIL_LEFT = 2 + BALL_RADIUS;
-        const RAIL_RIGHT = 98 - BALL_RADIUS;
-
-        for (const ballId in breakBallStates) {
-          const ball = breakBallStates[ballId];
-          if (!ball) continue;
-
-          // Check pockets first (before rail bounce)
-          if (isBallInPocket(ball.x, ball.y)) {
-            // Ball is pocketed - remove from simulation
-            ball.pocketed = true;
-            ball.vx = 0;
-            ball.vy = 0;
-            continue;
-          }
-
-          // Top rail
-          if (ball.y < RAIL_TOP) {
-            ball.y = RAIL_TOP;
-            ball.vy = -ball.vy * BREAK_PHYSICS.RAIL_COR;
-          }
-          // Bottom rail
-          if (ball.y > RAIL_BOTTOM) {
-            ball.y = RAIL_BOTTOM;
-            ball.vy = -ball.vy * BREAK_PHYSICS.RAIL_COR;
-          }
-          // Left rail
-          if (ball.x < RAIL_LEFT) {
-            ball.x = RAIL_LEFT;
-            ball.vx = -ball.vx * BREAK_PHYSICS.RAIL_COR;
-          }
-          // Right rail
-          if (ball.x > RAIL_RIGHT) {
-            ball.x = RAIL_RIGHT;
-            ball.vx = -ball.vx * BREAK_PHYSICS.RAIL_COR;
-          }
-        }
-      }
-
-      // Check if ball is in a pocket
-      // Uses same coordinates as pocketCenters for consistency
-      function isBallInPocket(x, y) {
-        const pockets = [
-          { x: 1.5, y: 1.5 },     // Top-left (corner-tl)
-          { x: 98.5, y: 1.5 },    // Top-right (corner-tr)
-          { x: 1.5, y: 48.5 },    // Bottom-left (corner-bl)
-          { x: 98.5, y: 48.5 },   // Bottom-right (corner-br)
-          { x: 50, y: 0 },        // Side-top (middle of top rail)
-          { x: 50, y: 50 }        // Side-bottom (middle of bottom rail)
-        ];
-
-        const POCKET_RADIUS = 4.0; // Match visual pocket size for reliable detection
-
-        for (const pocket of pockets) {
-          const dx = x - pocket.x;
-          const dy = y - pocket.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < POCKET_RADIUS) {
-            return true;
-          }
-        }
-        return false;
-      }
-
-      // Update ball positions each frame
-      function updateBreakPhysics() {
-        let anyMoving = false;
-
-        // Apply friction and update positions
-        for (const ballId in breakBallStates) {
-          const ball = breakBallStates[ballId];
-          if (!ball || ball.pocketed) continue;
-
-          // Apply velocity
-          ball.x += ball.vx;
-          ball.y += ball.vy;
-
-          // Apply friction
-          ball.vx *= BREAK_PHYSICS.FRICTION;
-          ball.vy *= BREAK_PHYSICS.FRICTION;
-
-          // Check if still moving
-          const speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
-          if (speed > BREAK_PHYSICS.MIN_VELOCITY) {
-            anyMoving = true;
-          } else {
-            ball.vx = 0;
-            ball.vy = 0;
-          }
-        }
-
-        // Check collisions
-        checkBallCollisions();
-        checkRailCollisions();
-
-        // Update visual positions
-        for (const ballId in breakBallStates) {
-          const ball = breakBallStates[ballId];
-          if (!ball) continue;
-
-          const ballEl = document.getElementById(`ball-${ballId}`);
-          if (ballEl) {
-            if (ball.pocketed) {
-              ballEl.style.display = 'none';
-            } else {
-              positionBallOnTable(ballEl, ball.x, ball.y);
-            }
-          }
-        }
-
-        return anyMoving;
-      }
-
-      // Animation loop for break
-      function animateBreak() {
-        if (!isBreakAnimating) return;
-
-        const stillMoving = updateBreakPhysics();
-
-        if (stillMoving) {
-          breakAnimationId = requestAnimationFrame(animateBreak);
-        } else {
-          // Animation complete - finalize positions
-          finalizeBreakPositions();
-        }
-      }
-
-      // Finalize ball positions after animation
-      function finalizeBreakPositions() {
-        isBreakAnimating = false;
-
-        for (const ballId in breakBallStates) {
-          const ball = breakBallStates[ballId];
-          if (!ball) continue;
-
-          if (ball.pocketed) {
-            ballPositions[ballId] = null;
-          } else {
-            ballPositions[ballId] = { x: ball.x, y: ball.y };
-          }
-        }
-
-        // Hide cue stick
-        hideCueStick();
-
-        // Clear selections
-        selectBall(null);
-        selectPocket(null);
-
-        // Update display
-        updateCueGhostLine();
-        showToast('Break complete!');
-      }
-      */
       // ════════════════════ end dead break animation ════════════════════
 
       // ========== REGULAR SHOT ANIMATION SYSTEM ==========
@@ -9565,38 +9213,39 @@
         ballRoll = {};
         shotEnglish = { x: contactOffset.x, y: contactOffset.y };
 
-        // Prefer the Rust core: resolve the whole shot up front, then play back
-        // its exact trajectories. Falls back to the JS stepper if unavailable.
+        // The Rust core is the only engine. It resolves the whole shot up front and the
+        // animation plays back its exact trajectories. The JS fixed-timestep stepper this
+        // used to fall back to was a single-FRICTION approximation of the two-phase model,
+        // so silently falling back to it meant simulating a *different* game; if the core is
+        // unavailable the shot is refused with a message instead (see
+        // PLAN-two-phase-physics.md item D, closed by removing the stepper).
         const ex = await loadAcePhysics();
-        if (ex) {
-          const secBalls = {};
-          for (const id in plan.balls) {
-            secBalls[id] = { x: plan.balls[id].x, y: plan.balls[id].y, vx: plan.balls[id].vx * 60, vy: plan.balls[id].vy * 60 };
-          }
-          let result = null;
-          try { result = aceSimulate(secBalls, plan.english); } catch (e) { console.warn('aceSimulate failed:', e); }
-          if (result && !result.error) {
-            const initial = snapshotShotBalls();
-            wasmShotDuration = Math.max(result.duration, 1e-4);
-            wasmShotTraj = buildWasmTrajectories(initial, result.events, result.final, wasmShotDuration);
-            window.ACE_SHOT = {
-              events: result.events.map(e => ({ ...e, step: Math.round(e.t * 60) })),
-              initial, final: result.final, done: false
-            };
-            wasmShotStart = null;
-            isShotAnimating = true;
-            shotAnimationId = requestAnimationFrame(animateShotWasm);
-            return;
-          }
+        if (!ex) {
+          isShotAnimating = false;
+          showToast('\u26a0\ufe0f Physics core unavailable - cannot simulate this shot');
+          return;
         }
-
-        // Fallback: JS fixed-timestep simulation
-        shotAnimationFrames = 0;
-        shotLastTime = null;
-        shotAccumulator = 0;
-        window.ACE_SHOT = { events: [], initial: snapshotShotBalls(), final: null, done: false };
+        const secBalls = {};
+        for (const id in plan.balls) {
+          secBalls[id] = { x: plan.balls[id].x, y: plan.balls[id].y, vx: plan.balls[id].vx * 60, vy: plan.balls[id].vy * 60 };
+        }
+        let result = null;
+        try { result = aceSimulate(secBalls, plan.english); } catch (e) { console.warn('aceSimulate failed:', e); }
+        if (!result || result.error) {
+          isShotAnimating = false;
+          showToast('\u26a0\ufe0f Physics core could not resolve this shot');
+          return;
+        }
+        const initial = snapshotShotBalls();
+        wasmShotDuration = Math.max(result.duration, 1e-4);
+        wasmShotTraj = buildWasmTrajectories(initial, result.events, result.final, wasmShotDuration);
+        window.ACE_SHOT = {
+          events: result.events.map(e => ({ ...e, step: Math.round(e.t * 60) })),
+          initial, final: result.final, done: false
+        };
+        wasmShotStart = null;
         isShotAnimating = true;
-        shotAnimationId = requestAnimationFrame(animateShot);
+        shotAnimationId = requestAnimationFrame(animateShotWasm);
       }
 
       // ── Shot event recording ──
@@ -9640,221 +9289,11 @@
       };
 
       // Advance shot physics by one fixed step (no DOM access)
-      function stepShotPhysics() {
-        let anyMoving = false;
-
-        // Record previous positions for render interpolation, and find the
-        // fastest ball to size anti-tunneling substeps: at full power a ball
-        // covers several units per step — more than a ball diameter — and a
-        // single move-then-check pass lets it pass through balls and pockets
-        let maxSpeed = 0;
-        for (const ballId in shotBallStates) {
-          const ball = shotBallStates[ballId];
-          if (!ball || ball.pocketed) continue;
-          ball.prevX = ball.x;
-          ball.prevY = ball.y;
-          const speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
-          if (speed > maxSpeed) maxSpeed = speed;
-        }
-        const substeps = Math.max(1, Math.ceil(maxSpeed / MAX_SUBSTEP_TRAVEL));
-
-        for (let s = 0; s < substeps; s++) {
-          for (const ballId in shotBallStates) {
-            const ball = shotBallStates[ballId];
-            if (!ball || ball.pocketed) continue;
-            ball.x += ball.vx / substeps;
-            ball.y += ball.vy / substeps;
-          }
-          checkShotCollisions(1 / substeps);
-          checkShotRailCollisions();
-        }
-
-        // Friction once per step, so decay matches the original per-frame tuning
-        for (const ballId in shotBallStates) {
-          const ball = shotBallStates[ballId];
-          if (!ball || ball.pocketed) continue;
-
-          ball.vx *= BREAK_PHYSICS.FRICTION;
-          ball.vy *= BREAK_PHYSICS.FRICTION;
-
-          const speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
-          if (speed > BREAK_PHYSICS.MIN_VELOCITY) {
-            anyMoving = true;
-          } else {
-            ball.vx = 0;
-            ball.vy = 0;
-          }
-        }
-
-        return anyMoving;
-      }
 
       // Draw balls interpolated between the previous and current physics step
       // (alpha 0..1), decoupling render rate from the fixed physics rate
-      function renderShotBalls(alpha) {
-        for (const ballId in shotBallStates) {
-          const ball = shotBallStates[ballId];
-          if (!ball) continue;
-
-          const ballEl = document.getElementById(`ball-${ballId}`);
-          if (!ballEl) continue;
-
-          if (ball.pocketed) {
-            ballEl.style.display = 'none';
-          } else {
-            const px = ball.prevX !== undefined ? ball.prevX : ball.x;
-            const py = ball.prevY !== undefined ? ball.prevY : ball.y;
-            const rx = px + (ball.x - px) * alpha;
-            const ry = py + (ball.y - py) * alpha;
-            positionBallOnTable(ballEl, rx, ry);
-            applyBallRoll(ballId, rx, ry);
-          }
-        }
-      }
 
       // Check ball-to-ball collisions for shot
-      function checkShotCollisions(moveScale = 1) {
-        const ballIds = Object.keys(shotBallStates);
-        const collisions = [];
-
-        // Detect collisions
-        for (let i = 0; i < ballIds.length; i++) {
-          for (let j = i + 1; j < ballIds.length; j++) {
-            const ball1 = shotBallStates[ballIds[i]];
-            const ball2 = shotBallStates[ballIds[j]];
-
-            if (!ball1 || !ball2 || ball1.pocketed || ball2.pocketed) continue;
-
-            const dx = ball2.x - ball1.x;
-            const dy = ball2.y - ball1.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-
-            if (dist < BREAK_PHYSICS.BALL_DIAMETER && dist > 0) {
-              // Check for frozen rack break - cue hitting any rack ball
-              if (frozenRackPending && (ballIds[i] === 'cue' || ballIds[j] === 'cue')) {
-                // Apply empirical break physics instead of sequential collisions
-                const cueBall = shotBallStates['cue'];
-                applyFrozenRackBreakPhysics({ vx: cueBall.vx, vy: cueBall.vy });
-                recordShotEvent('break', { ids: [ballIds[i], ballIds[j]] });
-                return;  // Skip normal collision processing
-              }
-              collisions.push([ballIds[i], ballIds[j]]);
-            }
-          }
-        }
-
-        // Resolve collisions
-        for (const [id1, id2] of collisions) {
-          const ball1 = shotBallStates[id1];
-          const ball2 = shotBallStates[id2];
-
-          let dx = ball2.x - ball1.x;
-          let dy = ball2.y - ball1.y;
-          let dist = Math.sqrt(dx * dx + dy * dy);
-
-          if (dist === 0) continue;
-
-          // Rewind both balls to the exact moment of contact before taking
-          // the collision normal. Discrete movement lets balls interpenetrate
-          // by up to a couple of units, and a normal taken mid-overlap skews
-          // the departure angle — worst on thin (large cut angle) hits.
-          const rvx = (ball1.vx - ball2.vx) * moveScale;  // relative motion per pass
-          const rvy = (ball1.vy - ball2.vy) * moveScale;
-          const a = rvx * rvx + rvy * rvy;
-          if (a > 1e-9 && dist < BREAK_PHYSICS.BALL_DIAMETER) {
-            const rx = ball1.x - ball2.x;
-            const ry = ball1.y - ball2.y;
-            const b = rx * rvx + ry * rvy;  // < 0 when approaching
-            const c = dist * dist - BREAK_PHYSICS.BALL_DIAMETER * BREAK_PHYSICS.BALL_DIAMETER;
-            const disc = b * b - a * c;
-            if (disc > 0) {
-              const tau = (b + Math.sqrt(disc)) / a;  // back-out fraction of this pass
-              if (tau > 0 && tau < 2) {
-                ball1.x -= ball1.vx * moveScale * tau;
-                ball1.y -= ball1.vy * moveScale * tau;
-                ball2.x -= ball2.vx * moveScale * tau;
-                ball2.y -= ball2.vy * moveScale * tau;
-                dx = ball2.x - ball1.x;
-                dy = ball2.y - ball1.y;
-                dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist === 0) continue;
-              }
-            }
-          }
-
-          const nx = dx / dist;
-          const ny = dy / dist;
-
-          // Relative velocity
-          const dvx = ball1.vx - ball2.vx;
-          const dvy = ball1.vy - ball2.vy;
-          const dvn = dvx * nx + dvy * ny;
-
-          // Only resolve if balls are approaching
-          if (dvn > 0) {
-            const impulse = dvn * BREAK_PHYSICS.BALL_COR;
-
-            ball1.vx -= impulse * nx;
-            ball1.vy -= impulse * ny;
-            ball2.vx += impulse * nx;
-            ball2.vy += impulse * ny;
-
-            // collision-induced throw: Coulomb tangential friction impulse on
-            // top of the normal one — mirrors MU_BALL in ace-physics/src/lib.rs
-            // so the JS fallback matches the wasm core (struck ball deflects a
-            // few degrees toward the cut; the aim solver compensates for it)
-            const ctx = -ny, cty = nx;
-            const dvt = (ball1.vx - ball2.vx) * ctx + (ball1.vy - ball2.vy) * cty;
-            const jt = Math.min(THROW_MU * impulse, Math.abs(dvt) * 0.5) * Math.sign(dvt);
-            ball1.vx -= jt * ctx; ball1.vy -= jt * cty;
-            ball2.vx += jt * ctx; ball2.vy += jt * cty;
-
-            // Apply english/throw effect if cue ball collision.
-            // NOTE: the cue must be matched on EITHER side of the pair —
-            // JS object iteration puts numeric ball ids before 'cue', so the
-            // cue is normally id2 and an id1-only check never fires (the
-            // stun/draw/follow behavior was dead in regular shots).
-            const cueB = id1 === 'cue' ? ball1 : id2 === 'cue' ? ball2 : null;
-            const otherB = id1 === 'cue' ? ball2 : id2 === 'cue' ? ball1 : null;
-            if (cueB && cueB.english) {
-              // Side english causes throw on the object ball
-              const throwAngle = cueB.english.x * 0.05;  // Radians
-              const speedO = Math.sqrt(otherB.vx * otherB.vx + otherB.vy * otherB.vy);
-              const angleO = Math.atan2(otherB.vy, otherB.vx);
-              otherB.vx = Math.cos(angleO + throwAngle) * speedO;
-              otherB.vy = Math.sin(angleO + throwAngle) * speedO;
-
-              // Top/bottom english affects cue ball after collision
-              if (cueB.english.y < 0) {
-                // Follow (top spin) - maintain more forward motion
-                cueB.vx *= 0.8;
-                cueB.vy *= 0.8;
-              } else if (cueB.english.y > 0) {
-                // Draw (bottom spin) - reverse or stop
-                cueB.vx *= -0.3;
-                cueB.vy *= -0.3;
-              } else {
-                // Stun (center) - stop dead
-                cueB.vx *= 0.1;
-                cueB.vy *= 0.1;
-              }
-
-              cueB.english = null;  // English applied, clear it
-            }
-
-            // Separate overlapping balls
-            const overlap = BREAK_PHYSICS.BALL_DIAMETER - dist;
-            const separationX = nx * (overlap / 2 + 0.01);
-            const separationY = ny * (overlap / 2 + 0.01);
-            ball1.x -= separationX;
-            ball1.y -= separationY;
-            ball2.x += separationX;
-            ball2.y += separationY;
-
-            recordShotEvent('ball-ball', { ids: [id1, id2] });
-          }
-        }
-      }
 
       // Check rail collisions for shot
       function checkShotRailCollisions() {
@@ -9933,34 +9372,7 @@
       }
 
       // Animation loop for regular shot: fixed-timestep accumulator.
-      // Physics advances in PHYSICS_STEP_MS steps regardless of how often
       // rAF fires; leftover time becomes the render interpolation alpha.
-      let shotLastTime = null;
-      let shotAccumulator = 0;
-
-      function animateShot(timestamp) {
-        if (!isShotAnimating) return;
-
-        if (shotLastTime === null) shotLastTime = timestamp;
-        shotAccumulator += Math.min(timestamp - shotLastTime, MAX_FRAME_MS);
-        shotLastTime = timestamp;
-
-        let stillMoving = true;
-        while (stillMoving && shotAccumulator >= PHYSICS_STEP_MS && shotAnimationFrames < MAX_SHOT_FRAMES) {
-          stillMoving = stepShotPhysics();
-          shotAnimationFrames++;
-          shotAccumulator -= PHYSICS_STEP_MS;
-        }
-
-        if (stillMoving && shotAnimationFrames < MAX_SHOT_FRAMES) {
-          renderShotBalls(Math.min(1, shotAccumulator / PHYSICS_STEP_MS));
-          shotAnimationId = requestAnimationFrame(animateShot);
-        } else {
-          // Animation complete - snap to exact physics positions and finalize
-          renderShotBalls(1);
-          finalizeShotPositions();
-        }
-      }
 
       // Finalize ball positions after shot animation
       function finalizeShotPositions() {

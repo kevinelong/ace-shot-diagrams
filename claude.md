@@ -113,7 +113,8 @@ Pool table SVG template for creating interactive shot diagrams with physics-base
   - **Collision-induced throw**: a Coulomb tangential friction impulse
     (`MU_BALL=0.06`) at every ball-ball contact — a cut drags the struck ball a
     few degrees toward the cut (head-on→0, capped ~atan(MU)≈3.4°). Present in
-    BOTH engines (Rust core + the JS fallback resolvers) so they agree.
+    the Rust core - the only engine since 2026-09-29, when the JS fallback was
+    deleted (NEXT_STEPS.md).
   - **Throw-compensated aim** (`throwCompensatedAimDir`): the solver pre-rotates
     the aim by the predicted throw so shots still pot — applied to direct, bank,
     and combo (both contacts); kicks re-solve using the off-rail arrival
@@ -212,8 +213,9 @@ In-app integration: the wasm is base64-embedded in index.html (between the
 ACE_WASM markers) by `node embed-wasm.js` — re-run it after every core
 rebuild. The app loads it (loadAcePhysics), resolves each shot up front
 (aceSimulate), and plays back the exact trajectories (animateShotWasm);
-the JS fixed-timestep sim remains as automatic fallback if the wasm is
-absent or errors. window.ACE_SHOT_PLAN exposes the solver's aim so headless
+there is no JS fallback: if the wasm is absent or
+errors, the shot is refused with a message rather than simulated by a different
+model (the JS fixed-timestep stepper was deleted 2026-09-29 - NEXT_STEPS.md). window.ACE_SHOT_PLAN exposes the solver's aim so headless
 tools share the same physics. verify-consistency.js now exercises this
 in-app wasm path end to end.
 
