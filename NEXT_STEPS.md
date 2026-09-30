@@ -259,20 +259,16 @@ was open only because the identifier `naturalAngle` never existed.
 
 ## Next up (decided, not started)
 
-- [ ] **Roadmap 2.2, safety-shot mode - first half shipped 2026-09-29.** The **Snooker Zones
-      (safety)** aid is in the Aids palette: it shades the spots where the cue ball leaves the
-      opponent no direct pot, on the app's existing direct-line approximation. Verified live
-      (four cells inside the pack for the break rack; nothing for a single ball on an open
-      table) and covered by `tests/features/safety-zones.spec.ts`. Still open: optimal defensive
-      positions, which needs a scoring model rather than a line check.
-      Original entry follows.
-- [ ] **Roadmap 2.2, safety-shot mode** - decided 2026-09-29: Phase 2 starts here, built in the
-      current single-file app (the user chose "keep the single file, build 2.2 now" over
-      modularising first, with the note that 2+ more features this quarter would flip that).
-      Scope per `FEATURE_ROADMAP.md` 2.2: snooker zones and optimal defensive positions, ~6-8 h,
-      HIGH value. Nothing exists yet (`snooker`/`safetyZone` have no hits in `index.html`).
-
-
+- [ ] **Roadmap 2.2, safety-shot mode - first half shipped 2026-09-29; defensive positions open.**
+      Shipped: the **Snooker Zones (safety)** aid in the Aids palette shades the spots where the
+      cue ball leaves the opponent no direct pot, on the app's existing direct-line approximation
+      (`isPathBlockedByAnyBall`). Verified through the UI - four cells inside the pack for the
+      break rack, nothing for a single ball on an open table - and covered by
+      `tests/features/safety-zones.spec.ts` (2 tests). Open: **optimal defensive positions**,
+      where to *leave* the cue rather than where it is safe, which needs a scoring model over the
+      candidate rests rather than a line check. Also still the note from the decision: built in
+      the current single-file app, and 2+ more features this quarter would flip that to
+      modularising first.
 ## Needs you (blocked on a decision, credentials, or a remote write)
 
 - [x] **Push the commits - done, and the live tool is fixed.** All of it is on `main` (0
