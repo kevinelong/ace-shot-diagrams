@@ -199,6 +199,15 @@ test green by relaxing the test — `verify-spin.js` below is the worked example
       "Video Recording/Playback" anti-feature now distinguishes the declined in-app feature from
       the shipped recording tooling.
 
+- [x] **The specs wait on the app's state instead of retrying and second-guessing.**
+      `window.DEBUG.state()` gained `english`, `power` and `aimReady` (cue + ghost present - exactly
+      the condition `executeShot` checks before it will run). `setEnglish` had *no* wait at all
+      because the state carried no english field and the contact point is a rendering effect
+      (wrong for side english, and a flake source when polled); `setPower` polled a display string;
+      and `shootAndAwaitStart` clicked in a loop because the app refuses silently and published no
+      readiness. All three now wait on the state. Backed by the full suite **158 passed, 0 flaky**
+      and all five app-side harnesses (6/6, 9/9, PASS, PASS, PASS) - they drive the app through the
+      same helpers.
 - [x] **The app's own in-browser suite is green: 40/40** (was 39 passed / 1 failed). The failing
       test asserted a `palette-share` id that never existed; it now asserts the seven palettes
       the app actually ships (balls, cue, game, shot, legend, aids, actions) — measured, not assumed.

@@ -28,17 +28,13 @@ export const POCKETS = {
  */
 export async function shootAndAwaitStart(page: Page, timeout = 20000) {
     const toast = page.locator('#toastNotification');
-    const deadline = Date.now() + timeout;
-    while (Date.now() < deadline) {
-        await page.locator('#btnShoot').click();
-        try {
-            await expect(toast).toContainText('Shot in progress', { timeout: 1000 });
-            return;
-        } catch {
-            // not accepted yet - the app was still computing the aim
-        }
-    }
-    throw new Error(`the app never accepted Shoot within ${timeout}ms`);
+    // The app accepts a shot exactly when its aim exists (executeShot needs the cue and the
+    // ghost), and DEBUG.state().aimReady is that condition. This used to click in a loop because
+    // the app refuses silently and offers no readiness signal.
+    await expect.poll(async () => (await page.evaluate(() => window.DEBUG.state())).aimReady,
+      { timeout, message: 'the app never reached a state where it could shoot' }).toBe(true);
+    await page.locator('#btnShoot').click();
+    await expect(toast).toContainText('Shot in progress', { timeout: 5000 });
 }
 
 /**
@@ -356,10 +352,15 @@ export class AceShotHelper {
       // @ts-ignore
       window.DEBUG.setEnglish(x, -y);
     }, { x, y });
-    // No wait: DEBUG.state() carries no english field, so there is nothing truthful to wait on
-    // here. The contact point is a rendering effect (it moves in cx for side english and cy for
-    // top/bottom), so polling it as a stand-in was both wrong for side english and a flake
-    // source. Callers assert the effect they care about, with polling.
+    // The app stores the contact offset with y inverted, and DEBUG.state() reports it: wait for
+    // that rather than for a rendering effect (the contact point moves in cx for side english and
+    // cy for top/bottom, so polling it was wrong for side english and a flake source).
+    await this.actUntilApplied(
+      async () => { /* the action already ran above */ },
+      async () => (await this.page.evaluate(() => window.DEBUG.state())).english,
+      (e) => !!e && Math.abs(e.x - x) < 1e-9 && Math.abs(e.y + y) < 1e-9,
+      `english should be (${x}, ${y})`,
+    );
   }
 
   // ==================== Power Control ====================
@@ -371,9 +372,9 @@ export class AceShotHelper {
         // @ts-ignore
         window.DEBUG.setPower(v);
       }, value),
-      async () => parseFloat((await this.page.locator('#forceValue-palette').textContent()) || 'NaN'),
-      (shown) => shown === value,
-      `force display should read ${value}`,
+      async () => (await this.page.evaluate(() => window.DEBUG.state())).power,
+      (power) => power === value,
+      `power should be ${value}`,
     );
   }
 

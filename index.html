@@ -10275,7 +10275,14 @@
           isBreakSetup,
           isShotAnimating,
           isBreakAnimating,
-          solver: currentSolverMode
+          solver: currentSolverMode,
+          // The three things the specs need to wait on truthfully instead of retrying or
+          // sleeping: the contact offset (english), the power, and whether a shot could be
+          // executed right now. executeShot needs the cue and the ghost and refuses silently
+          // without the ghost, which is what made the retry loops necessary.
+          english: { x: contactOffset.x, y: contactOffset.y },
+          power: shotForce,
+          aimReady: !!ballPositions['ghost'] && !!ballPositions['cue']
         }),
         ghost: () => ballPositions['ghost'],
         cue: () => ballPositions['cue'],
