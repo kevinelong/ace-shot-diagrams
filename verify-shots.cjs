@@ -25,6 +25,12 @@ const CASES = [
   // --- kick: cue kicks off a rail then pots the OB (s:kick) ---
   { name: 'kick-1rail', state: 'cue:20,25|1:70,38|p:cbr|b:1|m:9ball|f:8|e:0.0,0.0|s:kick', ball: '1', pocket: 'corner-br' },
   // --- combo: cue hits helper which pots the target (s:combo) ---
+  // chosen in the app after load, not encoded in the URL
+  { name: 'pick-in-app', state: 'cue:56.8,6.5|1:70,30|b:1|m:9ball|f:6|e:0.0,0.0|s:auto', ball: '1', pocket: 'corner-br',
+    selectAfterLoad: { ball: '1', pocket: 'corner-br' } },
+  // ...and changed to a different pocket just before shooting
+  { name: 'change-then-shoot', state: 'cue:56.8,6.5|1:70,30|p:ctl|b:1|m:9ball|f:6|e:0.0,0.0|s:auto', ball: '1', pocket: 'corner-br',
+    selectAfterLoad: { ball: '1', pocket: 'corner-br' } },
   { name: 'combo-2ball', state: 'cue:62,26|2:75,34|1:85,40|p:cbr|b:1|m:9ball|f:8|e:0.0,0.0|s:combo', ball: '1', pocket: 'corner-br' },
 ];
 
@@ -33,6 +39,23 @@ async function runCase(ctx, c) {
   const errs = []; page.on('pageerror', e => errs.push(String(e)));
   await page.goto(`${base}?empty=1&r=t#v1|${c.state}`, { waitUntil: 'load', timeout: 20000 });
   await page.waitForTimeout(1200);
+  // Cases whose state carries no pocket (or a different one) choose here, in the app: the reported
+  // bug was about a choice made interactively, and every other case pre-sets it in the URL hash.
+  if (c.selectAfterLoad) {
+    const want = c.selectAfterLoad;
+    for (let i = 0; i < 40; i++) {
+      await page.evaluate(({ ball, pocket }) => {
+        window.DEBUG.selectBall(ball);
+        window.DEBUG.selectPocket(pocket);
+      }, want);
+      const settled = await page.evaluate(({ ball, pocket }) => {
+        const st = window.DEBUG.state();
+        return String(st.selectedBallId) === String(ball) && st.selectedPocket === pocket;
+      }, want);
+      if (settled) break;
+      await page.waitForTimeout(50);
+    }
+  }
   // did the solver find a viable aim? (ghost placed)
   const aimed = await page.evaluate(() => !!(document.getElementById('btnShoot')));
   await page.evaluate(() => document.getElementById('btnShoot').click());

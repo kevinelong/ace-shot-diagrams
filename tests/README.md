@@ -22,6 +22,7 @@ tests/
 │   ├── 02-pocket-selection.spec.ts
 │   └── 03-shot-calculation.spec.ts
 ├── features/                    # Individual features
+│   ├── aim-consistency.spec.ts   # the stick and the aim must agree, on selection changes
 │   ├── english-controls.spec.ts
 │   ├── mobile.spec.ts           # Mobile + tablet viewports
 │   ├── power-control.spec.ts

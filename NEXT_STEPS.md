@@ -256,6 +256,34 @@ was open only because the identifier `naturalAngle` never existed.
   reached only from `copyShareLink()` (`index.html:7523`). Nothing to change - "copy only when the
   user asks" was already the behaviour. Fourth instance of the same mistake: reading static
   DOM/markup as runtime behaviour.
+## Aim/shots: what a reported incident exposed (2026-09-30)
+
+Reported from real use: after selecting a ball and pocket the cue stick did not immediately show the
+new direction (while other aids did), and once the cue ball went right past the object ball without
+moving it toward the selected pocket. Nothing here reproduced it, but it exposed two real coverage
+gaps, both now closed, and one user-facing trap.
+
+- **No test touched the cue stick at all** - `grep` found zero references in `tests/` or the
+  harnesses. `tests/features/aim-consistency.spec.ts` now reads the shaft polygon back and requires
+  it to agree with the ghost line within 1 degree and the tip to sit 0.8 units behind the cue ball,
+  checked on the *next turn* after both a ball change and a pocket change (3 repeats, green).
+- **Every shot check pre-set its selection in the URL hash**, so the interactive path was never
+  exercised. `verify-shots.cjs` gained `pick-in-app` (ball and pocket chosen through the app after
+  load) and `change-then-shoot` (pocket changed just before shooting): **8/8 potted as intended**.
+- **What the comparison found**: on a selection change the stick, ghost line, target line, ghost
+  ball and object-ball path all update; only `tangent-line`'s coordinates stay stale - that aid is
+  off, its group is hidden, and it recomputes when switched on, so it is not user-visible.
+- **Not reproduced**: ball change then shoot, pocket change then shoot, reads taken immediately
+  (no wait) after each change, and shooting right after choosing in-app. The executed shot followed
+  the *new* selection every time.
+- **Trap worth knowing, and worth fixing**: the **Balls palette covers the top-left pocket**, so a
+  click there lands on the palette and the pocket selection silently keeps its old value. The repo
+  already knows - `test-helpers.ts` has `minimizeBallsPalette()` "to prevent it from blocking pocket
+  clicks" - but a *user* has no such helper, and a shot then follows the old pocket while the aids
+  show the old aim too. Suggested fix: insets or a pointer-events rule for the pocket targets under
+  a palette, or start the Balls palette minimized. Not done here - it is a UX call.
+
+
 ## Open gaps I noticed (not in the user's list)
 
 - [x] **One browser launcher, eleven harnesses, and two scripts that could never run.** The
