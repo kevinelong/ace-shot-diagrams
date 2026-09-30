@@ -183,121 +183,15 @@ was open only because the identifier `naturalAngle` never existed.
       setup and read by nothing (kept declared so the writes stay in scope); and the same
       "no callers left?" sweep should be run once more over the shot-animation helpers now that
       the stepper is gone.
-- [ ] **Three unmerged branches, all with content:** `lineart-print-tooling` (+120 lines,
-      improves an existing main script — merge candidate), `claude/calendar-ascii-pro-design-een0rn`
-      (497 lines, a Columbia Cue Club calendar generator), and
-      `claude/recent-changes-review-wurocf` (972 lines including a 226-line tournament-platform
-      spec, which pairs with the merged `scoresheet.html` and the separate `15ball-scoresheet` repo).
-- [ ] **Two plan docs are unmaintained:** `PLAYWRIGHT_TEST_PLAN.md` has 137 unticked boxes and
-      `GAME_MODE_PLAN.md` 29, against a suite that is green. Either reconcile them against the
-      specs or prune them and say the specs are the source of truth.
-- [x] **Fixed waits are the runtime and the flakiness.** 92 `waitForTimeout` calls totalling
-      **57.6 s per pass** -> **3 calls, all deliberate** (see below). Backed by the full suite:
-      **158 passed, 0 flaky, 39.4 s** (was 57.1 s with 1 flaky). The count covers
-      `waitForTimeout` in the specs; the helpers' hidden per-action sleeps are gone too.
-  - [x] **`shot-animation.spec.ts` converted — 15 waits / 32.3 s removed, 0 left** (the top
-        offender and the file that flaked). Backed by `--repeat-each=4`: **60/60 passed, 0
-        flaky, 41.8 s** (≈10.4 s per pass of 15 tests), against 32.3 s of sleeps per pass
-        before. What the sleeps were really waiting for, measured through the app: it accepts
-        a shot only once its ghost-ball aim exists, which lands **~100–900 ms after load,
-        varying per run**, and it says nothing while refusing - no disabled state, no toast,
-        no class - so a fixed sleep was both slower than needed and the flake. The spec now
-        clicks until the app itself reports `Shot in progress` (`shootAndAwaitStart`), waits
-        for its result toast (`waitForShotComplete`), and asserts setup-dependent values by
-        polling (`toHaveValue` / `toContainText` / `toHaveAttribute`) instead of reading once.
-  - [x] Dead check removed with it: the "button might not be clickable while animating"
-        branch never ran - `#btnShoot` is never disabled (measured across a shot's whole
-        animation).
-  - [x] **`palette-minimize.spec.ts` converted — 13 waits removed** (the file that flaked twice
-        on 2026-09-29). Sleeps in front of polling assertions are gone; the ones guarding reads
-        or screenshots now wait for the state they were guessing at (the palette body
-        collapsing/expanding, the racked cue ball's `on-table` class). Backed by
-        `--repeat-each=2`: **151/152 passed, 1 retry-passed flake, 42 s**, against the same
-        command on the previous revision (**149/152 with 2 flaky and a hard failure, 72 s**).
-        The "minimize all" test still occasionally needs its retry under parallel load (its six
-        collapses are now awaited one by one, so it is no longer a hard failure); every other
-        flake in this file is gone.
-  - [x] **The shared navigation sleeps and the read-once races.** `test-helpers.ts`'s
-        `gotoEmpty`/`gotoWithRack` sleeps are now the board-visible wait (most critical-path
-        specs go through them); the three visibility races in `02-pocket-selection` use
-        `expect.poll`; `power-control` polls the force display; two sleeps left
-        `quick-validation`. Backed by those four specs at `--repeat-each=2`: **62 passed,
-        STATUS passed**.
-  - [x] **The read-race files converted: `02-pocket-selection` + `03-shot-calculation` (22
-        waits).** Their sleeps sat in front of reads (`getCutAngle()`, `getSelectedPocket()`,
-        `textContent()`/`boundingBox()`) that raced the app's recalculation, so they became
-        polling assertions (`expect.poll`), and "the angle changed" now polls *until* it
-        changes - which is the assertion. Also repaired a **vacuous assertion** found there: the
-        "impossible shot" test's `statusMessage !== null` is always true because `textContent()`
-        returns `''`, not null; it now requires a status message or the target line. Backed by
-        `--repeat-each=2`: **44 passed, STATUS passed, 17.1 s**.
-  - [x] **`shot-animation`'s consecutive-shots test had a broken premise** (found because the
-        new waits refused to sleep through it): it clicked Shoot three times and only checked the
-        toast never said "Error" - which passed even when the app refused the shot, e.g. after a
-        shot pockets the cue ball and the app answers "Place cue ball on table first". It now
-        requires the app to answer every click (shot start or a warning). Backed by
-        `--repeat-each=8`: **8/8 passed in 3.5 s**.
-  - [x] **The last six files** (`rack-start` 10, `kick-shots` 7, `quick-validation` 6,
-        `mobile` 3, `01-ball-placement` 1, `power-control` 1): post-goto sleeps became the
-        racked cue ball's `on-table` class (or the board being visible on `?empty=1`), the
-        post-shot ones use the shared `shootAndWait`, the post-Rack one waits for the "Rack set"
-        toast, the palette ones wait for the collapse they act on, and value reads poll. The
-        shot helpers now live in `tests/setup/test-helpers.ts` so specs share them. Backed by
-        those six files at `--repeat-each=2`: **76 passed, STATUS passed, 19.7 s**.
-  - **Kept on purpose (3 calls):** the three 50 ms gaps in "should recalculate instantly
-        without lag" - they *are* the measurement. `test-helpers.waitForShotCalculation` is gone
-        (its callers wait on the app's state instead).
-  - **Found and recorded, not fixed here:** `kick-shots.spec.ts` has **three** assertions of the
-        form `expect(count).toBeGreaterThanOrEqual(0)` (`:63` mirror overlay, `:74` incoming-angle
-        arc, `:116` kick aim label) that cannot fail — they claim coverage of optional features
-        while asserting nothing. What those features should guarantee is a product call, so they
-        are left as they are and listed here.
-  - [x] **The bigger half of the fixed cost was inside `test-helpers.ts`'s actions - now gone.**
-        Seven methods (`dragBallToTable`, `selectObjectBall`, `selectPocket`, `setEnglish`,
-        `setPower`, `enableKickSolver`, `setGameMode`) each called a shared 300 ms sleep right
-        after driving the app's `DEBUG` API, so every place/select/set paid it (~1.2 s per
-        critical-path test). They now wait for their own effect in the app's own state
-        (`DEBUG.state().ballPositions/selectedBallId/selectedPocket/solver`, the force display,
-        the contact point), and the shared sleep is deleted. Backed by the full suite:
-        **158 passed, 0 flaky, 39.4 s** (41.7 s before this change).
-  - [x] **The sleep was hiding a second silent-refusal window** (found because the new waits
-        refused to sleep through it): the app ignores `DEBUG.placeBall`/`selectBall`/
-        `selectPocket` until its initial setup completes - the same ~100-900 ms window in which
-        it ignores the Shoot button - and reports nothing. The polls failed with exactly that
-        ("1 should land at 65,30", "corner-br should be the selected pocket"). The helpers now
-        *retry the action until the app's state reflects it* (`actUntilApplied`), which is
-        deterministic and fails loudly with the last observed state if it never applies.
-  - [x] `setEnglish` gets **no** wait: `DEBUG.state()` carries no english field, and the contact
-        point is a rendering effect (it moves in `cx` for side english, `cy` for top/bottom), so
-        polling it was both wrong for side english and a flake source. Callers assert the effect
-        they care about, by polling (`english-controls`' six label reads became `toContainText`
-        polls, its contact-point read an `expect.poll`).
-  - [x] The app's break preset (follow spin, power 7) lands *after* load and overwrote values
-        tests had just set once the helpers got faster. `gotoWithRack` (and the two specs that
-        navigate themselves) now wait for the preset itself - the app saying "setup done" -
-        before the test body runs.
-  - Per-test boot of the 552 KB page is the other cost.
-- [x] **Remaining doc drift - all four fixed.** `tests/README.md`'s test tree now matches the
-      twelve real files and its protocol section says what the config does (the suite always runs
-      against `npx http-server -p 8080`; `file://` is for the standalone harnesses, not the
-      specs); `claude.md` says v009 (the tracked template version) and no longer claims
-      `cargo test` needs MSVC (it runs here, battery 5/5); `playwright.config.ts`'s comment no
-      longer says "76/76" (the suite is 158); the roadmap's "Video Recording/Playback"
-      anti-feature now says it refers to an in-app feature, which stays declined, while the
-      repo's recording *tooling* ships.
-- [x] **The write-only flags and the callerless leftovers are gone.** The break-state block and
-      `frozenRackPending` write (nothing read them since the stepper went), plus eight functions
-      that appear exactly once - definition only - and are referenced nowhere outside
-      `index.html`: `updateMakeProbability` (a legacy duplicate of the live updater at ~8518),
-      `checkShotRailCollisions` (the last fragment of the JS shot model), `setupDemoShot`,
-      `isDirectPathClear`, `getBlockingBalls`, `calculateReflectionAngle`,
-      `calculateActualKickDestination`, `findLegalCombinationShots`.
-      `index.html`: **10586 -> 10317 lines**. `calculateMakeProbability` was kept - the app's own
-      self-test asserts on it. Backed by `verify-consistency.js` 9/9, `verify-shots.cjs`
-      **6/6 shots potted as intended**, and the full suite.
-- [ ] **Bigger bets:** split the 552 KB inline app into modules with a build that still emits
-      one self-contained file (the pattern already used in the Go project); publish the
-      zero-dependency physics core as a crate so other tools can reuse it.
+- [x] **The unmerged branches, decided and executed.** `lineart-print-tooling` is **merged**
+      (`49c60d2`, tooling only: refinements to `svg-to-lineart.js` plus the new
+      `extend-aim-to-rail.js`, `measure-labels.js` and `scenarios/iso-cutout.json`; all three
+      scripts parse). `claude/recent-changes-review-wurocf` (`aceshot/`, 972 lines - a tournament
+      platform snapshot + spec docs) and `claude/calendar-ascii-pro-design-een0rn` (`calendar/`,
+      497 lines - a club calendar generator) are **out of scope for this repo**: neither touches
+      `index.html`, the tests or the tooling, and each is a separate artifact. They stay as
+      branches, recorded here so the next audit does not re-open it. If either should become its
+      own repo, say so and I'll extract it.
 
 ## Reference: what the last audit measured
 
