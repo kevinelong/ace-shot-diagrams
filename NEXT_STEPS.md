@@ -119,10 +119,13 @@ was open only because the identifier `naturalAngle` never existed.
   at ~70 ms, first accepted click between ~550 ms and ~940 ms, varying per run. A disabled
   state (or the existing "No aim point" message) for that window would make the UI honest;
   the spec side now retries, so this is a product question, not a test one.
-- **The app writes to the clipboard on load.** The first toast after `goto('/')` is
-  "Link copied to clipboard!" - the share URL is copied without the user asking. Recorded for
-  a decision: keep it (share-first UX) or make it an explicit action.
-
+- **RETRACTED: "the app writes to the clipboard on load."** False, and my error: the toast
+  element *ships* with the text "Link copied to clipboard!" in its markup (`index.html:3216`), so
+  reading it before the app updates it - which is what my probe did - is not evidence of a copy.
+  Measured properly: the clipboard is **empty** at load, and `navigator.clipboard.writeText` is
+  reached only from `copyShareLink()` (`index.html:7523`). Nothing to change - "copy only when the
+  user asks" was already the behaviour. Fourth instance of the same mistake: reading static
+  DOM/markup as runtime behaviour.
 ## Needs you (blocked on a decision, credentials, or a remote write)
 
 - [ ] **Push the commits.** 11 un-pushed as of 2026-09-29 (`git log origin/main..main --oneline`);
@@ -145,12 +148,13 @@ was open only because the identifier `naturalAngle` never existed.
       ~100-900 ms window swallows `DEBUG.placeBall`/`selectBall`/`selectPocket` as well. The
       specs handle both now (retry until the app's state reflects it), so this is a product
       question, not a test one. Original wording below.
-- [ ] **Make the Shoot button honest for its dead window.** For up to ~1 s after load the app
-      ignores Shoot clicks completely - no disabled state, no message - while the toast reads
-      "Click Shoot to break!" (measured; see the app findings below). Two small options: disable
-      `#btnShoot` until `ballPositions['ghost']` exists, or route that case into the existing
-      "⚠️ No aim point - position cue ball to aim" message. The specs no longer depend on which
-      you pick (they retry), so this is purely a UX call.
+- [x] **The startup window is gone - no app change needed.** Re-measured after the engine
+      cutover: clicks at **300 ms and 600 ms** are all accepted (`executeShot() called` ->
+      "Shot in progress", 4/4), where the same probe measured silent refusals at ~550 ms before
+      it. So the window belonged to the JS stepper's setup path, not to the core. The spec-side
+      retry stays as belt and braces (it is deterministic and costs nothing when the app is
+      ready). Original wording kept below, and the DEBUG half is moot for the same reason.
+- [ ] **Make the app honest for its startup window (Shoot *and* the DEBUG API).**
 - [ ] **Two harnesses report FAIL** (both runnable now, neither blocked by portability):
       `verify-spin.js` and `verify-sim-make.js`, while `verify-consistency.js` (9/9),
       `verify-animation.js` (PASS), `verify-ux-fixes.js` (PASS), the battery (8/8) and the
