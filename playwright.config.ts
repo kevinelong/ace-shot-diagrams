@@ -14,7 +14,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   // The palette UI tests use fixed waits and can flake under heavy parallel
-  // load (the suite is 158 tests); one retry absorbs that timing noise.
+  // load (the suite is 159 tests); one retry absorbs that timing noise.
   retries: process.env.CI ? 2 : 1,
   workers: process.env.CI ? 1 : undefined,
 

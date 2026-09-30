@@ -9391,6 +9391,25 @@
         return true;
       }
 
+      /**
+       * How good a leave is this spot? A spot can be snookered (no direct pot) and still leave the
+       * opponent an easy hit on any ball, so what separates one snooker from another is how many
+       * of their balls they can even reach, and how far the nearest one is. This is a reachability
+       * proxy, not a solve: it counts clear direct lines, no rails or kicks.
+       */
+      function snookerSpotQuality(from, ballIds) {
+        let reachable = 0;
+        let nearest = Infinity;
+        for (const id of ballIds) {
+          const ballPos = ballPositions[id];
+          if (!ballPos) continue;
+          if (isPathBlockedByAnyBall(from, ballPos, ['cue', 'ghost', id]).blocked) continue;
+          reachable += 1;
+          nearest = Math.min(nearest, Math.hypot(ballPos.x - from.x, ballPos.y - from.y));
+        }
+        return { reachable, nearest: Number.isFinite(nearest) ? nearest : null };
+      }
+
       function updateSnookerZones() {
         if (!showSnookerZones) {
           snookerZoneGroup.setAttribute('visibility', 'hidden');
@@ -9405,15 +9424,40 @@
           }
           const half = SN_CELL / 2;
           const rects = [];
+          const spots = [];
           for (let x = SN_MARGIN; x <= 100 - SN_MARGIN; x += SN_CELL) {
             for (let y = SN_MARGIN; y <= 50 - SN_MARGIN; y += SN_CELL) {
               if (!snookerSpotIsSafe({ x, y }, ballIds)) continue;
+              spots.push({ x, y, ...snookerSpotQuality({ x, y }, ballIds) });
               rects.push(`<rect x="${(x - half).toFixed(2)}" y="${(y - half).toFixed(2)}" ` +
                 `width="${SN_CELL}" height="${SN_CELL}" fill="#00ff88" fill-opacity="0.10" />`);
             }
           }
-          snookerZoneGroup.innerHTML = rects.join('');
-          snookerZoneGroup.setAttribute('visibility', rects.length ? 'visible' : 'hidden');
+
+          // The best leave: fewest balls they can reach, then the furthest nearest-ball.
+          let best = null;
+          for (const spot of spots) {
+            const better = !best ||
+              spot.reachable < best.reachable ||
+              (spot.reachable === best.reachable && (spot.nearest ?? 0) > (best.nearest ?? 0));
+            if (better) best = spot;
+          }
+
+          let marker = '';
+          if (best) {
+            const away = best.nearest === null ? 'none' : String(Math.round(best.nearest));
+            const label = best.reachable === 0
+              ? 'best leave: no ball reachable'
+              : `best leave: ${best.reachable} reachable, nearest ${away}`;
+            marker =
+              `<circle id="snooker-best-leave" cx="${best.x}" cy="${best.y}" r="1" fill="none" ` +
+              `stroke="#00ff88" stroke-width="0.3" data-reachable="${best.reachable}" data-nearest="${away}" />` +
+              `<text x="${best.x}" y="${(best.y - 2.4).toFixed(2)}" text-anchor="middle" font-size="1.2" ` +
+              `fill="#00ff88">${label}</text>`;
+          }
+
+          snookerZoneGroup.innerHTML = rects.join('') + marker;
+          snookerZoneGroup.setAttribute('visibility', spots.length ? 'visible' : 'hidden');
         }, 60);
       }
 

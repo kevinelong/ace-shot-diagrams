@@ -291,16 +291,17 @@ was open only because the identifier `naturalAngle` never existed.
         timing gaps carry the marker and the reason.
 ## Next up (decided, not started)
 
-- [ ] **Roadmap 2.2, safety-shot mode - first half shipped 2026-09-29; defensive positions open.**
-      Shipped: the **Snooker Zones (safety)** aid in the Aids palette shades the spots where the
-      cue ball leaves the opponent no direct pot, on the app's existing direct-line approximation
-      (`isPathBlockedByAnyBall`). Verified through the UI - four cells inside the pack for the
-      break rack, nothing for a single ball on an open table - and covered by
-      `tests/features/safety-zones.spec.ts` (2 tests). Open: **optimal defensive positions**,
-      where to *leave* the cue rather than where it is safe, which needs a scoring model over the
-      candidate rests rather than a line check. Also still the note from the decision: built in
-      the current single-file app, and 2+ more features this quarter would flip that to
-      modularising first.
+- [x] **Roadmap 2.2, safety-shot mode - both halves shipped.** The **Snooker Zones (safety)** aid
+      shades the spots where the cue ball leaves the opponent no direct pot, and marks the **best
+      leave**: each safe spot is scored by how many of their balls they can even reach and how far
+      the nearest is. On the break rack the recommendation lands at (76,23.75) inside the pack with
+      `0 reachable` ("best leave: no ball reachable"); with a single ball on an open table the aid
+      shades nothing, because every spot offers a pot. Documented limitation: a reachability proxy
+      (clear direct lines, no rails or kicks), not a solve. Backed by
+      `tests/features/safety-zones.spec.ts` - three tests, including that the recommendation sits on
+      one of the shaded spots - and the full suite.
+      Also recorded, not fixed: `quick-validation.spec.ts`'s palette minimise test is an occasional
+      retry-passed flake under parallel load, the same family as the palette `minimize all` test.
 ## Needs you (blocked on a decision, credentials, or a remote write)
 
 - [x] **Push the commits - done, and the live tool is fixed.** All of it is on `main` (0

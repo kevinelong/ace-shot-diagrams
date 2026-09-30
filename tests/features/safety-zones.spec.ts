@@ -24,6 +24,27 @@ test.describe('Snooker Zones (safety)', () => {
     await expect(group).toBeHidden();
   });
 
+  test('marks the best leave, and the marker is one of the shaded spots', async ({ page, aceHelper }) => {
+    await aceHelper.gotoWithRack();
+    await page.locator('#palette-aids .palette-btn.minimize').click();
+    await page.locator('#toggleSnookerZones').check();
+
+    const marker = page.locator('#snooker-best-leave');
+    await expect(marker).toBeVisible({ timeout: 10000 });
+
+    // the aid's own claim about that spot: how many balls the opponent can even reach
+    const reachable = Number(await marker.getAttribute('data-reachable'));
+    expect(Number.isInteger(reachable)).toBe(true);
+
+    // the invariant that makes the recommendation trustworthy: it is one of the shaded spots,
+    // not somewhere the aid has not shown as snookered
+    const cells = await page.locator('#snooker-zone-group rect').evaluateAll(rects =>
+      rects.map(r => [Number(r.getAttribute('x')) + Number(r.getAttribute('width')) / 2,
+                      Number(r.getAttribute('y')) + Number(r.getAttribute('height')) / 2]));
+    const [mx, my] = [Number(await marker.getAttribute('cx')), Number(await marker.getAttribute('cy'))];
+    expect(cells.some(([x, y]) => Math.abs(x - mx) < 0.01 && Math.abs(y - my) < 0.01)).toBe(true);
+  });
+
   test('shades nothing when a single ball sits on an open table', async ({ page, aceHelper }) => {
     // With one ball and no blockers the opponent can pot it from anywhere, so no spot on the
     // table is a snooker. This is the property that makes the aid trustworthy rather than
