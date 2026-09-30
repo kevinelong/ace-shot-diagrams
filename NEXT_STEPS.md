@@ -382,7 +382,7 @@ was open only because the identifier `naturalAngle` never existed.
   **40/40**, page errors **0**, duplicate ids **none**.
 - Core: **build 0.43 s**, `cargo test` **5/5**, battery **8/8**.
 - The browser `verify-*.js` scripts run on Windows now (portable browser lookup): `verify-consistency` 9/9, `verify-animation` PASS, `verify-ux-fixes` PASS; `verify-spin` and `verify-sim-make` report FAIL - see the open items.
-- Files: 77 tracked; `index.html` **10401 lines / 509 KB** with ~100 KB of embedded wasm
+- Files: 77 tracked; `index.html` **10445 lines / 511 KB** with ~100 KB of embedded wasm
   (11174 / 552 KB before the JS fallback and its dead neighbours went; this line is verified
   against the file by `verify-doc-claims.js`).
 - The harnesses write screenshots into the repo, including `verify-after-break.png`, which is
