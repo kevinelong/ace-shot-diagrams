@@ -17,6 +17,10 @@ const here = dirname(fileURLToPath(import.meta.url))
 const checks = [
   { script: 'verify-rust-parity.js', verdict: /(\d+)\/(\d+) passed through the Rust core/, what: 'physics battery' },
   { script: 'verify-trajectories.js', verdict: /(\d+)\/(\d+) trajectories match the golden file/, what: 'trajectory golden' },
+  // Prints a bare PASS/FAIL instead of a count. Judged here for the same reason as the two
+  // above: it instantiates the wasm and then aborts during teardown, so its own exit code is
+  // meaningless (it prints PASS and still exits 0xC0000409 here).
+  { script: 'verify-spin.js', verdict: /^(PASS|FAIL)$/m, what: 'spin model' },
 ]
 
 let failed = 0
@@ -29,6 +33,16 @@ for (const check of checks) {
   if (!match) {
     console.error(`FAIL: ${check.what} printed no verdict (${check.script} exited ${run.status})`)
     failed += 1
+    continue
+  }
+  if (!/^\d+$/.test(match[1] ?? '')) {
+    // a pass/fail check rather than a count
+    if (match[0] !== 'PASS') {
+      console.error(`FAIL: ${check.what} printed ${match[0]} (${check.script})`)
+      failed += 1
+    } else {
+      console.log(`ok: ${check.what} PASS (${check.script} itself exited ${run.status})`)
+    }
     continue
   }
   const [passed, total] = [Number(match[1]), Number(match[2])]
