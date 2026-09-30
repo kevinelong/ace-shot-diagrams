@@ -52,28 +52,6 @@ test.describe('Kick Shots', () => {
     await expect(kickPath).toBeVisible();
   });
 
-  test('should display mirror system overlay', async ({ page, aceHelper }) => {
-    // USER LEARNING: "Help me understand kick shot aiming"
-    
-    await aceHelper.enableKickSolver();
-    
-    const mirrorSystem = page.locator('#mirror-system-overlay');
-    // Mirror system may be optional feature
-    const count = await mirrorSystem.count();
-    expect(count).toBeGreaterThanOrEqual(0);
-  });
-
-  test('should show incoming angle arc', async ({ page, aceHelper }) => {
-    // USER UNDERSTANDING: "Show me the angle of approach"
-    
-    await aceHelper.enableKickSolver();
-    
-    const incomingArc = page.locator('#incoming-angle-arc');
-    // Optional element — just ensure querying it doesn't error
-    const exists = await incomingArc.count();
-    expect(exists).toBeGreaterThanOrEqual(0);
-  });
-
   test('should calculate english effect on kick', async ({ page, aceHelper }) => {
     // USER INTENT: "How does english affect the kick angle?"
     
@@ -110,9 +88,8 @@ test.describe('Kick Shots', () => {
     
     await aceHelper.enableKickSolver();
     
-    const kickAimLabel = page.locator('#kick-aim-label');
-    // Optional element — just ensure querying it doesn't error
-    const count = await kickAimLabel.count();
-    expect(count).toBeGreaterThanOrEqual(0);
+    // The label is real markup whose text the app writes (index.html:5849/5889) and which the
+    // kick indicator shows. The old body asserted count >= 0, which cannot fail.
+    await expect(page.locator('#kick-aim-label')).toBeVisible();
   });
 });
