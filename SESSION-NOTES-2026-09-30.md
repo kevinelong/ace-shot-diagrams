@@ -6,9 +6,10 @@ file is the working knowledge that is not in them.
 
 ## State at close
 
-- HEAD `d8d6899`, tag **v1.0.0**, tree clean, 0 un-pushed. Remote = `main`, plus two
+- HEAD `151571c`, tag **v1.0.0**, tree clean, 0 un-pushed. Remote = `main`, plus two
   deliberately out-of-scope `claude/*` branches (`aceshot/` tournament snapshot, `calendar/`).
-- `NEXT_STEPS.md`: **35 ticked / 0 open**. Suite: **159 tests in 12 files**, green.
+- `NEXT_STEPS.md`: **35 ticked / 0 open** (plus a dated section recording a reported incident).
+  Suite: **160 tests in 13 files**, green.
 - Guards, all green: `npm run test:core` (battery 8/8, trajectory golden 7/7, spin model PASS),
   `npm run test:app` (5 app-side harnesses judged by their printed verdicts), `npm run test:hygiene`
   (doc claims + test hygiene). CI runs all three.
@@ -38,6 +39,33 @@ file is the working knowledge that is not in them.
   opponent no direct pot, and marks the best leave scored by reachable balls + nearest distance.
   Documented as a reachability proxy (no rails/kicks), not a solve.
 
+## Aim and shots: what a reported incident exposed (later on 2026-09-30)
+
+Reported from real use: after selecting a ball and pocket the cue stick did not immediately show the
+new direction while other aids did, and once the cue ball went right past the object ball without
+moving it toward the selected pocket. **Not reproduced** - but it exposed two real coverage gaps,
+both now closed, and one user-facing trap.
+
+- **No test touched the cue stick** (zero references in `tests/` or the harnesses).
+  `tests/features/aim-consistency.spec.ts` reads the shaft polygon back and requires it to agree with
+  the ghost line within 1 degree, with the tip 0.8 units behind the cue ball, checked on the *next
+  turn* after both a ball change and a pocket change (3 repeats, green).
+- **Every shot check pre-set its selection in the URL hash**, so choosing a ball and pocket
+  interactively was never exercised. `verify-shots.cjs` gained `pick-in-app` and `change-then-shoot`:
+  **8/8 potted as intended**, each following the *new* selection.
+- Measured on a selection change: stick, ghost line, target line, ghost ball and object-ball path all
+  update. Only `tangent-line`'s coordinates stay stale, and that aid is off with its group hidden, so
+  it is not user-visible.
+- **Open, and the best candidate explanation**: the **Balls palette covers the top-left pocket**. A
+  click there lands on the palette and the pocket selection silently keeps its old value, so the shot
+  follows the old pocket while the aids keep showing the old aim. The repo's own test helper works
+  around it (`minimizeBallsPalette()` - "to prevent it from blocking pocket clicks"); a user has no
+  such helper. Suggested fix: inset or `pointer-events` for the pocket targets under a palette, or
+  start the Balls palette minimized.
+- If it recurs, capture: the aim mode (direct vs kick/bank - a kick or bank plan aims at a rail
+  point, so the cue legitimately passes the object ball), whether the pocket click registered near a
+  palette, and whether it was the first shot after load.
+
 ## Traps worth remembering
 
 - **Static DOM is not behaviour.** Five separate "findings" this pass were wrong because a probe
@@ -66,10 +94,11 @@ file is the working knowledge that is not in them.
 
 - Roadmap: **2.3** multi-shot sequences, **2.5** drill mode, **2.4** named save/load (partial),
   **3.1** undo/redo, **3.2** table sizes.
-- Recorded, not fixed: `quick-validation.spec.ts`'s palette-minimise test is an occasional
-  retry-passed flake under parallel load; `record-video.cjs`'s ffmpeg/ffconcat runtime is
-  unverified (needs a real ffmpeg run); the harnesses write screenshots into the repo and
-  `verify-after-break.png` is tracked, so a harness run dirties the tree.
+- Recorded, not fixed: the Balls palette covering the top-left pocket (see above);
+  `quick-validation.spec.ts`'s palette-minimise test is an occasional retry-passed flake under
+  parallel load; `record-video.cjs`'s ffmpeg/ffconcat runtime is unverified (needs a real ffmpeg
+  run); the harnesses write screenshots into the repo and `verify-after-break.png` is tracked, so a
+  harness run dirties the tree.
 - Bigger bets: split the inline app into modules with a build that still emits one file; publish
   the zero-dependency core as a crate.
 
