@@ -247,6 +247,19 @@ was open only because the identifier `naturalAngle` never existed.
   reached only from `copyShareLink()` (`index.html:7523`). Nothing to change - "copy only when the
   user asks" was already the behaviour. Fourth instance of the same mistake: reading static
   DOM/markup as runtime behaviour.
+## Next up (decided, not started)
+
+- [ ] **Roadmap 2.2, safety-shot mode** - decided 2026-09-29: Phase 2 starts here, built in the
+      current single-file app (the user chose "keep the single file, build 2.2 now" over
+      modularising first, with the note that 2+ more features this quarter would flip that).
+      Scope per `FEATURE_ROADMAP.md` 2.2: snooker zones and optimal defensive positions, ~6-8 h,
+      HIGH value. Nothing exists yet (`snooker`/`safetyZone` have no hits in `index.html`).
+- [ ] **A verdict on `verify-sim-make.js`** - the second red harness. My decision menu covered
+      `verify-spin.js` only (answered: the `spin` event means slide->roll, so the model's emission
+      gets fixed and the script stands); this one still needs the same model-vs-harness call, and
+      I owe it with measurements rather than a guess.
+
+
 ## Needs you (blocked on a decision, credentials, or a remote write)
 
 - [x] **Push the commits - done, and the live tool is fixed.** All of it is on `main` (0
