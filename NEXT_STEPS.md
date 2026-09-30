@@ -215,11 +215,11 @@ was open only because the identifier `naturalAngle` never existed.
   - **Kept on purpose (4 calls):** the three 50 ms gaps in "should recalculate instantly
         without lag" - they *are* the measurement - and `test-helpers.waitForShotCalculation`,
         which stays a 300 ms wait until the app exposes a signal for "shot calculated".
-  - **Found and recorded, not fixed here:** `kick-shots.spec.ts` has four assertions of the form
-        `expect(count).toBeGreaterThanOrEqual(0)` (lines ~65, ~77, ~107, ~124) that cannot fail -
-        they claim coverage of the mirror overlay, the incoming-angle arc and the kick aim label
-        but assert nothing. Deciding what those optional features should guarantee is a product
-        call, so they are left as they are and listed here.
+  - **Found and recorded, not fixed here:** `kick-shots.spec.ts` has **three** assertions of the
+        form `expect(count).toBeGreaterThanOrEqual(0)` (`:63` mirror overlay, `:74` incoming-angle
+        arc, `:116` kick aim label) that cannot fail — they claim coverage of optional features
+        while asserting nothing. What those features should guarantee is a product call, so they
+        are left as they are and listed here.
   - Per-test boot of the 552 KB page is the other cost.
 - [ ] **Remaining doc drift:** `tests/README.md`'s test tree and its "file:// is the default"
       claim; `claude.md`'s v008 (v009 is tracked) and its "`cargo test` needs MSVC" note (it
