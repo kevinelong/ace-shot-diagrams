@@ -145,7 +145,7 @@ Keyboard navigation and screen reader support.
 - `getCutAngle()`
 - `isTargetLineVisible()`
 - `isCueBallPathVisible()`
-- `waitForShotCalculation()`
+- (removed) `waitForShotCalculation()` - each action now waits for its own effect in the app's state
 
 ### Controls
 - `setEnglish(x, y)` - Range: -1 to 1
@@ -206,7 +206,7 @@ python -m http.server 8000
 
 ### Timing Issues
 If tests are flaky:
-- Increase wait times in `waitForShotCalculation()`
+- Make the action wait for the app state it should produce (the helpers no longer sleep)
 - Add explicit waits for animations
 - Use Playwright's auto-waiting features
 

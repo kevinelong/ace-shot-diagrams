@@ -88,6 +88,9 @@ export class AceShotHelper {
     await this.hideTourElements();
     await this.repositionPalettesForTesting();
     await this.page.locator('#pool-table-svg').waitFor({ state: 'visible' });
+    // The rack's break preset (follow, power 7) lands after the board appears; a test that sets
+    // spin or power must not have its value overwritten by it.
+    await this.waitForAppReady();
   }
 
   /**
@@ -159,6 +162,37 @@ export class AceShotHelper {
   }
 
   /**
+   * Run a DEBUG.* action until the app's own state shows it took effect.
+   *
+   * The app ignores DEBUG.* calls until it has finished its initial setup - the same window in
+   * which it ignores the Shoot button (measured: ~100-900ms after load, varying per run) - and
+   * it reports nothing when it ignores them. A 300ms sleep used to paper over that: it hid the
+   * dropped action behind a hopeful pause. Retrying is deterministic, and it fails loudly with
+   * the last observed state if the app never applies the action.
+   */
+  private async actUntilApplied<T>(
+    action: () => Promise<void>,
+    observed: () => Promise<T>,
+    satisfied: (value: T) => boolean,
+    what: string,
+    timeout = 10000,
+  ): Promise<void> {
+    const deadline = Date.now() + timeout;
+    let last: T | undefined;
+    while (Date.now() < deadline) {
+      await action();
+      try {
+        await expect.poll(async () => { last = await observed(); return satisfied(last); },
+          { timeout: 500 }).toBe(true);
+        return;
+      } catch {
+        // the app was not ready to accept this action yet
+      }
+    }
+    throw new Error(`${what} never took effect (last observed: ${JSON.stringify(last)})`);
+  }
+
+  /**
    * Place a ball on the table at the specified SVG coordinates.
    * Uses the app's DEBUG.placeBall API for proper state management.
    * Coordinates are in SVG units (table is roughly 0-100 x, 0-50 y)
@@ -167,33 +201,39 @@ export class AceShotHelper {
     const ballId = this.getBallId(ballNumber);
 
     // Use the app's DEBUG API to place the ball
-    await this.page.evaluate(({ ballId, svgX, svgY }) => {
-      // @ts-ignore - accessing global DEBUG object
-      if (!window.DEBUG || !window.DEBUG.placeBall) {
-        throw new Error('DEBUG.placeBall API not available');
-      }
-      // @ts-ignore
-      window.DEBUG.placeBall(ballId, svgX, svgY);
-    }, { ballId, svgX, svgY });
-
-    await this.waitForShotCalculation();
+    await this.actUntilApplied(
+      () => this.page.evaluate(({ ballId, svgX, svgY }) => {
+        // @ts-ignore - accessing global DEBUG object
+        if (!window.DEBUG || !window.DEBUG.placeBall) {
+          throw new Error('DEBUG.placeBall API not available');
+        }
+        // @ts-ignore
+        window.DEBUG.placeBall(ballId, svgX, svgY);
+      }, { ballId, svgX, svgY }),
+      async () => (await this.page.evaluate(() => window.DEBUG.state())).ballPositions[ballId],
+      (pos) => !!pos && Math.abs(pos.x - svgX) + Math.abs(pos.y - svgY) < 0.5,
+      `${ballId} should land at ${svgX},${svgY}`,
+    );
   }
 
   async selectObjectBall(ballNumber: number) {
     const ballId = this.getBallId(ballNumber);
 
     // Use the app's DEBUG API for reliable ball selection
-    await this.page.evaluate((ballId) => {
-      // @ts-ignore - accessing global DEBUG object
-      if (window.DEBUG && window.DEBUG.selectBall) {
-        // @ts-ignore
-        window.DEBUG.selectBall(ballId);
-      } else {
-        throw new Error('DEBUG.selectBall API not available');
-      }
-    }, ballId);
-
-    await this.waitForShotCalculation();
+    await this.actUntilApplied(
+      () => this.page.evaluate((ballId) => {
+        // @ts-ignore - accessing global DEBUG object
+        if (window.DEBUG && window.DEBUG.selectBall) {
+          // @ts-ignore
+          window.DEBUG.selectBall(ballId);
+        } else {
+          throw new Error('DEBUG.selectBall API not available');
+        }
+      }, ballId),
+      async () => (await this.page.evaluate(() => window.DEBUG.state())).selectedBallId,
+      (selected) => selected === ballId,
+      `${ballId} should be selected`,
+    );
   }
 
   async isBallOnTable(ballNumber: number): Promise<boolean> {
@@ -221,19 +261,22 @@ export class AceShotHelper {
     const pocketName = POCKETS[pocketId] || pocketId;
 
     // Use the app's DEBUG API for reliable pocket selection
-    await this.page.evaluate((pocketName) => {
-      // @ts-ignore - accessing global DEBUG object
-      if (window.DEBUG && window.DEBUG.selectPocket) {
-        // @ts-ignore
-        window.DEBUG.selectPocket(pocketName);
-      } else {
-        // Fallback to direct DOM manipulation + call selectPocket function
-        const pocket = document.querySelector(`.pocket-target[data-pocket="${pocketName}"]`) as HTMLElement;
-        if (pocket) pocket.click();
-      }
-    }, pocketName);
-
-    await this.waitForShotCalculation();
+    await this.actUntilApplied(
+      () => this.page.evaluate((pocketName) => {
+        // @ts-ignore - accessing global DEBUG object
+        if (window.DEBUG && window.DEBUG.selectPocket) {
+          // @ts-ignore
+          window.DEBUG.selectPocket(pocketName);
+        } else {
+          // Fallback to direct DOM manipulation + call selectPocket function
+          const pocket = document.querySelector(`.pocket-target[data-pocket="${pocketName}"]`) as HTMLElement;
+          if (pocket) pocket.click();
+        }
+      }, pocketName),
+      async () => (await this.page.evaluate(() => window.DEBUG.state())).selectedPocket,
+      (selected) => selected === pocketName,
+      `${pocketName} should be the selected pocket`,
+    );
   }
 
   async getSelectedPocket(): Promise<string | null> {
@@ -244,10 +287,10 @@ export class AceShotHelper {
 
   // ==================== Shot Analysis ====================
 
-  async waitForShotCalculation() {
-    // Shot calculations should be instant, but allow time for DOM updates
-    await this.page.waitForTimeout(300);
-  }
+  // Every action below waits for its own effect, in the app's state. These used to call a
+  // shared 300ms sleep ("shot calculations should be instant, but allow time for DOM
+  // updates"): measured, the app applies each action within one frame, so it was dead time
+  // paid on every place/select/set (a typical critical-path test spent ~1.2s in it).
 
   async isGhostBallVisible(): Promise<boolean> {
     // SVG elements use visibility attribute, not CSS display
@@ -290,6 +333,20 @@ export class AceShotHelper {
     return visibility === 'visible';
   }
 
+  /**
+   * Wait for the app to finish its own break setup.
+   *
+   * The app applies its break preset (follow spin, power 7) during initialisation, after the
+   * rack is placed. Fast helpers now run before that lands, and the preset then overwrites
+   * whatever the test set - so a test that sets spin or power must wait for setup first.
+   * Waiting on the preset itself is the honest gate: it is the app saying "setup done".
+   * (Racked tables only - `?empty=1` has no break preset.)
+   */
+  async waitForAppReady() {
+    await expect(this.page.locator('#ball-cue')).toHaveClass(/on-table/, { timeout: 15000 });
+    await expect(this.page.locator('#forceValue-palette')).toContainText('7', { timeout: 15000 });
+  }
+
   // ==================== English Controls ====================
 
   // english grid coords: x>0 right, y>0 top. The app stores contact offset with
@@ -299,28 +356,39 @@ export class AceShotHelper {
       // @ts-ignore
       window.DEBUG.setEnglish(x, -y);
     }, { x, y });
-    await this.waitForShotCalculation();
+    // No wait: DEBUG.state() carries no english field, so there is nothing truthful to wait on
+    // here. The contact point is a rendering effect (it moves in cx for side english and cy for
+    // top/bottom), so polling it as a stand-in was both wrong for side english and a flake
+    // source. Callers assert the effect they care about, with polling.
   }
 
   // ==================== Power Control ====================
 
   // value on the app's 1-10 scale
   async setPower(value: number) {
-    await this.page.evaluate((v) => {
-      // @ts-ignore
-      window.DEBUG.setPower(v);
-    }, value);
-    await this.waitForShotCalculation();
+    await this.actUntilApplied(
+      () => this.page.evaluate((v) => {
+        // @ts-ignore
+        window.DEBUG.setPower(v);
+      }, value),
+      async () => parseFloat((await this.page.locator('#forceValue-palette').textContent()) || 'NaN'),
+      (shown) => shown === value,
+      `force display should read ${value}`,
+    );
   }
 
   // ==================== Solver / Shot Types ====================
 
   async enableKickSolver() {
-    await this.page.evaluate(() => {
-      // @ts-ignore
-      window.DEBUG.setSolver('kick');
-    });
-    await this.waitForShotCalculation();
+    await this.actUntilApplied(
+      () => this.page.evaluate(() => {
+        // @ts-ignore
+        window.DEBUG.setSolver('kick');
+      }),
+      async () => (await this.page.evaluate(() => window.DEBUG.state())).solver,
+      (solver) => solver === 'kick',
+      'kick solver should be active',
+    );
   }
 
   async isKickModeActive(): Promise<boolean> {
@@ -334,7 +402,8 @@ export class AceShotHelper {
 
   async setGameMode(mode: string) {
     await this.page.selectOption('#gameModeSelect-palette', mode);
-    await this.waitForShotCalculation();
+    await expect.poll(async () => await this.page.locator('#gameModeSelect-palette').inputValue(),
+      { message: `game mode select should show ${mode}` }).toBe(mode);
   }
 
   // ==================== Export & Save ====================

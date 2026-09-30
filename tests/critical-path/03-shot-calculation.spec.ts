@@ -108,8 +108,8 @@ test.describe('Shot Calculation - Critical Path', () => {
     // Make probability should be displayed (use specific parent since ID is duplicated)
     const makeProb = page.locator('#palette-shot #makeProbabilityDisplay');
     await expect(makeProb).toBeVisible();
-    const makeProbText = await makeProb.textContent();
-    expect(makeProbText).not.toBe('--');
+    // '--' is the placeholder until the app computes it: poll rather than read once
+    await expect(makeProb).not.toHaveText('--', { timeout: 10000 });
   });
 
   test('should display final position indicators', async ({ page, aceHelper }) => {

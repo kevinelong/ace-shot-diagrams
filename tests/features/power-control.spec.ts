@@ -13,6 +13,8 @@ test.describe('Power Control', () => {
 
   test.beforeEach(async ({ page, aceHelper }) => {
     await page.goto('/');
+    // The rack's break preset (power 7) lands after load and would overwrite a test's value
+    await aceHelper.waitForAppReady();
     await aceHelper.clearLocalStorage();
 
     // Setup a shot (on-table coords are in SVG units: ~0-100 x, 0-50 y)

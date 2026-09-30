@@ -135,6 +135,10 @@ was open only because the identifier `naturalAngle` never existed.
       each wasm check printed (the battery and the trajectory golden), and CI plus
       `npm run test:core` go through it. Backed by:
       `npm run test:core` → `ok: battery 8/8`, **exit 0**.
+- [ ] **Make the app honest for its startup window (Shoot *and* the DEBUG API).** The same
+      ~100-900 ms window swallows `DEBUG.placeBall`/`selectBall`/`selectPocket` as well. The
+      specs handle both now (retry until the app's state reflects it), so this is a product
+      question, not a test one. Original wording below.
 - [ ] **Make the Shoot button honest for its dead window.** For up to ~1 s after load the app
       ignores Shoot clicks completely - no disabled state, no message - while the toast reads
       "Click Shoot to break!" (measured; see the app findings below). Two small options: disable
@@ -164,8 +168,9 @@ was open only because the identifier `naturalAngle` never existed.
       `GAME_MODE_PLAN.md` 29, against a suite that is green. Either reconcile them against the
       specs or prune them and say the specs are the source of truth.
 - [x] **Fixed waits are the runtime and the flakiness.** 92 `waitForTimeout` calls totalling
-      **57.6 s per pass** -> **4 calls, all deliberate** (see below). Backed by the full suite:
-      **158 passed, 0 flaky, 41.7 s** (was 57.1 s with 1 flaky).
+      **57.6 s per pass** -> **3 calls, all deliberate** (see below). Backed by the full suite:
+      **158 passed, 0 flaky, 39.4 s** (was 57.1 s with 1 flaky). The count covers
+      `waitForTimeout` in the specs; the helpers' hidden per-action sleeps are gone too.
   - [x] **`shot-animation.spec.ts` converted — 15 waits / 32.3 s removed, 0 left** (the top
         offender and the file that flaked). Backed by `--repeat-each=4`: **60/60 passed, 0
         flaky, 41.8 s** (≈10.4 s per pass of 15 tests), against 32.3 s of sleeps per pass
@@ -185,6 +190,9 @@ was open only because the identifier `naturalAngle` never existed.
         collapsing/expanding, the racked cue ball's `on-table` class). Backed by
         `--repeat-each=2`: **151/152 passed, 1 retry-passed flake, 42 s**, against the same
         command on the previous revision (**149/152 with 2 flaky and a hard failure, 72 s**).
+        The "minimize all" test still occasionally needs its retry under parallel load (its six
+        collapses are now awaited one by one, so it is no longer a hard failure); every other
+        flake in this file is gone.
   - [x] **The shared navigation sleeps and the read-once races.** `test-helpers.ts`'s
         `gotoEmpty`/`gotoWithRack` sleeps are now the board-visible wait (most critical-path
         specs go through them); the three visibility races in `02-pocket-selection` use
@@ -212,27 +220,38 @@ was open only because the identifier `naturalAngle` never existed.
         toast, the palette ones wait for the collapse they act on, and value reads poll. The
         shot helpers now live in `tests/setup/test-helpers.ts` so specs share them. Backed by
         those six files at `--repeat-each=2`: **76 passed, STATUS passed, 19.7 s**.
-  - **Kept on purpose (4 calls):** the three 50 ms gaps in "should recalculate instantly
-        without lag" - they *are* the measurement - and `test-helpers.waitForShotCalculation`,
-        which stays a 300 ms wait until the app exposes a signal for "shot calculated".
+  - **Kept on purpose (3 calls):** the three 50 ms gaps in "should recalculate instantly
+        without lag" - they *are* the measurement. `test-helpers.waitForShotCalculation` is gone
+        (its callers wait on the app's state instead).
   - **Found and recorded, not fixed here:** `kick-shots.spec.ts` has **three** assertions of the
         form `expect(count).toBeGreaterThanOrEqual(0)` (`:63` mirror overlay, `:74` incoming-angle
         arc, `:116` kick aim label) that cannot fail — they claim coverage of optional features
         while asserting nothing. What those features should guarantee is a product call, so they
         are left as they are and listed here.
-  - [ ] **The bigger half of the fixed cost is inside `test-helpers.ts`'s actions.** Seven methods
-        (`dragBallToTable`, `selectObjectBall`, `selectPocket`, `setEnglish`, `setPower`,
-        `enableKickSolver`, `setGameMode`) each call `waitForShotCalculation()` - a blind 300 ms -
-        right after driving the app's `DEBUG` API, so the 4-call count above understates the real
-        cost: a typical critical-path test still burns ~1.2 s in those sleeps. Measured through the
-        app: the actions' DOM effects are in place by **14 ms** (`.pocket-target.selected`,
-        `.ball.selected`, `.ball.on-table`, `#ghost-ball-indicator[visibility=visible]`) and never
-        change afterwards. Each should wait for its own effect instead
-        (`toHaveClass(/selected/)`, `toHaveClass(/on-table/)`, `#forceValue-palette` showing the
-        value, `DEBUG.state().solver === 'kick'`), with the specs that rely on the sleep's
-        side effect made to poll (e.g. `rack-start`'s `#forceSlider` read). `window.DEBUG` also
-        exposes `state/ghost/cue/balls/testShot/watchGhost`, so the app already has the state
-        surface this needs - no app change required.
+  - [x] **The bigger half of the fixed cost was inside `test-helpers.ts`'s actions - now gone.**
+        Seven methods (`dragBallToTable`, `selectObjectBall`, `selectPocket`, `setEnglish`,
+        `setPower`, `enableKickSolver`, `setGameMode`) each called a shared 300 ms sleep right
+        after driving the app's `DEBUG` API, so every place/select/set paid it (~1.2 s per
+        critical-path test). They now wait for their own effect in the app's own state
+        (`DEBUG.state().ballPositions/selectedBallId/selectedPocket/solver`, the force display,
+        the contact point), and the shared sleep is deleted. Backed by the full suite:
+        **158 passed, 0 flaky, 39.4 s** (41.7 s before this change).
+  - [x] **The sleep was hiding a second silent-refusal window** (found because the new waits
+        refused to sleep through it): the app ignores `DEBUG.placeBall`/`selectBall`/
+        `selectPocket` until its initial setup completes - the same ~100-900 ms window in which
+        it ignores the Shoot button - and reports nothing. The polls failed with exactly that
+        ("1 should land at 65,30", "corner-br should be the selected pocket"). The helpers now
+        *retry the action until the app's state reflects it* (`actUntilApplied`), which is
+        deterministic and fails loudly with the last observed state if it never applies.
+  - [x] `setEnglish` gets **no** wait: `DEBUG.state()` carries no english field, and the contact
+        point is a rendering effect (it moves in `cx` for side english, `cy` for top/bottom), so
+        polling it was both wrong for side english and a flake source. Callers assert the effect
+        they care about, by polling (`english-controls`' six label reads became `toContainText`
+        polls, its contact-point read an `expect.poll`).
+  - [x] The app's break preset (follow spin, power 7) lands *after* load and overwrote values
+        tests had just set once the helpers got faster. `gotoWithRack` (and the two specs that
+        navigate themselves) now wait for the preset itself - the app saying "setup done" -
+        before the test body runs.
   - Per-test boot of the 552 KB page is the other cost.
 - [ ] **Remaining doc drift:** `tests/README.md`'s test tree and its "file:// is the default"
       claim; `claude.md`'s v008 (v009 is tracked) and its "`cargo test` needs MSVC" note (it
@@ -244,10 +263,10 @@ was open only because the identifier `naturalAngle` never existed.
 
 ## Reference: what the last audit measured
 
-- Playwright **chromium 158/158** green after the waits cleanup, **0 flaky, 41.7 s**
-  (from 158/158 with 1-2 flaky and 57.1 s). Fixed waits in the suite: **92 -> 4**,
-  the four remaining being deliberate (three timing gaps that are the measurement,
-  one helper awaiting an app signal). The app's own in-browser suite is
+- Playwright **chromium 158/158** green after the waits cleanup, **0 flaky, 39.4 s**
+  (from 158/158 with 1-2 flaky and 57.1 s). Fixed waits in the suite: **92 -> 3**, the
+  three remaining being the timing gaps that *are* the "recalculate instantly" measurement;
+  the helpers' hidden per-action sleeps are gone as well. The app's own in-browser suite is
   **40/40**, page errors **0**, duplicate ids **none**.
 - Core: **build 0.43 s**, `cargo test` **5/5**, battery **8/8**.
 - The browser `verify-*.js` scripts run on Windows now (portable browser lookup): `verify-consistency` 9/9, `verify-animation` PASS, `verify-ux-fixes` PASS; `verify-spin` and `verify-sim-make` report FAIL - see the open items.
