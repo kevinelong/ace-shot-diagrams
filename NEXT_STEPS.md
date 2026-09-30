@@ -220,6 +220,19 @@ was open only because the identifier `naturalAngle` never existed.
         arc, `:116` kick aim label) that cannot fail — they claim coverage of optional features
         while asserting nothing. What those features should guarantee is a product call, so they
         are left as they are and listed here.
+  - [ ] **The bigger half of the fixed cost is inside `test-helpers.ts`'s actions.** Seven methods
+        (`dragBallToTable`, `selectObjectBall`, `selectPocket`, `setEnglish`, `setPower`,
+        `enableKickSolver`, `setGameMode`) each call `waitForShotCalculation()` - a blind 300 ms -
+        right after driving the app's `DEBUG` API, so the 4-call count above understates the real
+        cost: a typical critical-path test still burns ~1.2 s in those sleeps. Measured through the
+        app: the actions' DOM effects are in place by **14 ms** (`.pocket-target.selected`,
+        `.ball.selected`, `.ball.on-table`, `#ghost-ball-indicator[visibility=visible]`) and never
+        change afterwards. Each should wait for its own effect instead
+        (`toHaveClass(/selected/)`, `toHaveClass(/on-table/)`, `#forceValue-palette` showing the
+        value, `DEBUG.state().solver === 'kick'`), with the specs that rely on the sleep's
+        side effect made to poll (e.g. `rack-start`'s `#forceSlider` read). `window.DEBUG` also
+        exposes `state/ghost/cue/balls/testShot/watchGhost`, so the app already has the state
+        surface this needs - no app change required.
   - Per-test boot of the 552 KB page is the other cost.
 - [ ] **Remaining doc drift:** `tests/README.md`'s test tree and its "file:// is the default"
       claim; `claude.md`'s v008 (v009 is tracked) and its "`cargo test` needs MSVC" note (it
