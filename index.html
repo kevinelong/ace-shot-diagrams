@@ -2381,6 +2381,8 @@
         </g>
 
         <!-- Shape zone - triangular area showing where CB can be for next shot -->
+        <!-- Snooker zones: where the opponent has no direct pot (safety play) -->
+        <g id="snooker-zone-group" visibility="hidden"></g>
         <g id="shape-zone-group" visibility="hidden">
           <path id="shape-zone-path" d="" fill="#00ff88" fill-opacity="0.12" stroke="#00ff88" stroke-width="0.2"
             stroke-opacity="0.4" />
@@ -3169,6 +3171,10 @@
         <label class="toggle-row">
           <input type="checkbox" id="toggleShapeZone">
           <span>Shape Zone</span>
+        </label>
+        <label class="toggle-row">
+          <input type="checkbox" id="toggleSnookerZones">
+          <span>Snooker Zones (safety)</span>
         </label>
       </div>
       <!-- Legend Section -->
@@ -9349,6 +9355,68 @@
         };
       }
 
+      // ── Snooker zones (safety play) ──
+      //
+      // A spot is "snookered" when the opponent, playing the cue from there, has no direct pot:
+      // for every ball, either the cue cannot reach its ghost point or the ball cannot reach a
+      // pocket. Direct lines only - no rails or kicks, no cut feasibility - the same
+      // approximation the other aids make, documented as such.
+      //
+      // Cost: (100/CELL)x(50/CELL) probes x balls x pockets path checks, so the draw is
+      // debounced and only runs while the aid is switched on.
+      let showSnookerZones = false;
+      const snookerZoneGroup = document.getElementById('snooker-zone-group');
+      const SN_CELL = 2.5;      // table units between probes
+      const SN_MARGIN = 1.25;   // keep probes off the cushion line
+      let snookerTimer = null;
+
+      /** Is the cue safe from here - can the opponent pot anything on a direct line? */
+      function snookerSpotIsSafe(from, ballIds) {
+        for (const id of ballIds) {
+          const ballPos = ballPositions[id];
+          if (!ballPos) continue;
+          for (const pocketId in pocketCenters) {
+            const pocketPos = pocketCenters[pocketId];
+            const toPocket = vectorNormalize(vectorSubtract(pocketPos, ballPos));
+            const ghost = {
+              x: ballPos.x - toPocket.x * GHOST_BALL_OFFSET,
+              y: ballPos.y - toPocket.y * GHOST_BALL_OFFSET
+            };
+            // cue -> ghost (the cue is imagined at `from`), then the ball -> pocket line
+            if (isPathBlockedByAnyBall(from, ghost, ['cue', 'ghost', id]).blocked) continue;
+            if (isPathBlockedByAnyBall(ballPos, pocketPos, ['cue', 'ghost', id]).blocked) continue;
+            return false; // a direct pot exists here
+          }
+        }
+        return true;
+      }
+
+      function updateSnookerZones() {
+        if (!showSnookerZones) {
+          snookerZoneGroup.setAttribute('visibility', 'hidden');
+          return;
+        }
+        clearTimeout(snookerTimer);
+        snookerTimer = setTimeout(() => {
+          const ballIds = Object.keys(ballPositions).filter(id => id !== 'ghost' && ballPositions[id]);
+          if (!ballIds.length) {
+            snookerZoneGroup.setAttribute('visibility', 'hidden');
+            return;
+          }
+          const half = SN_CELL / 2;
+          const rects = [];
+          for (let x = SN_MARGIN; x <= 100 - SN_MARGIN; x += SN_CELL) {
+            for (let y = SN_MARGIN; y <= 50 - SN_MARGIN; y += SN_CELL) {
+              if (!snookerSpotIsSafe({ x, y }, ballIds)) continue;
+              rects.push(`<rect x="${(x - half).toFixed(2)}" y="${(y - half).toFixed(2)}" ` +
+                `width="${SN_CELL}" height="${SN_CELL}" fill="#00ff88" fill-opacity="0.10" />`);
+            }
+          }
+          snookerZoneGroup.innerHTML = rects.join('');
+          snookerZoneGroup.setAttribute('visibility', rects.length ? 'visible' : 'hidden');
+        }, 60);
+      }
+
       function updateShapeZone() {
         if (!showShapeZone || !selectedBallId || !selectedPocket) {
           shapeZoneGroup.setAttribute('visibility', 'hidden');
@@ -9447,6 +9515,14 @@
         }
 
         // Shape zone toggle
+        const toggleSnooker = document.getElementById('toggleSnookerZones');
+        if (toggleSnooker) {
+          toggleSnooker.addEventListener('change', (e) => {
+            showSnookerZones = e.target.checked;
+            updateSnookerZones();
+          });
+        }
+
         const toggleShape = document.getElementById('toggleShapeZone');
         if (toggleShape) {
           toggleShape.addEventListener('change', (e) => {
@@ -9517,6 +9593,7 @@
         updateTangentLine();
         updateFollowDrawLines();
         updateShapeZone();
+        updateSnookerZones();
         updateURL();
       };
 

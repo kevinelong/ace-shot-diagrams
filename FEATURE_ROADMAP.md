@@ -75,7 +75,16 @@
 - **Effort**: 4-6 hours
 - **Details**: Triangular zone showing where CB can be to make next shot
 
-#### 2.2 Safety Shot Mode — ⬜ open (no snooker/safetyZone hits)
+#### 2.2 Safety Shot Mode — 🟡 partial: snooker zones shipped, defensive positions open
+- *2026-09-29*: the first half ships as the **"Snooker Zones (safety)"** toggle in the Aids
+  palette. It shades the spots where the cue ball would leave the opponent no direct pot (the cue
+  cannot reach a ball's ghost point, or that ball cannot reach a pocket), recomputed on a
+  debounced redraw from the same geometry the other aids use. Measured: on the break rack it
+  shades four cells inside the pack - (76,24) (76,26) (84,24) (84,26), where the balls span
+  x 75-83 - and with a single ball on an open table it shades nothing, which is the property
+  that makes it trustworthy rather than decorative. Covered by `tests/features/safety-zones.spec.ts`.
+- Still open from this item: **optimal defensive positions** (where to leave the cue, not just
+  where it is safe), which needs a scoring model rather than a line check.
 - **Value**: HIGH - No competitor does this well
 - **Effort**: 6-8 hours
 - **Details**: Show snooker zones, optimal defensive positions
