@@ -1,4 +1,9 @@
 # Game Mode Selection & Combination Shots Implementation Plan
+> **Historical - superseded 2026-09-29.** The Playwright specs under `tests/` are the source of
+> truth for what is covered, and `NEXT_STEPS.md` is the plan of record. This document is kept for
+> its original reasoning only: its checkboxes were never maintained (29 unticked against a
+> suite of 158 passing tests), so do not read them as a to-do list.
+
 
 > **Status (2026-09-29):** five modes ship (9-Ball, 8-Ball, 10-Ball, Straight Pool, One
 > Pocket) plus the K-Ball rotation preset merged from `kball-preset`. The 29 checkboxes below

@@ -1,4 +1,9 @@
 # Playwright UX Test Plan - ACE Shot Diagrams
+> **Historical - superseded 2026-09-29.** The Playwright specs under `tests/` are the source of
+> truth for what is covered, and `NEXT_STEPS.md` is the plan of record. This document is kept for
+> its original reasoning only: its checkboxes were never maintained (137 unticked against a
+> suite of 158 passing tests), so do not read them as a to-do list.
+
 
 > **Status (2026-09-29): the suite is 158/158 green on chromium.** The 137 checkboxes below
 > have not been maintained and read as a design document, not a task list; either reconcile
