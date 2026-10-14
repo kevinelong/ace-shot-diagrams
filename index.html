@@ -8525,15 +8525,22 @@
             }
           }
         } else if (gameBalls.length === 10) {
-          // 10-Ball triangle rack: 1-2-3-4 formation
+          // 10-Ball triangle rack: 1-2-3-4 formation (WPA rules)
+          // 1 at the apex (foot spot), 10 in the center, 2 and 3 in the two
+          // back corners, the rest random.
           const trianglePattern = [
             [0],                    // Row 0: 1 ball (apex)
             [-0.5, 0.5],            // Row 1: 2 balls
             [-1, 0, 1],             // Row 2: 3 balls (10 in center)
-            [-1.5, -0.5, 0.5, 1.5]  // Row 3: 4 balls
+            [-1.5, -0.5, 0.5, 1.5]  // Row 3: 4 balls (2 and 3 in the corners)
           ];
 
-          const shuffledBalls = [...gameBalls].filter(b => b !== '1' && b !== '10');
+          // 2 and 3 take the back corners; which side each gets is random.
+          const cornerBalls = ['2', '3'];
+          shuffleArray(cornerBalls);
+          const [backLeft, backRight] = cornerBalls;
+
+          const shuffledBalls = [...gameBalls].filter(b => !['1', '10', '2', '3'].includes(b));
           shuffleArray(shuffledBalls);
 
           let ballIndex = 0;
@@ -8547,6 +8554,10 @@
                 ballId = '1';   // 1-ball at apex
               } else if (row === 2 && col === 1) {
                 ballId = '10';  // 10-ball in center
+              } else if (row === 3 && col === 0) {
+                ballId = backLeft;   // back-left corner: 2 or 3
+              } else if (row === 3 && col === 3) {
+                ballId = backRight;  // back-right corner: 2 or 3
               } else {
                 ballId = shuffledBalls[ballIndex++];
               }
@@ -8556,7 +8567,7 @@
               }
             }
           }
-        } else {
+        } else if (currentGameMode && currentGameMode.id === '8ball') {
           // 8-Ball/15-Ball triangle rack: 1-2-3-4-5 formation
           // British style: 8 in center, solid+stripe on back corners, alternating
           const trianglePattern = [
@@ -8605,6 +8616,34 @@
                 ballId = remainingBalls[ballIndex++];
               }
 
+              if (ballId && gameBalls.includes(ballId)) {
+                positions[ballId] = { x, y };
+              }
+            }
+          }
+        } else {
+          // Straight Pool (14.1) and One Pocket: full 15-ball triangle, apex on
+          // the foot spot, all balls placed randomly - neither game mandates a
+          // center or corner ball, unlike 8-Ball. (14.1 traditionally seats the
+          // 1 and 5 in the back corners, but a random full rack is rules-legal
+          // and is the simpler, standard choice for a diagram.)
+          const trianglePattern = [
+            [0],                      // Row 0: 1 ball (apex)
+            [-0.5, 0.5],              // Row 1: 2 balls
+            [-1, 0, 1],               // Row 2: 3 balls
+            [-1.5, -0.5, 0.5, 1.5],   // Row 3: 4 balls
+            [-2, -1, 0, 1, 2]         // Row 4: 5 balls
+          ];
+
+          const shuffledBalls = [...gameBalls];
+          shuffleArray(shuffledBalls);
+
+          let ballIndex = 0;
+          for (let row = 0; row < trianglePattern.length; row++) {
+            for (let col = 0; col < trianglePattern[row].length; col++) {
+              const x = FOOT_SPOT.x + row * ROW_SPACING;
+              const y = FOOT_SPOT.y + trianglePattern[row][col] * BALL_D;
+              const ballId = shuffledBalls[ballIndex++];
               if (ballId && gameBalls.includes(ballId)) {
                 positions[ballId] = { x, y };
               }
@@ -9238,8 +9277,13 @@
         // Get current game mode's balls
         const gameBalls = currentGameMode.ballIds || ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
-        // Clear all ball positions first
-        for (const ballId of gameBalls) {
+        // Clear EVERY object ball first (the full 1-15 set plus the generic
+        // 'gray' object ball), not just the new game's set - otherwise
+        // higher-numbered balls left over from a larger previous game (e.g.
+        // 10-15 after switching 8-Ball -> 9-Ball) would stay stranded on the
+        // table.
+        const allObjectBalls = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', 'gray'];
+        for (const ballId of allObjectBalls) {
           ballPositions[ballId] = null;
           const ball = document.getElementById(`ball-${ballId}`);
           if (ball) {
