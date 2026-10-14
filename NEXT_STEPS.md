@@ -466,5 +466,15 @@ Still uncovered, and deliberately so:
 - **Game-mode *rules*** (8-ball suit groups, the One Pocket pocket restriction, 14.1 scoring) -
   the racks are covered now, the rules are not.
 - **`record-video.cjs`** - needs a real ffmpeg run, which this box cannot do headlessly.
-- **README doc drift**: it advertises "PNG (1600x900), SVG (800x450)" while `exportPNG()` builds a
-  1600x**1214** canvas. The new spec pins the file, not the size, so the claim is still wrong.
+- **README doc drift - corrected 2026-10-14.** It advertised "PNG (1600x900), SVG (800x450)"; the
+  code builds **1600x1214** and **800x607**, both on the table's own 116:88 aspect ratio, so the
+  code was right and the README was stale. Fixed in `README.md`. The new spec pins the *file*
+  (real PNG signature, plausible size), not the pixel dimensions - asserting a number the README
+  had wrong for months would have made the test the thing that changes, not the product.
+
+**Verified since that audit:** the Playwright job is green in CI with the new spec - `9079ff3`,
+then `d70545b` fixing a click that Playwright refused as intercepted (`#palette-aids`' title bar
+covers `#btnSaveDiagram` in the runner's layout; the helper now disables pointer events on every
+palette it is not driving). Suite **163 tests in 14 files**; local 159 passed + 2 flaky, CI 160
+passed + 2 flaky (the same `quick-validation` pair), 0 failed. `verify-app.js` runs **6** app-side
+checks and `verify-doc-claims.js` / `verify-test-hygiene.js` are green.

@@ -48,7 +48,7 @@ Design notes, plans, and research for the project (start with `claude.md`):
 - **5 game modes**: 9-Ball, 8-Ball, 10-Ball, Straight Pool, One Pocket
 - **Position aids**: Tangent line, follow/draw lines, shape zone visualization
 - **Shot analysis**: Cut angle, make probability, difficulty rating
-- **Export**: PNG (1600x900), SVG (800x450), shareable URL links
+- **Export**: PNG (1600x1214), SVG (800x607), shareable URL links
 - **Save/Load**: Named diagrams stored in browser localStorage
 - **Guided tour**: First-time user walkthrough
 
