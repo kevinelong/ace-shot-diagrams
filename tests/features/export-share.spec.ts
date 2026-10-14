@@ -12,12 +12,27 @@ import { readFileSync } from 'node:fs';
  * and only a user who clicks the button finds out.
  */
 
-/** The Game palette ships minimized; its controls are unreachable until it is open. */
+/**
+ * The Game palette ships minimized; its controls are unreachable until it is open.
+ *
+ * The other palettes are also disabled for pointer events: a *minimized* palette still
+ * keeps its title bar, and in a narrower viewport (CI's) the Aids palette's title sits
+ * over `#btnSaveDiagram`, so Playwright refuses the click as intercepted. The repo's own
+ * helpers do the same kind of thing for the balls palette ("to prevent it from blocking
+ * pocket clicks"); this is a layout workaround, not a product fix.
+ */
 async function openPalette(page: Page, id: string) {
   await page.evaluate((paletteId) => {
+    document.querySelectorAll('.tool-palette').forEach((p) => {
+      const el = p as HTMLElement;
+      if (el.id === paletteId) return;
+      el.classList.add('minimized');
+      el.style.pointerEvents = 'none';
+    });
     const palette = document.getElementById(paletteId);
     if (!palette) throw new Error(`no palette ${paletteId}`);
     palette.classList.remove('minimized');
+    palette.style.pointerEvents = '';
     const body = palette.querySelector('.palette-body') as HTMLElement | null;
     if (body) body.style.display = '';
   }, id);
