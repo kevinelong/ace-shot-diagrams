@@ -6879,6 +6879,12 @@
         // Show/hide pocket selector for One Pocket
         pocketSelector.style.display = currentGameMode.pocketRestriction ? 'block' : 'none';
 
+        // Re-rack for the newly selected game. Only a user-driven change reaches
+        // this handler: loading a saved state sets gameModeSelect.value directly
+        // without dispatching 'change' (see applyState), so a loaded diagram is
+        // never clobbered by a fresh break.
+        randomRack();
+
         // Update visualizations
         updateCueGhostLine();
         highlightLegalBalls();
