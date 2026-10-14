@@ -39,7 +39,7 @@ Design notes, plans, and research for the project (start with `claude.md`):
 
 - `ace-physics/` — Rust event-driven physics core (compiles to wasm, embedded in `index.html`); see the "Rust physics core" section of `claude.md`.
 - Node tools (run with `node <file>`): `render-scenarios.js` (state → SVG/PNG, print theme), `render-impacts.js` (impact keyframe GIFs), `make-percentage.js` (Monte Carlo make %), `render-heatmap.js` (make-% heatmap by cue position), `svg-to-lineart.js` (B&W line drawings), `embed-wasm.js` (re-embed the core).
-- Headless checks: `verify-consistency.js`, `verify-rust-parity.js`, `verify-animation.js`, `verify-spin.js`, `verify-ux-fixes.js`, `verify-sim-make.js`.
+- Headless checks: `verify-consistency.js`, `verify-rust-parity.js`, `verify-animation.js`, `verify-spin.js`, `verify-ux-fixes.js`, `verify-sim-make.js`, `verify-racks.cjs`.
 
 ## Features
 

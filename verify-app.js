@@ -5,7 +5,7 @@
 // still exit 0). Each entry names the text that counts as a verdict, so a crash that happens
 // *before* a verdict still fails here - nothing is hidden by judging the output.
 //
-// Until 2026-09-29 these five could not run on Windows at all (a hardcoded /usr/bin chromium),
+// Until 2026-09-29 these could not run on Windows at all (a hardcoded /usr/bin chromium),
 // which is why ci.yml listed them as deliberately excluded. Both blockers it named are gone:
 // the browser lookup is portable and verify-spin.js is green.
 //
@@ -19,6 +19,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 
 const checks = [
   { script: 'verify-shots.cjs', verdict: /(\d+)\/(\d+) shots potted as intended/, what: 'app shots (Shoot -> pot)' },
+  { script: 'verify-racks.cjs', verdict: /(\d+)\/(\d+) rack assertions passed/, what: 'racks (10-ball WPA, 14.1/One Pocket, mode change)' },
   { script: 'verify-consistency.js', verdict: /(\d+)\/(\d+) passed/, what: 'the core through the app' },
   { script: 'verify-sim-make.js', verdict: /^(PASS|FAIL)$/m, what: 'make-% Monte Carlo' },
   { script: 'verify-animation.js', verdict: /^(PASS|FAIL)$/m, what: 'break animation' },
