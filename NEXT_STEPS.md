@@ -416,3 +416,55 @@ gaps, both now closed, and one user-facing trap.
 - The harnesses write screenshots into the repo, including `verify-after-break.png`, which is
   tracked - so any harness run leaves the tree dirty. Either untrack those images or ignore them;
   it costs a `git checkout` every time right now.
+
+## Audit 2026-10-14: the red CI job, and what the suite does not cover
+
+### The `Physics core` job's embed check is red for an environment reason, not drift
+
+`node verify-wasm-embed.js` fails in CI ("the core embedded in index.html is not the current
+build") while passing here. The difference was measured, not guessed:
+
+    touch ace-physics/src/lib.rs
+    cargo build --release --target wasm32-unknown-unknown --manifest-path ace-physics/Cargo.toml
+    node verify-wasm-embed.js
+    -> ok: embedded core matches the current build (75365 bytes, code 65665)
+
+A **fresh** rebuild matches the committed `index.html`, and the build takes ~1.5 s (the crate
+has no dependencies). So re-running `node embed-wasm.js` here would change nothing and CI
+would fail exactly as before - **the committed core is not stale**. The check compares bytes
+after stripping custom sections; the code section is what differs, and the remaining variable
+is the host (`ubuntu-latest` versus this machine). It is not the toolchain: `rust-toolchain.toml`
+pins 1.96.0 and this machine reports `rustc 1.96.0 (ac68faa20)`.
+
+So this is a decision, not a defect. One line, one of:
+
+1. **Make the check host-aware** - assert the embedded core *behaves* like the build (load it
+   and run the battery) instead of comparing its bytes. `verify-core.js` already drives the core
+   through the wasm, so this is a small edit to `verify-wasm-embed.js` and no rebuild. It keeps
+   the property that matters to a user and drops the one that does not travel.
+2. **Pin the build environment** - produce the release artifact in CI and commit that, so the
+   bytes come from one place. Costs a rebuild-and-re-embed per release plus the investigation
+   into why the two hosts differ.
+3. **Run the embed check only where the canonical build happens**, not on every runner.
+   Cheapest, but this is the check that already caught a real drift once.
+
+### Features the suite never touches
+
+Grepping the specs for each feature the README advertises found nothing at all for `export`,
+`clipboard` / `copyShareLink`, `10ball`, `1pocket` / `One Pocket`, `shapeZone`, `tangent`,
+`mirror` and `arc`. Coverage added since: `tests/features/export-share.spec.ts` (a downloaded PNG
+with the real 8-byte signature and a plausible size, the share string actually on the clipboard,
+and a saved diagram surviving a reload) and `verify-racks.cjs` (the rack shapes for 10-Ball,
+14.1 and One Pocket).
+
+Still uncovered, and deliberately so:
+
+- **The mirror-overlay and incoming-angle-arc aids** - the two whose tautological tests were
+  deleted; asserting them needs someone to say what they must guarantee.
+- **The tangent line** and the **shape zone** - both are drawn; neither is read back.
+- **The guided tour's behaviour** - the specs only pre-set `ace-tour-completed` to skip it.
+- **Game-mode *rules*** (8-ball suit groups, the One Pocket pocket restriction, 14.1 scoring) -
+  the racks are covered now, the rules are not.
+- **`record-video.cjs`** - needs a real ffmpeg run, which this box cannot do headlessly.
+- **README doc drift**: it advertises "PNG (1600x900), SVG (800x450)" while `exportPNG()` builds a
+  1600x**1214** canvas. The new spec pins the file, not the size, so the claim is still wrong.

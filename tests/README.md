@@ -24,6 +24,7 @@ tests/
 ├── features/                    # Individual features
 │   ├── aim-consistency.spec.ts   # the stick and the aim must agree, on selection changes
 │   ├── english-controls.spec.ts
+│   ├── export-share.spec.ts     # Export PNG, Copy Link, Save/Load
 │   ├── mobile.spec.ts           # Mobile + tablet viewports
 │   ├── power-control.spec.ts
 │   ├── rack-start.spec.ts
