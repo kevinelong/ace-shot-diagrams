@@ -8,7 +8,7 @@
 //
 //   node verify-doc-claims.js
 
-import { readFileSync, readdirSync, existsSync, statSync } from 'fs'
+import { readFileSync, readdirSync, existsSync } from 'fs'
 import { execFileSync } from 'child_process'
 import { dirname, join, basename } from 'path'
 import { fileURLToPath } from 'url'
@@ -56,7 +56,12 @@ check('tests/README.md lists exactly the spec files that exist',
 // ── index.html's size, as the plan's reference records it ──
 const html = read('index.html')
 const lines = (html.match(/\n/g) || []).length
-const kb = Math.round(statSync(join(here, 'index.html')).size / 1024)
+// Measured on the line-ending-normalised text, not the raw bytes on disk: a fresh
+// checkout is LF (CI, and any non-Windows clone) while a Windows working copy is
+// CRLF, so the same file differs by one byte per line. Comparing raw bytes made this
+// claim impossible to satisfy on both platforms at once - it was 511 KB here and
+// 501 KB in CI for identical content.
+const kb = Math.round(Buffer.byteLength(html.replace(/\r\n/g, '\n'), 'utf8') / 1024)
 const claim = read('NEXT_STEPS.md').match(/`index\.html` \*\*(\d+) lines \/ (\d+) KB\*\*/)
 check('NEXT_STEPS.md records index.html\'s real size',
   claim && Number(claim[1]) === lines && Math.abs(Number(claim[2]) - kb) <= 2,
