@@ -557,3 +557,8 @@ checks and `verify-doc-claims.js` / `verify-test-hygiene.js` are green.
   `palette-minimize.spec.ts:301-302`, bounded above by `resolution.width`/`height` on the next
   lines (a real in-viewport assertion) and one `count()` `toBeGreaterThan(0)` in
   `safety-zones.spec.ts:21` (needs at least one shaded spot). Nothing tautological to record.
+- **CI - the job this was all about.** On `06af46b` the `Physics core` job failed at the step
+  "The embedded core matches the build" while `Playwright (chromium)` passed. On `1856fe2` (this
+  change) run `38790058402` is **success**: both jobs, zero failed steps. So the behavioural
+  check passes on `ubuntu-latest` against the core embedded on this machine - the code section
+  differs there, the shots do not.
