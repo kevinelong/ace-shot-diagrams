@@ -151,6 +151,12 @@ After changing the Rust core, rebuild AND re-embed or the live app runs stale
 wasm: `cargo build --release --target wasm32-unknown-unknown` (in ace-physics/)
 then `node embed-wasm.js`. Builds are deterministic per-toolchain but differ
 ACROSS toolchains, so embed from one canonical machine to avoid base64 churn.
+`node verify-wasm-embed.js` is the guard: it runs the shot battery through the
+core embedded in `index.html` and through a fresh build and fails unless the two
+cores produce the same shots (same events, same final table within 0.01 units).
+It compares behaviour, not bytes - the code section depends on the host that
+compiled the module, so a byte compare reported drift for a core that was not
+stale (2026-10-14).
 
 ## Batch Scenario Rendering (headless)
 

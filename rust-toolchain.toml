@@ -1,6 +1,9 @@
 [toolchain]
-# Pinned so the wasm build is reproducible: verify-wasm-embed.js compares the core embedded
-# in index.html against a fresh build, and a different rustc produces different bytes.
+# Pinned so a rebuild of unchanged source produces the same wasm bytes: embed-wasm.js bakes
+# those bytes into index.html, so a different rustc means base64 churn in the committed
+# artifact. verify-wasm-embed.js compares the embedded core's *behaviour* against the build,
+# not its bytes (the code section depends on the compiling host), so the pin is about keeping
+# re-embeds diff-free, not about making that check pass.
 # Bump this deliberately, then rebuild and re-run `node embed-wasm.js`.
 channel = "1.96.0"
 components = ["rustfmt", "clippy"]

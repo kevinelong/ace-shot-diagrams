@@ -19,11 +19,15 @@ test green by relaxing the test — `verify-spin.js` below is the worked example
 - [x] **Guard against that drift recurring.** `verify-wasm-embed.js` compares the embedded
       core against a fresh build with custom sections stripped (so build paths don't matter).
       Backed by: it failed before the fix (exit 1) and passes after.
+      *Correction 2026-10-15: it compares **behaviour** now, not bytes - the byte compare was
+      red in CI for a core that was not stale. See "Audit 2026-10-14" below.*
 - [x] **CI.** `.github/workflows/ci.yml`: pinned toolchain → build → `cargo test` → embed
       check → battery (judged by stdout, because the script aborts in teardown) and Playwright
       chromium with the report uploaded on failure.
 - [x] **Reproducible toolchain.** `rust-toolchain.toml` pins rustc 1.96.0, because the embed
       check compares bytes and a different compiler produces different ones.
+      *Correction 2026-10-15: the pin outlived the reason - the check compares behaviour now, so
+      the pin is about keeping re-embeds diff-free (see the audit below). It is still pinned.*
 - [x] **LICENSE.** MIT, as already claimed by `Cargo.toml` and `package.json`.
 - [x] **Duplicate screenshot removed.** `screenshot-kick.png` was md5-identical to
       `screenshot-english-diff.png` and referenced nowhere.
@@ -419,9 +423,10 @@ gaps, both now closed, and one user-facing trap.
 
 ## Audit 2026-10-14: the red CI job, and what the suite does not cover
 
-### The `Physics core` job's embed check is red for an environment reason, not drift
+### The `Physics core` job's embed check was red for an environment reason, not drift
+*(found 2026-10-14, resolved 2026-10-15 below)*
 
-`node verify-wasm-embed.js` fails in CI ("the core embedded in index.html is not the current
+`node verify-wasm-embed.js` failed in CI ("the core embedded in index.html is not the current
 build") while passing here. The difference was measured, not guessed:
 
     touch ace-physics/src/lib.rs
@@ -436,17 +441,62 @@ after stripping custom sections; the code section is what differs, and the remai
 is the host (`ubuntu-latest` versus this machine). It is not the toolchain: `rust-toolchain.toml`
 pins 1.96.0 and this machine reports `rustc 1.96.0 (ac68faa20)`.
 
-So this is a decision, not a defect. One line, one of:
+So this is a decision, not a defect. The menu was one of:
 
 1. **Make the check host-aware** - assert the embedded core *behaves* like the build (load it
    and run the battery) instead of comparing its bytes. `verify-core.js` already drives the core
    through the wasm, so this is a small edit to `verify-wasm-embed.js` and no rebuild. It keeps
    the property that matters to a user and drops the one that does not travel.
+   **Taken 2026-10-15** - see below.
 2. **Pin the build environment** - produce the release artifact in CI and commit that, so the
    bytes come from one place. Costs a rebuild-and-re-embed per release plus the investigation
-   into why the two hosts differ.
+   into why the two hosts differ. **Not taken** - option 1 needs neither.
 3. **Run the embed check only where the canonical build happens**, not on every runner.
-   Cheapest, but this is the check that already caught a real drift once.
+   Cheapest, but this is the check that already caught a real drift once. **Not taken** - it
+   now costs 0.07 s and runs in the job that already builds the core.
+
+### RESOLVED 2026-10-15: the embed check is behavioural (option 1)
+
+`verify-wasm-embed.js` no longer compares bytes. It loads both cores in one process - the base64
+copy inside `index.html` and the fresh build - runs the shot battery through each (the inputs
+moved to `battery-cases.js`, shared with `verify-rust-parity.js`, so the two checks cannot
+compare different shots), and requires the two cores to agree on the shot:
+
+- the expected ball in the expected pocket, with no scratch, in **both** cores (the battery's own
+  claim, now asserted on the shipped artifact too);
+- the same events in the same order (`eventSummary`);
+- the same final table within **0.01 units** (1 unit = 1 inch) and the same duration within
+  **0.05 s**.
+
+Byte equality is still printed, as `info:`, but is not the verdict: the code section depends on
+the host that compiled the module. That is the property that does not travel, and it was the
+whole of the CI failure.
+
+Discrimination, measured, not asserted:
+
+- **Red, then green, restored.** `RAIL_COR 0.85 -> 0.8499` (0.01%) in `ace-physics/src/lib.rs`,
+  rebuilt, `index.html` left alone - exactly the drift this check exists for - gives
+  `FAIL: cut-45-corner lands 0.050 units apart in the two cores (tolerance 0.01)`, **exit 1**.
+  Restoring the source, rebuilding and re-embedding gives `ok: the embedded core behaves like
+  the build (8 battery cases, max position drift 0.000 units)`, **exit 0**.
+- **The embedded side is caught too** (the historical shape of the drift): with the source
+  pristine and a rebuilt core in place, `node embed-wasm.js` was run against the retuned build
+  and the build then restored to the pristine bytes, so `index.html` carried the old core -
+  `FAIL: cut-45-corner lands 0.050 units apart in the two cores (tolerance 0.01)`, exit 1.
+  Re-embedding the pristine core brought `index.html` back
+  byte-identical to `HEAD` (`git hash-object index.html` = `git rev-parse HEAD:index.html` =
+  `a306a99`), and the check green again.
+- **How small a change it sees.** Two cores from the same source agree *exactly* (0.000 units),
+  and the smallest retune tried - 0.01% on rail COR, invisible in play - lands 0.050 units
+  apart, 5x the tolerance. (A first cut used a 0.05 tolerance, which that retune just squeaked
+  inside; the 0.01 now used catches it.)
+- **Cost.** 0.07 s here - 16 short sims across two instantiations, no browser, no extra build.
+- **Its exit code is real now.** The process instantiates wasm, and on this node version
+  `process.exit()` after that aborts during teardown (libuv `UV_HANDLE_CLOSING`, exit 9) and
+  would override the verdict - measured with a two-line probe. So the script never calls
+  `process.exit()`; it sets `process.exitCode`. The three scripts that do call it
+  (`verify-rust-parity.js`, `verify-trajectories.js`, `verify-spin.js`) are still judged by
+  `verify-core.js`'s text for that reason.
 
 ### Features the suite never touches
 
@@ -478,3 +528,32 @@ covers `#btnSaveDiagram` in the runner's layout; the helper now disables pointer
 palette it is not driving). Suite **163 tests in 14 files**; local 159 passed + 2 flaky, CI 160
 passed + 2 flaky (the same `quick-validation` pair), 0 failed. `verify-app.js` runs **6** app-side
 checks and `verify-doc-claims.js` / `verify-test-hygiene.js` are green.
+
+**Verified 2026-10-15, for the behavioural embed check (option 1):**
+
+- `node verify-wasm-embed.js` -> `ok: the embedded core behaves like the build (8 battery cases,
+  max position drift 0.000 units, max duration drift 0.000s)`, plus `info: the two modules are
+  byte-identical as well (75365 bytes, custom sections stripped)`. **Exit 0**, **0.07 s**.
+- Planted drift, both directions, both **exit 1**: a retuned core (`RAIL_COR 0.85 -> 0.8499`,
+  built, `index.html` untouched) and an `index.html` left carrying a core the pristine build no
+  longer produces. Restoring each gave the green line above, with `index.html` back at the
+  commit's own blob (`a306a99`).
+- `npm run test:core` -> **exit 0** (embed ok, battery 8/8, trajectory golden 7/7, spin model
+  PASS).
+- `npx playwright test` -> **163 tests in 14 files** (its own `--list`), chromium **162 passed,
+  1 flaky, 0 failed, 47.5 s**. The flake is `palette-minimize.spec.ts:210` "Multiple palettes can
+  be minimized simultaneously", the retry-passed one this plan already records.
+- `verify-app.js` -> **all 6 app-side checks passed, exit 0** (shots 8/8, racks 58/58, the core
+  through the app 9/9, make-% PASS, break animation PASS, UX fixes PASS; 117 s);
+  `verify-racks.cjs` on its own -> **58/58, exit 0**; `verify-doc-claims.js` and
+  `verify-test-hygiene.js` -> green.
+- Run notes, because they are environmental: this box's port 8080 is held by the *score*
+  project's dev server (`python tools/dev-server.py 8080`), which the config would have reused,
+  so the suite ran on 8099 through a throwaway config (same tests, same counts; not committed);
+  and `CI=true` is set in this shell, which would have forced `workers: 1` and `retries: 2`, so
+  it was unset to match the documented local settings.
+- **No spec was added, removed, or relaxed** - this is a Node-side check. A scan for the vacuous
+  shapes this suite has produced before found two `expect(x).toBeGreaterThanOrEqual(0)` in
+  `palette-minimize.spec.ts:301-302`, bounded above by `resolution.width`/`height` on the next
+  lines (a real in-viewport assertion) and one `count()` `toBeGreaterThan(0)` in
+  `safety-zones.spec.ts:21` (needs at least one shaded spot). Nothing tautological to record.

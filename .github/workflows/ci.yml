@@ -24,8 +24,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # The toolchain is pinned by rust-toolchain.toml so the wasm build is reproducible:
-      # a different rustc produces different bytes, and the embed check compares bytes.
+      # rust-toolchain.toml pins the toolchain so a rebuild of unchanged source produces the
+      # same bytes - embed-wasm.js commits those bytes into index.html, so a different rustc
+      # would mean base64 churn. The embed check below compares *behaviour*, not bytes: the
+      # code section depends on the compiling host, which is what made this job red for a core
+      # that was not stale (measured 2026-10-14, see NEXT_STEPS.md).
       - name: Install the pinned toolchain and wasm target
         run: rustup target add wasm32-unknown-unknown
 
@@ -35,7 +38,11 @@ jobs:
       - name: Core unit tests
         run: cargo test --release --manifest-path ace-physics/Cargo.toml
 
-      - name: The embedded core matches the build
+      # Runs the shot battery through the embedded core and the fresh build and requires the
+      # same shots, so this is host-agnostic. Its exit code is trustworthy: the script sets
+      # process.exitCode instead of calling process.exit, which after wasm instantiation aborts
+      # during teardown on this node version.
+      - name: The embedded core behaves like the build
         run: node verify-wasm-embed.js
 
       # verify-rust-parity.js prints its verdict and then aborts during process teardown,
