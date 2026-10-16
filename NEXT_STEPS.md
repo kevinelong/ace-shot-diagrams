@@ -450,7 +450,7 @@ So this is a decision, not a defect. The menu was one of:
    **Taken 2026-10-15** - see below.
 2. **Pin the build environment** - produce the release artifact in CI and commit that, so the
    bytes come from one place. Costs a rebuild-and-re-embed per release plus the investigation
-   into why the two hosts differ. **Not taken** - option 1 needs neither.
+   into why the two hosts differ. **Taken 2026-10-16** - see below.
 3. **Run the embed check only where the canonical build happens**, not on every runner.
    Cheapest, but this is the check that already caught a real drift once. **Not taken** - it
    now costs 0.07 s and runs in the job that already builds the core.
@@ -497,6 +497,32 @@ Discrimination, measured, not asserted:
   `process.exit()`; it sets `process.exitCode`. The three scripts that do call it
   (`verify-rust-parity.js`, `verify-trajectories.js`, `verify-spin.js`) are still judged by
   `verify-core.js`'s text for that reason.
+
+### RESOLVED 2026-10-16 (option 2): the bytes come from CI
+
+The behavioural check answers "does the shipped core shoot the same shots?" on any host. It cannot
+answer "is the shipped core the bytes we built?", because the code section depends on the compiling
+host - and that second question still matters for a release: a published hash should be reproducible.
+So CI is now the single place the bytes come from, in three parts:
+
+- **`node embed-wasm.js --check`** compares the core committed in `index.html` with the core the
+  current build produced and exits non-zero when they differ (`node embed-wasm.js` alone still
+  writes). Line endings are normalised on both sides, because a Windows checkout has CRLF outside
+  the block while the payload is written with LF - the same lesson `verify-doc-claims.js` records
+  about `index.html`'s size.
+- **The `Physics core` job runs it** as *The committed core is the CI-built core*, immediately after
+  the behavioural check. CI therefore asserts both properties now: the core behaves like the build,
+  and the committed bytes *are* that build's bytes.
+- **The job publishes those bytes** as the `ci-built-core` artifact - `ace_physics.wasm` plus the
+  `index.html` the embed produces from it - uploaded even when the gate fails, which is exactly when
+  it is wanted. Fixing a failure is one step: download the artifact and commit its `index.html` (or
+  run `node embed-wasm.js` with its `ace_physics.wasm` in place). The gate then goes green with the
+  bytes still coming from a single place.
+
+The cost is the one the option named: the rebuild-and-re-embed per release now happens in CI rather
+than on the developer's machine, and a *local* `--check` is expected to report a difference - its
+message says so and points at the artifact name. Behaviour is unaffected either way: the behavioural
+check stays the host-agnostic one, and it is what a drift in the core's *semantics* trips first.
 
 ### Features the suite never touches
 

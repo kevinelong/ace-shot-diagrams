@@ -26,9 +26,11 @@ jobs:
 
       # rust-toolchain.toml pins the toolchain so a rebuild of unchanged source produces the
       # same bytes - embed-wasm.js commits those bytes into index.html, so a different rustc
-      # would mean base64 churn. The embed check below compares *behaviour*, not bytes: the
-      # code section depends on the compiling host, which is what made this job red for a core
-      # that was not stale (measured 2026-10-14, see NEXT_STEPS.md).
+      # would mean base64 churn. Two checks below cover the two questions: the behavioural one is
+      # host-agnostic, and the byte gate is exact *because* this job is where the bytes come from
+      # (option 2, taken 2026-10-16). Before that, the byte comparison was red here for a core
+      # that was not stale - the code section depends on the compiling host (measured 2026-10-14,
+      # see NEXT_STEPS.md).
       - name: Install the pinned toolchain and wasm target
         run: rustup target add wasm32-unknown-unknown
 
@@ -45,11 +47,39 @@ jobs:
       - name: The embedded core behaves like the build
         run: node verify-wasm-embed.js
 
+      # Option 2 of the embed-check menu (2026-10-14), taken 2026-10-16: the bytes' one home is CI.
+      # The wasm's code section depends on the compiling host, so a byte comparison can only be exact
+      # when the committed core was built *here* - and from now on it was, because the artifact below
+      # is where the canonical bytes come from. The behavioural check above stays the host-agnostic
+      # one; this gate is the exact one. When it fails, download `ci-built-core` from the run and
+      # commit its index.html (or run `node embed-wasm.js` with its ace_physics.wasm in place).
+      - name: The committed core is the CI-built core
+        run: node embed-wasm.js --check
+
       # verify-rust-parity.js prints its verdict and then aborts during process teardown,
       # so its exit code is not a verdict; verify-core.js judges what it printed instead and
       # still fails if the crash happens before the summary.
       - name: Physics battery through the wasm
         run: node verify-core.js
+
+      # Last in the job, because it rewrites index.html: the embed writes the CI-built core into the
+      # file, so the artifact carries something that can be committed as-is. Runs even when the byte
+      # gate above failed - that is exactly when these bytes are wanted.
+      - name: Package the canonical core and index.html
+        if: always()
+        run: |
+          node embed-wasm.js
+          mkdir -p ci-built-core
+          cp ace-physics/target/wasm32-unknown-unknown/release/ace_physics.wasm ci-built-core/
+          cp index.html ci-built-core/
+          ls -l ci-built-core
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ci-built-core
+          path: ci-built-core/
+          retention-days: 30
 
   browser:
     name: Playwright (chromium)
