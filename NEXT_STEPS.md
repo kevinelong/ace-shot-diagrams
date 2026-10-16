@@ -524,6 +524,25 @@ than on the developer's machine, and a *local* `--check` is expected to report a
 message says so and points at the artifact name. Behaviour is unaffected either way: the behavioural
 check stays the host-agnostic one, and it is what a drift in the core's *semantics* trips first.
 
+Measured, not asserted:
+
+- **The gate discriminates, and the first run was red on purpose.** Run `38975090615` failed at *The
+  committed core is the CI-built core* with `built 75365 bytes wasm -> 100488 base64 chars` against
+  `committed: 100488 base64 chars` - the **same length, different bytes**, which is the host dependence
+  of 2026-10-14 appearing as an explicit gate rather than as an ambiguous red job. That run's
+  `Playwright (chromium)` job passed, so the failure was confined to the bytes.
+- **The artifact repaired it in one step.** `gh run download 38975090615 -n ci-built-core` gave
+  `ace_physics.wasm` (75365 bytes) and `index.html` (515570 bytes); embedding that wasm and committing
+  the result made the staged blob's sha256 **identical** to the artifact's
+  (`217038a83061fc0ff4a3c992955436e53038dfa44b0c6fc71c3a8190eb7773f`), with the diff a single line - the
+  payload. Size and line count are unchanged, so the plan's own `index.html` claim did not move.
+- **Run `38975748598` is green in both jobs**, which is the gate agreeing that the committed bytes are
+  now the build's bytes.
+- Locally after the swap: `embed-wasm.js --check` ok, the behavioural check green (8 battery cases, 0.000
+  units drift), `verify-doc-claims.js` green. Keeping CI's `ace_physics.wasm` in
+  `ace-physics/target/wasm32-unknown-unknown/release/` is what makes a local `--check` agree; a rebuild
+  overwrites it, and then a local `--check` reporting a difference is the expected state, not a defect.
+
 ### Features the suite never touches
 
 Grepping the specs for each feature the README advertises found nothing at all for `export`,

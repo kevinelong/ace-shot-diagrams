@@ -150,13 +150,18 @@ aim. It uses playwright-core + system chromium (no browser download).
 After changing the Rust core, rebuild AND re-embed or the live app runs stale
 wasm: `cargo build --release --target wasm32-unknown-unknown` (in ace-physics/)
 then `node embed-wasm.js`. Builds are deterministic per-toolchain but differ
-ACROSS toolchains, so embed from one canonical machine to avoid base64 churn.
-`node verify-wasm-embed.js` is the guard: it runs the shot battery through the
-core embedded in `index.html` and through a fresh build and fails unless the two
-cores produce the same shots (same events, same final table within 0.01 units).
-It compares behaviour, not bytes - the code section depends on the host that
-compiled the module, so a byte compare reported drift for a core that was not
-stale (2026-10-14).
+ACROSS toolchains - the code section depends on the compiling host - so since
+2026-10-16 the committed bytes are the ones CI builds: the `Physics core` job runs
+`node embed-wasm.js --check` and fails when the committed core is not its own, and
+publishes those bytes as the `ci-built-core` artifact (`ace_physics.wasm` and the
+`index.html` the embed produces from it). Repair a mismatch by downloading that
+artifact and embedding its wasm; do not hand-pick a host. Two guards, two questions:
+`node verify-wasm-embed.js` runs the shot battery through the core embedded in
+`index.html` and through a fresh build and fails unless the two cores produce the
+same shots (same events, same final table within 0.01 units) - that is behaviour,
+and it travels between hosts; `embed-wasm.js --check` is the byte question, and only
+CI can answer it exactly (2026-10-14 measured why: a byte compare reported drift for
+a core that was not stale).
 
 ## Batch Scenario Rendering (headless)
 
@@ -218,7 +223,7 @@ Validate: `node verify-rust-parity.js` (battery through the wasm).
 that it needs MSVC Build Tools was wrong for this setup.
 In-app integration: the wasm is base64-embedded in index.html (between the
 ACE_WASM markers) by `node embed-wasm.js` — re-run it after every core
-rebuild. The app loads it (loadAcePhysics), resolves each shot up front
+rebuild, and commit CI's bytes when the embed gate says yours differ (above). The app loads it (loadAcePhysics), resolves each shot up front
 (aceSimulate), and plays back the exact trajectories (animateShotWasm);
 there is no JS fallback: if the wasm is absent or
 errors, the shot is refused with a message rather than simulated by a different
