@@ -6493,6 +6493,8 @@
         }
 
         updateShotGeometry();
+        autoPositionGhostBall();
+        updateCueGhostLine();
       }
 
       // Select a pocket (highlight it)
@@ -6544,9 +6546,6 @@
       // Places it exactly one ball diameter behind the object ball, along the pocket line
       // So ghost ball and object ball are just touching (not overlapping)
       function autoPositionGhostBall() {
-        // Don't auto-position during break setup - ghost ball is manually positioned
-        if (isBreakSetup) return;
-
         const objBallPos = selectedBallId ? ballPositions[selectedBallId] : null;
         const pocketPos = selectedPocket ? pocketCenters[selectedPocket] : null;
 
@@ -6628,6 +6627,7 @@
         const paletteBall = e.target.closest('#palette-balls .ball');
         if (!paletteBall && (
           e.target.closest('.tool-palette') ||
+          e.target.closest('.pocket-target') ||
           e.target.closest('.palette-restore-btn') ||
           e.target.closest('.tour-tooltip') ||
           e.target.closest('.status-banner'))) {
@@ -6750,14 +6750,11 @@
 
         const ballId = ball.dataset.ballId;
 
-        // If it was just a click (not a drag):
-        // - Long press (>400ms) = select the ball
-        // - Short click = do nothing (use double-click to select)
+        // A click without a drag selects the ball.
         if (!wasDragging) {
-          if (ballId !== 'cue' && ballId !== 'ghost' && holdTime >= LONG_PRESS_TIME) {
+          if (ballId !== 'cue' && ballId !== 'ghost') {
             selectBall(ballId);
           }
-          // Short click does nothing - use double-click instead
           return;
         }
 
