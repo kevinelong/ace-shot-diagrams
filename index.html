@@ -558,9 +558,9 @@
     /* ACE account / cloud library */
     #palette-save {
       bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      min-width: 300px;
+      left: 30px;
+      min-width: 270px;
+      max-width: 300px;
       max-height: 78vh;
       overflow-y: auto;
     }
@@ -3190,12 +3190,12 @@
     </div>
   </div>
 
-  <!-- Palette: Library (Bottom Center) -->
-  <div class="tool-palette" id="palette-save">
+  <!-- Palette: Library (Bottom-Left) -->
+  <div class="tool-palette minimized" id="palette-save">
     <div class="palette-header">
       <span class="palette-title"><span class="palette-title-icon">💾</span> Library</span>
       <div class="palette-controls">
-        <button class="palette-btn minimize" title="Minimize" aria-label="Minimize panel">−</button>
+        <button class="palette-btn minimize" title="Expand" aria-label="Expand panel">+</button>
       </div>
     </div>
     <div class="palette-body">
@@ -7086,7 +7086,8 @@
         game: document.getElementById('palette-game'),
         shot: document.getElementById('palette-shot'),
         actions: document.getElementById('palette-actions'),
-        aids: document.getElementById('palette-aids')
+        aids: document.getElementById('palette-aids'),
+        save: document.getElementById('palette-save')
       };
 
       const restoreButtons = {
@@ -8299,6 +8300,16 @@
             else { avatar.hidden = true; }
           }
         }
+        aceSyncLibraryPanel();
+      }
+
+      function aceSyncLibraryPanel() {
+        const palette = aceEl('palette-save');
+        if (!palette) return;
+        const open = Boolean(aceSharedToken) && !aceMeUser;
+        palette.classList.toggle('minimized', !open);
+        const btn = palette.querySelector('.palette-btn.minimize');
+        if (btn) btn.textContent = open ? '−' : '+';
       }
 
       function aceRenderCloud() {
@@ -8542,6 +8553,7 @@
         if (title) title.textContent = diagram.title;
         if (owner) owner.textContent = diagram.ownerName ? 'Shared by ' + diagram.ownerName : 'Shared diagram';
         if (banner) banner.hidden = false;
+        aceSyncLibraryPanel();
       }
 
       async function aceLoadSharedFromQuery() {
