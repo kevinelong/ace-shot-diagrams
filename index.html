@@ -4,12 +4,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="data:,">
   <title>ACE Shot Diagrams - Pool Table Preview</title>
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+    }
+
+    [hidden] {
+      display: none !important;
     }
 
     body {
@@ -57,7 +62,7 @@
       width: 100%;
       height: 100%;
       pointer-events: none;
-      z-index: 50;
+      z-index: 500;
     }
 
     /* ============================================
@@ -286,7 +291,7 @@
       z-index: 2002;  /* stay above the right-center Aids panel if they overlap */
     }
 
-    /* Legend and Save merged into other palettes */
+    /* Legend and Save merged into other palettes; Library stays separate. */
     #palette-legend {
       display: none;
     }
@@ -549,6 +554,41 @@
       background: rgba(0, 255, 136, 0.25);
       border-color: rgba(0, 255, 136, 0.5);
     }
+
+    /* ACE account / cloud library */
+    #palette-save {
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      min-width: 300px;
+      max-height: 78vh;
+      overflow-y: auto;
+    }
+
+    #palette-save .palette-body { display: flex; flex-direction: column; gap: 10px; }
+    .ace-account-card { padding-top: 10px; border-top: 1px solid rgba(255,255,255,.1); }
+    .ace-hint { font-size: 11px; color: #9ab; margin: 6px 0; }
+    .ace-auth-buttons { display: flex; flex-direction: column; gap: 6px; }
+    .ace-auth-btn { display: block; text-align: center; padding: 8px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,.15); color: #fff; text-decoration: none; font-size: 12px; }
+    .ace-auth-btn.google { background: #fff; color: #111; }
+    .ace-auth-btn.facebook { background: #1877f2; border-color: #1877f2; }
+    .ace-user { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+    .ace-avatar { width: 28px; height: 28px; border-radius: 50%; }
+    .ace-user-meta { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+    .ace-user-meta strong { color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ace-user-meta span { color: #888; font-size: 10px; }
+    .ace-link { color: #0fa; font-size: 11px; }
+    .ace-cloud { display: flex; flex-direction: column; gap: 6px; }
+    .ace-mini-btn { width: 100%; padding: 7px 8px; border-radius: 5px; border: 1px solid rgba(0,255,136,.3); background: rgba(0,255,136,.12); color: #0f8; font-size: 11px; cursor: pointer; }
+    .ace-mini-btn.ghost { border-color: rgba(255,255,255,.2); background: transparent; color: #ccc; }
+    .ace-mini-btn:hover { background: rgba(0,255,136,.22); }
+    .ace-cloud .saved-list { max-height: 190px; }
+    .ace-cloud-item .saved-item-actions { gap: 2px; }
+    .shared-banner { display: flex; flex-direction: column; gap: 6px; padding: 8px; border: 1px solid rgba(0,200,255,.35); border-radius: 6px; background: rgba(0,200,255,.08); font-size: 11px; }
+    .shared-banner-text { display: flex; flex-direction: column; gap: 2px; }
+    .shared-banner-text span { color: #9ab; }
+    .shared-banner-actions { display: flex; gap: 6px; }
+    .shared-banner-actions .ace-mini-btn { margin: 0; }
 
     /* Position Aids Palette (right center) */
     #palette-aids {
@@ -2623,6 +2663,12 @@
           <line x1="2" y1="25" x2="98" y2="25" stroke="#ffffff" stroke-width="0.15" />
           <line x1="2" y1="37.5" x2="98" y2="37.5" stroke="#ffffff" stroke-width="0.15" />
         </g>
+
+        <!-- Branding watermark (single source; exports clone this) -->
+        <g id="share-watermark" pointer-events="none" opacity="0.12">
+          <text x="50" y="23" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="6.5" fill="#ffffff">Ace Shot Diagram</text>
+          <text x="50" y="29" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="3.2" fill="#ffffff">by ColumbiaCueClub.com</text>
+        </g>
       </svg>
     </div>
 
@@ -3144,6 +3190,55 @@
     </div>
   </div>
 
+  <!-- Palette: Library (Bottom Center) -->
+  <div class="tool-palette" id="palette-save">
+    <div class="palette-header">
+      <span class="palette-title"><span class="palette-title-icon">💾</span> Library</span>
+      <div class="palette-controls">
+        <button class="palette-btn minimize" title="Minimize" aria-label="Minimize panel">−</button>
+      </div>
+    </div>
+    <div class="palette-body">
+      <!-- Account / Cloud Library -->
+      <div class="ace-account-card" id="aceAccount">
+        <div id="aceGuest">
+          <div class="section-label">Library</div>
+          <p class="ace-hint">Sign in to save diagrams across devices and collect shared shots.</p>
+          <div class="ace-auth-buttons">
+            <a class="ace-auth-btn google" href="/ace/accounts/google/login/?next=/ace/">Sign in with Google</a>
+            <a class="ace-auth-btn facebook" href="/ace/accounts/facebook/login/?next=/ace/">Sign in with Facebook</a>
+          </div>
+        </div>
+        <div class="ace-user" id="aceUser" hidden>
+          <img id="aceAvatar" class="ace-avatar" alt="" />
+          <div class="ace-user-meta"><strong id="aceUserName"></strong><span>Signed in</span></div>
+          <a class="ace-link" href="/ace/accounts/logout/">Sign out</a>
+        </div>
+      </div>
+
+      <div class="ace-cloud" id="aceCloud" hidden>
+        <div class="section-label">My Diagrams</div>
+        <div class="saved-list" id="aceCloudList"><div class="no-saved">No cloud diagrams yet</div></div>
+        <button class="ace-mini-btn" id="btnImportLocal" type="button">Import local saves</button>
+      </div>
+
+      <div class="ace-cloud" id="aceCloudActions" hidden>
+        <button class="ace-mini-btn" id="btnSaveCloud" type="button">Save current to cloud</button>
+      </div>
+
+      <div class="shared-banner" id="aceSharedBanner" hidden>
+        <div class="shared-banner-text"><strong id="aceSharedTitle"></strong><span id="aceSharedOwner"></span></div>
+        <div class="shared-banner-actions">
+          <button class="ace-mini-btn" id="btnCollectShared" type="button">Collect to my library</button>
+          <button class="ace-mini-btn ghost" id="btnDismissShared" type="button">Dismiss</button>
+        </div>
+      </div>
+
+      <div class="ace-hint">
+        <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a>
+      </div>
+    </div>
+  </div>
 
   <!-- Palette: Position Aids (Center-Right) - minimized by default -->
   <div class="tool-palette minimized" id="palette-aids" role="region" aria-label="Position aid toggles">
@@ -3264,6 +3359,7 @@
       const englishEffectArc = document.getElementById('english-effect-arc');
       const englishEffectText = document.getElementById('english-effect-text');
       const cueStick = document.getElementById('cue-stick');
+      if (cueStick && cueStick.parentNode) cueStick.parentNode.appendChild(cueStick);
       const cueShaft = document.getElementById('cue-shaft');
       const cueFerule = document.getElementById('cue-ferrule');
       const cueTip = document.getElementById('cue-tip');
@@ -7224,6 +7320,7 @@
         setupPaletteSync();
         setupSharePalette();
         loadStateFromURL();
+        aceInit();
       }, 150);
 
       // ========== SHARE/EXPORT FUNCTIONALITY ==========
@@ -7711,14 +7808,19 @@
 
           // Add label text
           const label = balls.find(b => b.id === ballId)?.label || ballId;
+          const isNumbered = !isNaN(parseInt(ballId, 10));
+          const fontSize = ballId === 'cue' || ballId === 'ghost' || ballId === 'gray'
+            ? '0.8'
+            : (isNumbered ? '1.25' : '0.9');
+          const labelFill = isNumbered ? '#111' : colors.textFill;
           const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
           text.setAttribute('x', '0');
           text.setAttribute('y', '0.35');
           text.setAttribute('text-anchor', 'middle');
-          text.setAttribute('font-size', ballId === 'cue' || ballId === 'ghost' || ballId === 'gray' ? '0.7' : '0.9');
+          text.setAttribute('font-size', fontSize);
           text.setAttribute('font-family', 'Arial, sans-serif');
           text.setAttribute('font-weight', 'bold');
-          text.setAttribute('fill', colors.textFill);
+          text.setAttribute('fill', labelFill);
           text.textContent = label;
           ballGroup.appendChild(text);
 
@@ -7726,6 +7828,10 @@
         });
 
         exportSvg.appendChild(ballsGroup);
+        addShareWatermark(exportSvg);
+        for (const cue of exportSvg.querySelectorAll('#cue-stick, #cue-stick-animation')) {
+          exportSvg.appendChild(cue);
+        }
 
         // ========== ADD INFO PANELS BELOW TABLE ==========
         const panelY = 60;  // Start panels below the table
@@ -8135,6 +8241,381 @@
       // Expose functions globally for onclick handlers
       window.loadDiagram = loadDiagram;
       window.deleteDiagram = deleteDiagram;
+      window.applyState = applyState;
+      window.decodeState = decodeState;
+      window.createExportSVG = createExportSVG;
+      window.addShareWatermark = addShareWatermark;
+
+      // ========== ACE ACCOUNT / CLOUD LIBRARY ==========
+      const ACE_API = '/ace/api';
+      let aceMeUser = null;
+      let aceCloudItems = [];
+      let aceCloudCurrentId = null;
+      let aceSharedToken = null;
+
+      function aceEl(id) { return document.getElementById(id); }
+
+      function aceCookie(name) {
+        const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.*+?^${}()|[\]\\])/g, '\\$1') + '=([^;]*)'));
+        return match ? decodeURIComponent(match[1]) : '';
+      }
+
+      async function aceFetch(path, opts = {}) {
+        const headers = Object.assign({}, opts.headers || {});
+        if (opts.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+        const method = (opts.method || 'GET').toUpperCase();
+        if (method !== 'GET' && method !== 'HEAD') {
+          const csrf = aceCookie('csrftoken');
+          if (csrf) headers['X-CSRFToken'] = csrf;
+        }
+        const response = await fetch(ACE_API + path, Object.assign({ credentials: 'same-origin' }, opts, { headers }));
+        let data = null;
+        try { data = await response.json(); } catch (e) {}
+        if (!response.ok) {
+          const err = new Error((data && data.error) || ('HTTP ' + response.status));
+          err.status = response.status;
+          err.data = data;
+          throw err;
+        }
+        return data || {};
+      }
+
+      function aceApplyMe(me) {
+        aceMeUser = me.authenticated ? me.user : null;
+        const guest = aceEl('aceGuest');
+        const user = aceEl('aceUser');
+        const cloud = aceEl('aceCloud');
+        const actions = aceEl('aceCloudActions');
+        if (guest) guest.hidden = !!aceMeUser;
+        if (user) user.hidden = !aceMeUser;
+        if (cloud) cloud.hidden = !aceMeUser;
+        if (actions) actions.hidden = !aceMeUser;
+        if (aceMeUser) {
+          const name = aceEl('aceUserName');
+          const avatar = aceEl('aceAvatar');
+          if (name) name.textContent = aceMeUser.name || aceMeUser.email || 'Signed in';
+          if (avatar) {
+            if (aceMeUser.avatar) { avatar.src = aceMeUser.avatar; avatar.hidden = false; }
+            else { avatar.hidden = true; }
+          }
+        }
+      }
+
+      function aceRenderCloud() {
+        const list = aceEl('aceCloudList');
+        if (!list) return;
+        if (!aceCloudItems.length) {
+          list.innerHTML = '<div class="no-saved">No cloud diagrams yet</div>';
+          return;
+        }
+        list.innerHTML = aceCloudItems.map((diagram) => {
+          const date = formatDate(Date.parse(diagram.updatedAt));
+          const tags = (diagram.sourceTitle ? ' · collected' : '') + (diagram.isShared ? ' · shared' : '');
+          return `
+            <div class="saved-item ace-cloud-item">
+              <div class="saved-item-info" onclick="aceLoadCloudItem(${diagram.id})" title="Load diagram">
+                <div class="saved-item-name">${escapeHtml(diagram.title)}</div>
+                <div class="saved-item-date">${date}${tags}</div>
+              </div>
+              <div class="saved-item-actions">
+                <button class="saved-item-btn ace-rename-btn" onclick="aceRenameCloud(${diagram.id})" title="Rename" aria-label="Rename">
+                  <svg viewBox="0 -960 960 960" width="14" height="14" aria-hidden="true" focusable="false"><path fill="currentColor" d="M449-280h271v-80H529l-80 80Zm-209 0h123l260-260q9-9 13-20.5t4-22.5q0-11-4.5-22T623-625l-37-37q-9-9-20-13.5t-23-4.5q-11 0-22 4t-20 13L240-403v123Zm340-303-37-37 37 37ZM300-340v-38l162-161 19 18 18 19-161 162h-38Zm181-181 18 19-37-37 19 18ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z"/></svg>
+                </button>
+                <button class="saved-item-btn" onclick="aceShareCloud(${diagram.id})" title="Copy share link" aria-label="Share">
+                  <svg viewBox="0 -960 960 960" width="14" height="14" aria-hidden="true" focusable="false"><path fill="currentColor" d="M680-80q-50 0-85-35t-35-85q0-6 3-28L282-392q-16 15-37 23.5t-45 8.5q-50 0-85-35t-35-85q0-50 35-85t85-35q24 0 45 8.5t37 23.5l281-164q-2-7-2.5-13.5T560-760q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35q-24 0-45-8.5T598-672L317-508q2 7 2.5 13.5t.5 14.5q0 8-.5 14.5T317-452l281 164q16-15 37-23.5t45-8.5q50 0 85 35t35 85q0 50-35 85t-85 35Zm0-80q17 0 28.5-11.5T720-200q0-17-11.5-28.5T680-240q-17 0-28.5 11.5T640-200q0 17 11.5 28.5T680-160ZM200-440q17 0 28.5-11.5T240-480q0-17-11.5-28.5T200-520q-17 0-28.5 11.5T160-480q0 17 11.5 28.5T200-440Zm508.5-291.5Q720-743 720-760t-11.5-28.5Q697-800 680-800t-28.5 11.5Q640-777 640-760t11.5 28.5Q663-720 680-720t28.5-11.5ZM680-200ZM200-480Zm480-280Z"/></svg>
+                </button>
+                <button class="saved-item-btn delete" onclick="aceDeleteCloud(${diagram.id})" title="Delete">×</button>
+              </div>
+            </div>`;
+        }).join('');
+      }
+
+      async function aceLoadCloud() {
+        if (!aceMeUser) return;
+        try {
+          const data = await aceFetch('/diagrams');
+          aceCloudItems = data.items || [];
+          aceRenderCloud();
+        } catch (e) {
+          console.warn('ACE cloud list failed', e);
+        }
+      }
+
+      async function aceLoadCloudItem(id) {
+        try {
+          const data = await aceFetch('/diagrams/' + id);
+          const diagram = data.diagram;
+          applyState(decodeState(diagram.state));
+          aceCloudCurrentId = diagram.id;
+          history.replaceState(null, '', window.location.pathname + '#' + encodeState(captureState()));
+          showToast(`Loaded "${diagram.title}"`);
+        } catch (e) {
+          showToast('Could not load diagram');
+        }
+      }
+
+      async function aceSaveCloud() {
+        if (!aceMeUser) { showToast('Sign in to save to the cloud'); return; }
+        const nameInput = aceEl('saveDiagramName');
+        let title = (nameInput && nameInput.value.trim()) || '';
+        if (!title) {
+          const entered = window.prompt('Diagram name:', 'Untitled diagram');
+          if (entered === null) return;
+          title = entered.trim() || 'Untitled diagram';
+        }
+        const state = encodeState(captureState());
+        try {
+          const data = await aceFetch('/diagrams', {
+            method: 'POST',
+            body: JSON.stringify({ title: title, state: state })
+          });
+          aceCloudCurrentId = data.diagram.id;
+          if (nameInput) nameInput.value = '';
+          await aceLoadCloud();
+          showToast('Saved to your library');
+        } catch (e) {
+          showToast(e.status === 401 ? 'Sign in to save to the cloud' : 'Cloud save failed');
+        }
+      }
+
+      async function aceShareCloud(id) {
+        if (!aceMeUser) { showToast('Sign in to share'); return; }
+        try {
+          const item = await aceFetch('/diagrams/' + id);
+          applyState(decodeState(item.diagram.state));
+          aceCloudCurrentId = item.diagram.id;
+          await new Promise((resolve) => setTimeout(resolve, 150));
+          try {
+            const blob = await createExportPNGBlob();
+            await aceFetch('/diagrams/' + id + '/thumbnail', {
+              method: 'POST',
+              headers: { 'Content-Type': 'image/png' },
+              body: blob
+            });
+          } catch (thumbError) {
+            console.warn('ACE thumbnail upload failed', thumbError);
+          }
+          const data = await aceFetch('/diagrams/' + id + '/share', {
+            method: 'POST',
+            body: JSON.stringify({ shared: true })
+          });
+          const token = data.diagram.shareToken;
+          if (!token) throw new Error('No share token');
+          const url = window.location.origin + '/ace/s/' + encodeURIComponent(token);
+          await aceCopyText(url);
+          await aceLoadCloud();
+          showToast('Share link copied');
+        } catch (e) {
+          showToast('Could not create share link');
+        }
+      }
+
+      function addShareWatermark(exportSvg) {
+        if (exportSvg.querySelector('#share-watermark')) return;
+        const NS = 'http://www.w3.org/2000/svg';
+        const group = document.createElementNS(NS, 'g');
+        group.setAttribute('id', 'share-watermark');
+        group.setAttribute('pointer-events', 'none');
+        group.setAttribute('opacity', '0.12');
+        const line1 = document.createElementNS(NS, 'text');
+        line1.setAttribute('x', '50');
+        line1.setAttribute('y', '23');
+        line1.setAttribute('text-anchor', 'middle');
+        line1.setAttribute('font-family', 'Arial, sans-serif');
+        line1.setAttribute('font-weight', 'bold');
+        line1.setAttribute('font-size', '6.5');
+        line1.setAttribute('fill', '#ffffff');
+        line1.textContent = 'Ace Shot Diagram';
+        const line2 = document.createElementNS(NS, 'text');
+        line2.setAttribute('x', '50');
+        line2.setAttribute('y', '29');
+        line2.setAttribute('text-anchor', 'middle');
+        line2.setAttribute('font-family', 'Arial, sans-serif');
+        line2.setAttribute('font-weight', 'bold');
+        line2.setAttribute('font-size', '3.2');
+        line2.setAttribute('fill', '#ffffff');
+        line2.textContent = 'by ColumbiaCueClub.com';
+        group.appendChild(line1);
+        group.appendChild(line2);
+        const balls = exportSvg.querySelector('#balls');
+        if (balls) exportSvg.insertBefore(group, balls);
+        else exportSvg.appendChild(group);
+      }
+
+      async function createExportPNGBlob() {
+        const OUT_W = 1200;
+        const OUT_H = 683;
+        const SCALE = 2;
+        const exportSvg = createExportSVG();
+        addShareWatermark(exportSvg);
+        exportSvg.setAttribute('viewBox', '-8 -8 116 66');
+        exportSvg.setAttribute('width', String(OUT_W * SCALE));
+        exportSvg.setAttribute('height', String(OUT_H * SCALE));
+        const svgData = new XMLSerializer().serializeToString(exportSvg);
+        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+        return new Promise((resolve, reject) => {
+          const hi = document.createElement('canvas');
+          hi.width = OUT_W * SCALE;
+          hi.height = OUT_H * SCALE;
+          const hctx = hi.getContext('2d');
+          const img = new Image();
+          img.onload = () => {
+            hctx.drawImage(img, 0, 0, hi.width, hi.height);
+            URL.revokeObjectURL(url);
+            const canvas = document.createElement('canvas');
+            canvas.width = OUT_W;
+            canvas.height = OUT_H;
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(hi, 0, 0, OUT_W, OUT_H);
+            canvas.toBlob((blob) => {
+              if (blob) resolve(blob);
+              else reject(new Error('PNG export failed'));
+            }, 'image/png');
+          };
+          img.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error('PNG export failed'));
+          };
+          img.src = url;
+        });
+      }
+
+      async function aceDeleteCloud(id) {
+        if (!aceMeUser) return;
+        if (!confirm('Delete this diagram from your library?')) return;
+        try {
+          await aceFetch('/diagrams/' + id, { method: 'DELETE' });
+          aceCloudItems = aceCloudItems.filter((d) => d.id !== id);
+          if (aceCloudCurrentId === id) aceCloudCurrentId = null;
+          aceRenderCloud();
+          showToast('Deleted');
+        } catch (e) {
+          showToast('Delete failed');
+        }
+      }
+
+      async function aceRenameCloud(id) {
+        if (!aceMeUser) return;
+        const diagram = aceCloudItems.find((d) => d.id === id);
+        const current = diagram ? diagram.title : '';
+        const entered = window.prompt('Rename diagram:', current);
+        if (entered === null) return;
+        const title = entered.trim();
+        if (!title) { showToast('Name cannot be empty'); return; }
+        try {
+          await aceFetch('/diagrams/' + id, {
+            method: 'PATCH',
+            body: JSON.stringify({ title: title })
+          });
+          await aceLoadCloud();
+          showToast('Renamed');
+        } catch (e) {
+          showToast('Rename failed');
+        }
+      }
+
+      async function aceImportLocal() {
+        if (!aceMeUser) return;
+        const local = getSavedDiagrams();
+        if (!local.length) { showToast('No local saves to import'); return; }
+        try {
+          const items = local.map((d) => ({ title: d.name, state: encodeState(d.state) }));
+          const data = await aceFetch('/diagrams/import', {
+            method: 'POST',
+            body: JSON.stringify({ items: items })
+          });
+          await aceLoadCloud();
+          showToast(`Imported ${data.items.length} diagram${data.items.length === 1 ? '' : 's'}`);
+        } catch (e) {
+          showToast('Import failed');
+        }
+      }
+
+      function aceShowShared(diagram, token) {
+        aceSharedToken = token;
+        const banner = aceEl('aceSharedBanner');
+        const title = aceEl('aceSharedTitle');
+        const owner = aceEl('aceSharedOwner');
+        if (title) title.textContent = diagram.title;
+        if (owner) owner.textContent = diagram.ownerName ? 'Shared by ' + diagram.ownerName : 'Shared diagram';
+        if (banner) banner.hidden = false;
+      }
+
+      async function aceLoadSharedFromQuery() {
+        const token = new URLSearchParams(window.location.search).get('d');
+        if (!token) return;
+        try {
+          const data = await aceFetch('/shared/' + encodeURIComponent(token));
+          const diagram = data.diagram;
+          applyState(decodeState(diagram.state));
+          aceShowShared(diagram, token);
+        } catch (e) {
+          showToast('Shared diagram not found or no longer shared');
+        }
+      }
+
+      async function aceCollectShared() {
+        if (!aceSharedToken) return;
+        if (!aceMeUser) {
+          const next = '/ace/?d=' + encodeURIComponent(aceSharedToken);
+          window.location.href = '/ace/accounts/google/login/?next=' + encodeURIComponent(next);
+          return;
+        }
+        try {
+          const data = await aceFetch('/shared/' + encodeURIComponent(aceSharedToken) + '/collect', { method: 'POST', body: '{}' });
+          aceCloudCurrentId = data.diagram.id;
+          await aceLoadCloud();
+          showToast('Collected to your library');
+        } catch (e) {
+          showToast('Could not collect the diagram');
+        }
+      }
+
+      function aceDismissShared() {
+        const banner = aceEl('aceSharedBanner');
+        if (banner) banner.hidden = true;
+      }
+
+      async function aceCopyText(text) {
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch (e) {
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+        }
+      }
+
+      async function aceInit() {
+        const saveCloud = aceEl('btnSaveCloud');
+        const importLocal = aceEl('btnImportLocal');
+        const collectShared = aceEl('btnCollectShared');
+        const dismissShared = aceEl('btnDismissShared');
+        if (saveCloud) saveCloud.addEventListener('click', aceSaveCloud);
+        if (importLocal) importLocal.addEventListener('click', aceImportLocal);
+        if (collectShared) collectShared.addEventListener('click', aceCollectShared);
+        if (dismissShared) dismissShared.addEventListener('click', aceDismissShared);
+
+        try {
+          const me = await aceFetch('/me');
+          aceApplyMe(me);
+          if (me.authenticated) await aceLoadCloud();
+          await aceLoadSharedFromQuery();
+        } catch (e) {
+          console.warn('ACE library unavailable', e);
+        }
+      }
+
+      window.aceLoadCloudItem = aceLoadCloudItem;
+      window.aceRenameCloud = aceRenameCloud;
+      window.aceShareCloud = aceShareCloud;
+      window.aceDeleteCloud = aceDeleteCloud;
 
       // ========== TANGENT LINE VISUALIZATION ==========
 
@@ -8677,9 +9158,9 @@
       // Create or get cue stick SVG element
       function getCueStick() {
         if (!cueStickElement) {
-          const svg = document.getElementById('pool-table-svg');
+          const svg = document.getElementById('connection-overlay');
           const cueGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-          cueGroup.id = 'cue-stick';
+          cueGroup.id = 'cue-stick-animation';
           cueGroup.style.visibility = 'hidden';
 
           // Cue stick body (tapered)

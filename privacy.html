@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ACE Shot Diagrams — Privacy</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 16px/1.6 -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+         max-width: 760px; margin: 0 auto; padding: 2rem 1.25rem 4rem; color: #1a1a1a; background: #fff; }
+  h1 { font-size: 1.7rem; margin: 0 0 .25rem; }
+  h2 { font-size: 1.15rem; margin: 1.75rem 0 .5rem; border-bottom: 1px solid #ddd; padding-bottom: .3rem; }
+  .sub { color: #555; margin: 0 0 1.5rem; }
+  footer { margin-top: 3rem; color: #666; font-size: .9rem; }
+  a { color: #0a58ca; }
+</style>
+</head>
+<body>
+  <h1>ACE Shot Diagrams — Privacy</h1>
+  <p class="sub">Last updated: 2026-10-21.</p>
+
+  <h2>Accounts</h2>
+  <p>
+    Signing in is optional. Guests keep diagram saves in this browser's local storage. If you sign in
+    with Google or Facebook, the provider shares your name, email address, and profile picture with
+    ACE. We store that account data in PostgreSQL on the ACE server.
+  </p>
+
+  <h2>Diagrams and sharing</h2>
+  <p>
+    A cloud diagram stores its title and shot state (ball positions, shot settings, and annotations).
+    Private diagrams are visible only to you. If you create an unlisted share link, anyone with that
+    link can view the diagram while it remains shared; treat the link as a secret. Collecting a shared
+    diagram creates an independent copy in your library. Deleting a diagram removes it from your
+    library; copies collected by other users remain theirs.
+  </p>
+
+  <h2>Cookies</h2>
+  <p>
+    ACE uses a session cookie for sign-in and a CSRF cookie for API protection. There are no advertising
+    or analytics cookies.
+  </p>
+
+  <h2>Third parties</h2>
+  <p>
+    Google and Facebook provide optional sign-in. We do not sell or rent account data or diagrams. The
+    server and PostgreSQL database run on the ACE operator's infrastructure.
+  </p>
+
+  <h2>Retention and deletion</h2>
+  <p>
+    Delete individual diagrams from the library. To delete your account and all cloud diagrams, email
+    <a href="mailto:kevinelong@gmail.com">kevinelong@gmail.com</a>; we will remove the account and its
+    diagrams. Guest local saves can be cleared from your browser.
+  </p>
+
+  <h2>Contact</h2>
+  <p>Questions: <a href="mailto:kevinelong@gmail.com">kevinelong@gmail.com</a>.</p>
+
+  <footer><a href="/ace/">Back to ACE Shot Diagrams</a> · <a href="terms.html">Terms</a> · <a href="data-deletion.html">Delete data</a></footer>
+</body>
+</html>

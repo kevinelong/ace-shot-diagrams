@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <radialGradient id="felt" cx="50%" cy="40%" r="70%">
+      <stop offset="0" stop-color="#0f7a4b"/>
+      <stop offset="1" stop-color="#04301f"/>
+    </radialGradient>
+    <radialGradient id="ball" cx="35%" cy="28%" r="75%">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.55" stop-color="#efe8d6"/>
+      <stop offset="1" stop-color="#b8ad94"/>
+    </radialGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" rx="220" fill="#07130f"/>
+  <rect x="86" y="196" width="852" height="632" rx="120" fill="#3a241a"/>
+  <rect x="126" y="236" width="772" height="552" rx="88" fill="url(#felt)"/>
+  <g fill="#050505">
+    <circle cx="126" cy="236" r="38"/>
+    <circle cx="512" cy="236" r="34"/>
+    <circle cx="898" cy="236" r="38"/>
+    <circle cx="126" cy="788" r="38"/>
+    <circle cx="512" cy="788" r="34"/>
+    <circle cx="898" cy="788" r="38"/>
+  </g>
+  <g filter="url(#shadow)">
+    <circle cx="700" cy="330" r="74" fill="url(#ball)" stroke="#8d826b" stroke-width="6"/>
+    <circle cx="430" cy="560" r="168" fill="#0a0a0a" stroke="#000" stroke-width="10"/>
+    <circle cx="430" cy="560" r="86" fill="#f4f1e8"/>
+    <text x="430" y="592" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="104" font-weight="900" fill="#111">A</text>
+  </g>
+  <line x1="190" y1="760" x2="640" y2="410" stroke="#d8b98a" stroke-width="26" stroke-linecap="round"/>
+  <line x1="190" y1="760" x2="300" y2="678" stroke="#3a2a1a" stroke-width="34" stroke-linecap="round"/>
+  <text x="512" y="958" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="92" font-weight="900" letter-spacing="8" fill="#f4f1e8">ACE</text>
+</svg>

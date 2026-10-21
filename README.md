@@ -16,7 +16,9 @@ the page carries its own physics core.
 5. Adjust english (spin) and power in the Cue Control palette
 6. View shot analysis in the Shot Info panel
 
-No build step, dependencies, or server required - it's a single HTML file.
+The editor is still a single HTML file with no build step. Accounts and the cloud
+library are optional and use a same-origin Django service (`aceweb`); guests keep
+local saves and URL sharing.
 
 ## Documentation & Notes
 
@@ -49,8 +51,53 @@ Design notes, plans, and research for the project (start with `claude.md`):
 - **Position aids**: Tangent line, follow/draw lines, shape zone visualization
 - **Shot analysis**: Cut angle, make probability, difficulty rating
 - **Export**: PNG (1600x1214), SVG (800x607), shareable URL links
-- **Save/Load**: Named diagrams stored in browser localStorage
+- **Save/Load**: Named diagrams stored in browser localStorage; optional PostgreSQL-backed My Diagrams library with Google/Facebook sign-in, unlisted shares, and collect-to-library
 - **Guided tour**: First-time user walkthrough
+
+---
+
+## Accounts and cloud library (optional)
+
+The editor works without an account. Signing in with Google or Facebook adds:
+
+- **My Diagrams** — save the current shot to PostgreSQL, reload or delete from the list.
+- **Share** — an unlisted `https://codeonline.io/ace/?d=<token>` link; the diagram is
+  visible to anyone who has the token until the owner unshares it.
+- **Collect** — copy a shared diagram into your library. The copy is independent.
+- **Import local saves** — push existing `localStorage` diagrams into the cloud list.
+- Existing `#v…` editor links and local saves continue to work unchanged.
+
+The service is `aceweb` (Django 5.2 + django-allauth + PostgreSQL) on loopback,
+proxied by nginx under `/ace/api/` and `/ace/accounts/`; the editor stays static at
+`/ace/`. Admin: `https://codeonline.io/ace/admin/`.
+
+### OAuth setup
+
+Create the provider apps and add the credentials to `/etc/aceweb/aceweb.env`:
+
+```sh
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+FACEBOOK_CLIENT_ID=...
+FACEBOOK_CLIENT_SECRET=...
+```
+
+- **Google** (Web application): authorized origin `https://codeonline.io`; redirect
+  `https://codeonline.io/ace/accounts/google/login/callback/`.
+- **Facebook** (Consumer + Facebook Login): valid OAuth redirect
+  `https://codeonline.io/ace/accounts/facebook/login/callback/`.
+- Privacy policy: `https://codeonline.io/ace/privacy.html`; terms:
+  `https://codeonline.io/ace/terms.html` (use these in the provider apps).
+
+After editing the env:
+
+```sh
+doas chown root:kevin /etc/aceweb/aceweb.env
+doas chmod 640 /etc/aceweb/aceweb.env
+doas rc-service aceweb restart
+```
+
+Backend tests: `cd /home/kevin/aceweb && /home/kevin/datacraftsignal/venv/bin/python manage.py test diagrams`.
 
 ---
 
