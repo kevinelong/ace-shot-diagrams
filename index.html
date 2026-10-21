@@ -10790,7 +10790,7 @@
           });
 
           await this.test('All palettes exist', () => {
-            const palettes = ['palette-balls', 'palette-cue', 'palette-game', 'palette-shot', 'palette-legend', 'palette-aids', 'palette-actions'];
+            const palettes = ['palette-balls', 'palette-cue', 'palette-game', 'palette-shot', 'palette-legend', 'palette-aids', 'palette-actions', 'palette-save'];
             return palettes.every(id => document.getElementById(id) !== null);
           });
 
@@ -10828,16 +10828,74 @@
             const wasHidden = document.body.classList.contains('panels-hidden');
             setPanelsHidden(true);
             try {
-              selectBall('1');
-              selectPocket('corner-tr');
+              const ball = document.getElementById('ball-1');
+              const rect = ball.getBoundingClientRect();
+              const point = {
+                bubbles: true,
+                clientX: rect.left + rect.width / 2,
+                clientY: rect.top + rect.height / 2
+              };
+              ball.dispatchEvent(new MouseEvent('mousedown', point));
+              ball.dispatchEvent(new MouseEvent('mouseup', point));
+              const ballSelected = ball.classList.contains('selected');
+
+              const pocket = document.querySelector('.pocket-target[data-pocket="corner-tr"]');
+              const pocketRect = pocket.getBoundingClientRect();
+              pocket.dispatchEvent(new MouseEvent('click', {
+                bubbles: true,
+                clientX: pocketRect.left + pocketRect.width / 2,
+                clientY: pocketRect.top + pocketRect.height / 2
+              }));
               const ghost = ballPositions['ghost'];
-              return selectedPocket === 'corner-tr' && !!ghost &&
+              return ballSelected && selectedPocket === 'corner-tr' && !!ghost &&
                 Number.isFinite(ghost.x) && Number.isFinite(ghost.y);
             } finally {
               selectBall(null);
               selectPocket(null);
               setPanelsHidden(wasHidden);
             }
+          });
+
+          await this.test('panels toggle hides all and restores open/minimized state', () => {
+            const toggle = document.getElementById('panelsToggle');
+            const wasHidden = document.body.classList.contains('panels-hidden');
+            if (wasHidden) toggle.click();
+
+            const panels = Array.from(document.querySelectorAll('.tool-palette'));
+            const before = panels.map(p => ({
+              hidden: p.classList.contains('hidden'),
+              minimized: p.classList.contains('minimized')
+            }));
+
+            toggle.click();
+            const hidden = document.body.classList.contains('panels-hidden') &&
+              panels.every(p => getComputedStyle(p).display === 'none') &&
+              toggle.getAttribute('aria-pressed') === 'true';
+
+            toggle.click();
+            const after = panels.map(p => ({
+              hidden: p.classList.contains('hidden'),
+              minimized: p.classList.contains('minimized')
+            }));
+            const restored = JSON.stringify(before) === JSON.stringify(after) &&
+              !document.body.classList.contains('panels-hidden');
+
+            if (wasHidden) toggle.click();
+            return hidden && restored;
+          });
+
+          await this.test('Library palette minimizes and reopens', () => {
+            const palette = document.getElementById('palette-save');
+            const btn = palette.querySelector('.palette-btn.minimize');
+            const wasMinimized = palette.classList.contains('minimized');
+
+            if (wasMinimized) btn.click();
+            const opened = !palette.classList.contains('minimized');
+            btn.click();
+            const minimized = palette.classList.contains('minimized');
+
+            if (!wasMinimized) btn.click();
+            return opened && minimized && palette.classList.contains('minimized') === wasMinimized;
           });
 
           // Export function tests
