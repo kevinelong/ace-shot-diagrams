@@ -341,8 +341,9 @@ test.describe('Rack Button Functionality', () => {
         // First, execute a shot to scatter balls
         await shootAndWait(page);
 
-        // Now click Rack button
+        // Rack is destructive: accept its confirmation before clicking
         const rackButton = page.locator('#btnRandomRack');
+        page.once('dialog', dialog => dialog.accept());
         await rackButton.click();
 
         // The rack announces itself with its own toast
@@ -362,8 +363,9 @@ test.describe('Rack Button Functionality', () => {
     test('should show rack setup message when Rack clicked', async ({ page }) => {
         // USER INTENT: "I want to set up a new rack for breaking"
 
-        // Click Rack button
+        // Click Rack button (accept its destructive-action confirmation)
         const rackButton = page.locator('#btnRandomRack');
+        page.once('dialog', dialog => dialog.accept());
         await rackButton.click();
 
         // Should show toast notification

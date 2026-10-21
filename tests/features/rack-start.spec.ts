@@ -140,12 +140,15 @@ test.describe('Rack Start Behavior', () => {
     expect(sliderValue).toBe('7');
   });
 
-  test('should allow Rack button to reset to rack', async ({ page }) => {
+  test('should allow Rack button to reset to rack after confirmation', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('#ball-cue')).toHaveClass(/on-table/, { timeout: 15000 });
 
     // First, shoot to scatter balls
     await shootAndWait(page);
+
+    // Rack is destructive, so it asks before clearing the layout.
+    page.once('dialog', dialog => dialog.accept());
 
     // Click Rack button
     await page.locator('#btnRandomRack').click();

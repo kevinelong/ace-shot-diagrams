@@ -1,5 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// Isolated runs (worktrees, parallel agents) can move both the app and the
+// Playwright base URL together: ACE_TEST_PORT=8091 npx playwright test
+const port = process.env.ACE_TEST_PORT || '8080';
+
 /**
  * Playwright configuration for ACE Shot Diagrams UX tests
  * @see https://playwright.dev/docs/test-configuration
@@ -28,7 +32,7 @@ export default defineConfig({
   // Shared settings for all projects
   use: {
     // Base URL for the application
-    baseURL: 'http://localhost:8080',
+    baseURL: `http://localhost:${port}`,
 
     // Artefact recording: on failure, and on the first retry. Recording every test across
     // five projects costs disk and time for nothing when everything passes; specs that want a
@@ -104,8 +108,8 @@ export default defineConfig({
 
   // Web server to run during tests
   webServer: {
-    command: 'npx http-server -p 8080 -c-1',
-    url: 'http://localhost:8080',
+    command: `npx http-server -p ${port} -c-1`,
+    url: `http://localhost:${port}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
   },
