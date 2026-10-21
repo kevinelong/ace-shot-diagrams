@@ -25,6 +25,7 @@ tests/
 │   ├── aim-consistency.spec.ts   # the stick and the aim must agree, on selection changes
 │   ├── english-controls.spec.ts
 │   ├── export-share.spec.ts     # Export PNG, Copy Link, Save/Load
+│   ├── share-account.spec.ts    # live share OG/image + Library/account states
 │   ├── mobile.spec.ts           # Mobile + tablet viewports
 │   ├── power-control.spec.ts
 │   ├── rack-start.spec.ts
@@ -82,6 +83,19 @@ npm test:update-snapshots
 npm run report
 ```
 
+### Current status
+
+The chromium suite has **176 tests**. Latest full run: **174 passed, 2 flaky**
+(the existing cross-resolution palette-minimize timing cases, both retried green).
+The config uses the system Chromium at `/usr/bin/chromium` and supports an isolated
+port with `ACE_TEST_PORT=8091`. Screenshots are written to `test-results/` and
+`tests/ui-ux/screenshots/`; curated README images are in `docs/screenshots/`.
+
+The suite now includes the live share/account checks (`share-account.spec.ts`) and
+the rack-safety scenarios (`rack-safety.spec.ts`): empty-felt Auto-Rack, destructive
+Rack confirmation, cue-only protection, game-mode preservation, panel hiding and the
+last-object-ball prompt regression.
+
 ## Writing New Tests
 
 ### Use the AceShotHelper
@@ -110,14 +124,14 @@ test('my test', async ({ page, aceHelper }) => {
 ### Include User Context
 
 ```typescript
-test('should select object ball by double-clicking', async ({ page, aceHelper }) => {
+test('should select object ball', async ({ page, aceHelper }) => {
   // USER INTENT: "I want to shoot at ball #1"
   
   // Setup: Place balls on table
   await aceHelper.dragBallToTable(0, 300, 600); // cue ball
   await aceHelper.dragBallToTable(1, 500, 400); // object ball
   
-  // USER ACTION: Double-click ball 1 to select it
+  // USER ACTION: Click ball 1 to select it
   await aceHelper.selectObjectBall(1);
   
   // EXPECTED OUTCOME: Ball 1 is highlighted/selected
@@ -132,6 +146,14 @@ Core workflows that must never break. These run first in CI.
 
 ### ✨ Features
 Individual feature verification.
+
+### 🛡 Rack Safety
+Empty-felt Auto-Rack, destructive Rack confirmation, cue-only protection and
+game-mode layout preservation (`rack-safety.spec.ts`).
+
+### 🔗 Share / Account
+Live share-page Open Graph/image, anonymous Library open with sign-in, and
+authenticated Library-minimized state (`share-account.spec.ts`).
 
 ### 🎨 Visual
 Screenshot comparisons and visual feedback verification.
@@ -174,6 +196,8 @@ Keyboard navigation and screen reader support.
 ### UI
 - `minimizePalette(paletteId)`
 - `closePalette(paletteId)`
+- `minimizeAllPalettes()` — uses the app's eye/H global hide
+- `showAllPanels()` — restores the prior open/minimized/closed state
 - `clearLocalStorage()`
 
 ## Pocket IDs
@@ -229,14 +253,20 @@ If selectors break:
 - Use data-testid attributes in app (recommended)
 - Check browser console for actual element structure
 
+## Screenshot artifacts
+
+- `test-results/` — per-test screenshots, videos and traces (gitignored)
+- `tests/ui-ux/screenshots/` — palette states at five resolutions (gitignored)
+- `docs/screenshots/` — curated images used by the main README
+
 ## Future Enhancements
 
-- [ ] Visual regression testing with baselines
+- [ ] Visual regression baselines for the palette/README states
 - [ ] Performance benchmarks
-- [ ] Mobile viewport tests
 - [ ] Accessibility audit integration
 - [ ] Code coverage reporting
 - [ ] Parallel test execution optimization
+- [ ] Custom styled rack confirmation (native `confirm()` is used today)
 
 ## Contributing
 

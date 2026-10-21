@@ -2,23 +2,50 @@
 
 An interactive pool/billiards shot diagramming tool with physics-based shot solving, position play aids, and multiple game mode support.
 
-![ACE Shot Diagrams Preview](preview.png)
+![ACE Shot Diagrams Preview](docs/screenshots/overview.png)
 
-**[Live demo →](https://kevinelong.github.io/ace-shot-diagrams/)** — no install, no build;
+**[Live app →](https://codeonline.io/ace/)** — no install, no build;
 the page carries its own physics core.
 
 ## Quick Start
 
-1. Open `index.html` in any modern browser
-2. Drag balls from the palette onto the table
-3. Click a pocket to select target
-4. Double-click or long-press a ball to select it as the object ball
-5. Adjust english (spin) and power in the Cue Control palette
-6. View shot analysis in the Shot Info panel
+1. Open the [live app](https://codeonline.io/ace/) or `index.html` in any modern browser.
+2. Click an object ball, then click a pocket. The ghost ball, cue stick, aim/kick line and Shot Info update immediately.
+3. Adjust english (spin) and power in the Cue palette, then use Shoot.
+4. On an empty felt, click **Auto-Rack Layout**. Rack asks before clearing an existing layout.
+5. Switching game mode keeps the current layout; rack explicitly when ready.
+6. Use the eye at top-left (or press **H**) to hide all panels; toggle again to restore the open/minimized state.
+7. Export/save from the Game palette; the Library (bottom-left) handles shared links and accounts.
 
 The editor is still a single HTML file with no build step. Accounts and the cloud
 library are optional and use a same-origin Django service (`aceweb`); guests keep
 local saves and URL sharing.
+
+## Screenshots & covered scenarios
+
+| Overview | Empty felt |
+|---|---|
+| ![Default table with palettes and panel-hide eye](docs/screenshots/overview.png) | ![Empty felt with Auto-Rack Layout prompt](docs/screenshots/empty-rack.png) |
+| **Aim a shot** | **Hide all panels** |
+| ![Selected ball and pocket with ghost ball, cue stick and Shot Info](docs/screenshots/pocket-aim.png) | ![Table with every panel hidden](docs/screenshots/panels-hidden.png) |
+| **Export and save** | **Library on a shared link** |
+| ![Game palette with Link, PNG, SVG and Saved Diagrams](docs/screenshots/export-save.png) | ![Library open with sign-in and shared banner](docs/screenshots/library-share.png) |
+| **Mobile** | |
+| ![Mobile layout at 390x844](docs/screenshots/mobile.png) | |
+
+| User scenario | What to expect | Playwright coverage |
+|---|---|---|
+| Place and select balls | Drag/drop, single-click select, preserved positions | `tests/critical-path/01-ball-placement.spec.ts` |
+| Aim at a pocket | Ghost ball, cue stick, target line, cut angle, make %, difficulty | `tests/critical-path/02-pocket-selection.spec.ts`, `03-shot-calculation.spec.ts`, `tests/features/aim-consistency.spec.ts` |
+| Start from an empty table | **Auto-Rack Layout** racks without a prompt | `tests/features/rack-safety.spec.ts` |
+| Rack over a custom layout | Native confirmation; cancel preserves the layout | `tests/features/rack-safety.spec.ts`, `rack-start.spec.ts` |
+| Switch game mode | Layout, cue, spin and power are preserved | `tests/features/rack-safety.spec.ts` |
+| Hide/restore panels | Eye/H hides every panel and restores open/minimized/closed state | `tests/ui-ux/palette-minimize.spec.ts`, `rack-safety.spec.ts` |
+| Export and save | PNG download, SVG download, copied share URL, local save survives reload | `tests/features/export-share.spec.ts` |
+| Share and account | Public OG/image; anonymous shared view opens Library; authenticated view keeps it minimized | `tests/features/share-account.spec.ts` |
+| Mobile | 390×844 layout and touch targets | `tests/features/mobile.spec.ts` |
+| Shot animation and kick shots | Break/shot feedback and kick solver | `tests/features/shot-animation.spec.ts`, `tests/features/shot-types/kick-shots.spec.ts` |
+| Safety zones | Snooker zone shading and best-leave marker | `tests/features/safety-zones.spec.ts` |
 
 ## Documentation & Notes
 
@@ -46,12 +73,16 @@ Design notes, plans, and research for the project (start with `claude.md`):
 ## Features
 
 - **Drag-and-drop ball placement** with real-time shot calculation
+- **Click-to-aim**: single-click an object ball and a pocket; the ghost ball, cue stick, aim/kick line and Shot Info update
 - **Multiple shot types**: Direct, Kick (1-rail, 2-rail), Bank, Combination
 - **5 game modes**: 9-Ball, 8-Ball, 10-Ball, Straight Pool, One Pocket
 - **Position aids**: Tangent line, follow/draw lines, shape zone visualization
 - **Shot analysis**: Cut angle, make probability, difficulty rating
+- **Rack safety**: empty-felt Auto-Rack; confirmation before clearing a layout; game-mode changes preserve the table
+- **Panel visibility**: eye/H hides all panels and restores their prior open/minimized state
 - **Export**: PNG (1600x1214), SVG (800x607), shareable URL links
 - **Save/Load**: Named diagrams stored in browser localStorage; optional PostgreSQL-backed My Diagrams library with Google/Facebook sign-in, unlisted shares, and collect-to-library
+- **Mobile layout**: 390×844 with touch-sized controls
 - **Guided tour**: First-time user walkthrough
 
 ---
@@ -116,13 +147,20 @@ ACE Shot Diagrams is a **zero-dependency, single-file web application**. All HTM
 ```
 ace-shot-diagrams/
 ├── index.html              # Main application (all-in-one)
+├── docs/screenshots/       # README screenshot gallery
+├── tests/                  # Playwright user-intent suite
+│   ├── critical-path/      # ball placement, pocket selection, shot calculation
+│   ├── features/           # aim, english, power, rack safety, export, share/account, mobile, animation, kick, safety zones
+│   ├── ui-ux/              # palette minimize + visual states
+│   └── quick-validation.spec.ts
+├── playwright.config.ts    # Chromium + system Chromium; optional ACE_TEST_PORT
 ├── pool-table-template.svg # Reference SVG template
 ├── pool-table-labeled.svg  # Labeled version for documentation
 ├── versions/               # SVG version history (v001-v009)
 ├── claude.md               # Developer documentation
 ├── FEATURE_ROADMAP.md      # Planned features & anti-features
 ├── GAME_MODE_PLAN.md       # Game mode implementation details
-└── preview.png             # Screenshot for README
+└── preview.png             # Legacy preview
 ```
 
 ### Application Structure (index.html)
@@ -286,15 +324,20 @@ Diagram state is encoded in the URL hash for instant sharing:
 | Palette | Position | Purpose |
 |---------|----------|---------|
 | `#palette-balls` | Top-left | Ball rack for dragging |
-| `#palette-cue` | Bottom-left | English selector + power slider |
-| `#palette-game` | Top-right | Game mode + solver selection |
+| `#palette-actions` | Top-center | Rack + Tour |
+| `#palette-game` | Top-right, starts minimized | Game mode, solver, export/save |
+| `#palette-aids` | Right-middle, starts minimized | Position aid toggles |
 | `#palette-shot` | Bottom-right | Shot info display |
-| `#palette-share` | Top-right area | Export + position aids |
+| `#palette-cue` | Bottom-center | English, power, Shoot |
+| `#palette-save` | Bottom-left, starts minimized | Library, account, shared links |
+| `#palette-legend` | Hidden | Merged into the other panels |
+| `#panelsToggle` | Top-left | Eye/H — hide or restore all panels |
 
-All palettes are:
-- Draggable via header
-- Minimizable (collapse to title bar)
-- Semi-transparent with backdrop blur
+Panel behavior:
+- Click a header to minimize; the minimize button toggles `+`/`−`
+- The eye/H hides all panels and restores the prior open/minimized/closed state
+- The Game, Aids and Library start minimized; the Library opens for guests on shared links
+- Palettes are semi-transparent with backdrop blur and respect mobile / print layouts
 
 ### Event Flow
 
@@ -329,20 +372,33 @@ updateURLState() → encode to URL hash
 
 ## Development Guide
 
-### Running Tests
+### Running tests
 
-Open browser console and run:
+**Playwright end-to-end (preferred)**
+
+```sh
+npx playwright test --project=chromium
+ACE_TEST_PORT=8091 npx playwright test --project=chromium  # isolated worktree/agent
+```
+
+The suite starts its own local server, uses `/usr/bin/chromium` (configured in
+`playwright.config.ts`), and currently has **176 chromium tests**: critical path,
+aim/english/power, rack safety, export/save, share/account, mobile, shot animation,
+kick shots, safety zones, palette minimize and visual states. The known
+cross-resolution palette-minimize timing flakes retry green.
+
+Screenshots are written to `test-results/` and `tests/ui-ux/screenshots/`; curated
+README images live in `docs/screenshots/`. See [tests/README.md](tests/README.md).
+
+**Built-in console smoke suite**
+
 ```javascript
 ACETests.runAll()
 ```
 
-Tests cover:
-- Vector math utilities
-- Path blocking detection
-- State encoding/decoding
-- Make probability calculation
-- Game mode rules
-- UI element existence
+The in-page suite covers vector utilities, path blocking, state encoding/decoding,
+make probability, game modes, the new rack-safety/panel behaviors and UI existence.
+It is intentionally fast; the Playwright suite is the user-intent layer.
 
 ### Key Functions Reference
 
