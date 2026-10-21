@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { waitForRackSet } from '../setup/test-helpers';
+import { waitForRackSet, waitForShotComplete } from '../setup/test-helpers';
 
 /**
  * Rack safety and empty-felt affordance.
@@ -24,8 +24,10 @@ interface BallPosition {
 interface AceDebugApi {
   balls: () => Record<string, BallPosition | null>;
   cue: () => BallPosition | null;
-  state: () => { power: number };
+  state: () => { power: number; aimReady: boolean };
   placeBall: (ballId: string, x: number, y: number) => unknown;
+  selectBall: (ballId: string) => unknown;
+  selectPocket: (pocketId: string) => unknown;
   hidePanels: () => unknown;
   showPanels: () => unknown;
 }
@@ -134,6 +136,25 @@ test.describe('Rack safety', () => {
     await waitForRackSet(page);
     // The prompt disappears; focus moves to the next useful action.
     await expect(page.locator('#btnShoot')).toBeFocused();
+  });
+
+  test('empty-felt prompt returns after the last object ball is pocketed', async ({ page }) => {
+    await page.goto('/?empty=1');
+
+    await page.evaluate(() => {
+      window.DEBUG.placeBall('cue', 80, 20);
+      window.DEBUG.placeBall('1', 95, 5);
+      window.DEBUG.selectBall('1');
+      window.DEBUG.selectPocket('corner-tr');
+    });
+
+    await expect(page.locator('#btnEmptyRack')).toBeHidden();
+    await expect.poll(() => page.evaluate(() => window.DEBUG.state().aimReady)).toBe(true);
+
+    await page.locator('#btnShoot').click();
+    await waitForShotComplete(page);
+
+    await expect(page.locator('#btnEmptyRack')).toBeVisible();
   });
 
   test('empty-felt prompt ignores a cue ball visually but protects its position', async ({ page }) => {
