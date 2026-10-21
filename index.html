@@ -253,6 +253,50 @@
       display: none;
     }
 
+    /* Global panel visibility toggle */
+    .panels-toggle {
+      position: fixed;
+      top: 8px;
+      left: 8px;
+      z-index: 3000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      border-radius: 7px;
+      border: 1px solid rgba(255, 255, 255, .16);
+      background: rgba(18, 22, 34, .82);
+      color: #9ab;
+      cursor: pointer;
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+      transition: color .15s, border-color .15s;
+    }
+
+    .panels-toggle:hover {
+      color: #fff;
+      border-color: rgba(0, 255, 136, .45);
+    }
+
+    .panels-toggle .panel-eye-off { display: none; }
+    body.panels-hidden .panels-toggle .panel-eye { display: none; }
+    body.panels-hidden .panels-toggle .panel-eye-off { display: block; }
+
+    body.panels-hidden .tool-palette,
+    body.panels-hidden .palette-restore-btn {
+      display: none !important;
+    }
+
+    @media (max-width: 768px) {
+      .panels-toggle {
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+    }
+
     /* Palette anchor positions */
     #palette-balls {
       top: 60px;   /* Moved down to avoid blocking top-left pocket click */
@@ -2347,6 +2391,16 @@
 </head>
 
 <body>
+  <button id="panelsToggle" class="panels-toggle" type="button" aria-label="Hide panels" aria-pressed="false" title="Hide panels (H)">
+    <svg class="panel-eye" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false">
+      <path d="M12 5.2c-5.1 0-9.1 4.3-10.2 6.8 1.1 2.5 5.1 6.8 10.2 6.8s9.1-4.3 10.2-6.8C21.1 9.5 17.1 5.2 12 5.2Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/>
+    </svg>
+    <svg class="panel-eye-off" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false">
+      <path d="M3 3l18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M10.6 6.1A10.9 10.9 0 0 1 12 6c5.1 0 9.1 4.3 10.2 6.8a12.8 12.8 0 0 1-2.6 3.6M7.2 7.2C4.5 8.6 2.6 10.8 1.8 12c1.1 2.5 5.1 6.8 10.2 6.8 1.9 0 3.6-.6 5.1-1.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+  </button>
   <h1>ACE Shot Diagrams</h1>
   <p class="version-info">Pool Table Template v009 - Drag balls to create shot diagrams</p>
 
@@ -7240,6 +7294,66 @@
         });
       }
 
+      // Global panel visibility toggle: hide every palette and restore the
+      // exact open/minimized/closed state when shown again.
+      let panelsSnapshot = null;
+
+      function setPanelsHidden(hidden) {
+        if (hidden) {
+          if (!document.body.classList.contains('panels-hidden')) {
+            panelsSnapshot = Array.from(document.querySelectorAll('.tool-palette')).map((el) => ({
+              el,
+              hidden: el.classList.contains('hidden'),
+              minimized: el.classList.contains('minimized')
+            }));
+          }
+          document.body.classList.add('panels-hidden');
+        } else {
+          if (panelsSnapshot) {
+            for (const item of panelsSnapshot) {
+              if (!item.el.isConnected) continue;
+              item.el.classList.toggle('hidden', item.hidden);
+              item.el.classList.toggle('minimized', item.minimized);
+              const btn = item.el.querySelector('.palette-btn.minimize');
+              if (btn) btn.textContent = item.minimized ? '+' : '−';
+            }
+            panelsSnapshot = null;
+          }
+          document.body.classList.remove('panels-hidden');
+        }
+
+        const toggle = document.getElementById('panelsToggle');
+        if (toggle) {
+          const isHidden = document.body.classList.contains('panels-hidden');
+          toggle.setAttribute('aria-pressed', String(isHidden));
+          toggle.setAttribute('aria-label', isHidden ? 'Show panels' : 'Hide panels');
+          toggle.title = isHidden ? 'Show panels (H)' : 'Hide panels (H)';
+        }
+      }
+
+      function setupPanelsToggle() {
+        const toggle = document.getElementById('panelsToggle');
+        if (!toggle) return;
+
+        toggle.addEventListener('click', () => {
+          setPanelsHidden(!document.body.classList.contains('panels-hidden'));
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (e.key.toLowerCase() !== 'h' || e.ctrlKey || e.metaKey || e.altKey) return;
+          const target = e.target;
+          if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' ||
+              target.tagName === 'SELECT' || target.isContentEditable)) return;
+          e.preventDefault();
+          setPanelsHidden(!document.body.classList.contains('panels-hidden'));
+        });
+
+        setPanelsHidden(document.body.classList.contains('panels-hidden'));
+      }
+
+      window.setPanelsHidden = setPanelsHidden;
+      window.togglePanels = () => setPanelsHidden(!document.body.classList.contains('panels-hidden'));
+
       // Update palette displays when shot geometry changes
       // Note: Uses querySelector with #palette-shot prefix to avoid duplicate ID issues
       function updatePaletteDisplays(shotData) {
@@ -7314,6 +7428,7 @@
       setTimeout(() => {
         createPaletteBalls();
         setupPaletteControls();
+        setupPanelsToggle();
         setupPaletteDragging();
         setupPaletteSync();
         setupSharePalette();
@@ -10709,6 +10824,22 @@
             return pockets.every(p => pocketCenters[p] !== undefined);
           });
 
+          await this.test('pocket selection with panels minimized recalculates ghost', () => {
+            const wasHidden = document.body.classList.contains('panels-hidden');
+            setPanelsHidden(true);
+            try {
+              selectBall('1');
+              selectPocket('corner-tr');
+              const ghost = ballPositions['ghost'];
+              return selectedPocket === 'corner-tr' && !!ghost &&
+                Number.isFinite(ghost.x) && Number.isFinite(ghost.y);
+            } finally {
+              selectBall(null);
+              selectPocket(null);
+              setPanelsHidden(wasHidden);
+            }
+          });
+
           // Export function tests
           await this.test('exportPNG function exists', () => {
             return typeof exportPNG === 'function';
@@ -10898,6 +11029,14 @@
           // Use the internal selectPocket function which also auto-positions ghost ball
           selectPocket(pocketId);
           return { success: true, selectedPocket: pocketId };
+        },
+
+        // Test API: Hide/show every palette, restoring the prior states on show.
+        hidePanels: () => { setPanelsHidden(true); return { success: true, hidden: true }; },
+        showPanels: () => { setPanelsHidden(false); return { success: true, hidden: false }; },
+        togglePanels: () => {
+          setPanelsHidden(!document.body.classList.contains('panels-hidden'));
+          return { success: true, hidden: document.body.classList.contains('panels-hidden') };
         },
 
         // Test API: Set english (cue contact offset). x>0 right, y>0 draw.
