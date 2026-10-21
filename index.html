@@ -54,6 +54,62 @@
       height: auto;
     }
 
+    /* Empty-table affordance: the one obvious way to get a rack when the felt
+       has no object balls (e.g. ?empty=1, or after clearing the table). */
+    .empty-table-hint {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 150;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      max-width: 80%;
+      padding: 14px 22px;
+      border: 1px solid rgba(0, 200, 255, 0.45);
+      border-radius: 12px;
+      background: rgba(13, 17, 30, 0.82);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+      color: #dff;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, transform 0.15s;
+    }
+
+    .empty-table-hint:hover {
+      background: rgba(0, 200, 255, 0.18);
+      border-color: #0cf;
+      transform: translate(-50%, -50%) scale(1.02);
+    }
+
+    .empty-table-hint:focus-visible {
+      outline: 2px solid #0fa;
+      outline-offset: 3px;
+    }
+
+    .empty-table-hint .empty-hint-icon {
+      display: block;
+      line-height: 0;
+    }
+
+    .empty-table-hint .empty-hint-sub {
+      font-size: 11px;
+      font-weight: 400;
+      color: #9ab;
+      letter-spacing: 0;
+    }
+
+    body.panels-hidden .empty-table-hint {
+      display: none;
+    }
+
     /* Connection overlay must match table size */
     .table-wrapper #connection-overlay {
       position: absolute;
@@ -2254,6 +2310,12 @@
         font-size: 13px;
       }
 
+      /* Keep the empty-table hint a comfortable touch target on phones */
+      .empty-table-hint {
+        padding: 12px 16px;
+        font-size: 14px;
+      }
+
       /* Simplify cue control layout */
       #palette-cue .palette-body {
         padding: 10px;
@@ -2341,6 +2403,11 @@
 
     /* Print styles - preserve ball positions */
     @media print {
+      /* Never print the interactive empty-table prompt */
+      .empty-table-hint {
+        display: none !important;
+      }
+
       body {
         background: #fff;
         padding: 10px;
@@ -2724,6 +2791,23 @@
           <text x="50" y="29" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="3.2" fill="#ffffff">by ColumbiaCueClub.com</text>
         </g>
       </svg>
+
+      <!-- Empty felt: the only gesture that gets a rack without hunting the
+           Actions palette. Hidden as soon as any object ball is on the felt. -->
+      <button type="button" class="empty-table-hint" id="btnEmptyRack" hidden
+        aria-label="Auto-rack layout - set up a standard break" title="Set up a standard rack">
+        <span class="empty-hint-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="28" height="28" focusable="false">
+            <path d="M12 3 L22 21 H2 Z" fill="none" stroke="#0cf" stroke-width="1.6"
+              stroke-linejoin="round" />
+            <circle cx="12" cy="9" r="2.2" fill="#f5f5f5" />
+            <circle cx="8" cy="17" r="2.2" fill="#f5f5f5" />
+            <circle cx="16" cy="17" r="2.2" fill="#f5f5f5" />
+          </svg>
+        </span>
+        <span>Auto-Rack Layout</span>
+        <span class="empty-hint-sub">Start from a standard break</span>
+      </button>
     </div>
 
     <!-- Ball Rack -->
@@ -6850,6 +6934,7 @@
         }
 
         updateCueGhostLine();
+        refreshEmptyTableHint();
       }
 
       // Cancel drag completely (reset all state)
@@ -7026,11 +7111,14 @@
         // Show/hide pocket selector for One Pocket
         pocketSelector.style.display = currentGameMode.pocketRestriction ? 'block' : 'none';
 
-        // Re-rack for the newly selected game. Only a user-driven change reaches
-        // this handler: loading a saved state sets gameModeSelect.value directly
-        // without dispatching 'change' (see applyState), so a loaded diagram is
-        // never clobbered by a fresh break.
-        randomRack();
+        // Deliberately do NOT re-rack here. Switching rules is a preferences
+        // change, not a destructive action: re-racking silently deleted the
+        // user's ball layout (and reset cue position, spin, and power) every
+        // time they compared games. The table stays exactly as it is; the user
+        // can pick a fresh rack explicitly via Rack or the empty-felt prompt.
+        // Only a user-driven change reaches this handler: loading a saved state
+        // sets gameModeSelect.value directly without dispatching 'change' (see
+        // applyState), so a loaded diagram is never clobbered either.
 
         // Update visualizations
         updateCueGhostLine();
@@ -7115,6 +7203,19 @@
       createBalls();
       setupPocketHandlers();
 
+      // Bind the rack controls synchronously. The empty-felt prompt becomes
+      // visible at 100ms, while the palette setup timer (which used to own
+      // these bindings) runs at 150ms - a short window where the prompt was
+      // visible and focusable but inert.
+      const btnRandomRack = document.getElementById('btnRandomRack');
+      if (btnRandomRack) {
+        btnRandomRack.addEventListener('click', requestRack);
+      }
+      const btnEmptyRack = document.getElementById('btnEmptyRack');
+      if (btnEmptyRack) {
+        btnEmptyRack.addEventListener('click', requestRack);
+      }
+
       // Set up initial 8-ball rack (skip if ?empty=1, or when opening a shared
       // state link — otherwise the rack would overlap the loaded shot)
       setTimeout(() => {
@@ -7123,6 +7224,7 @@
         if (!urlParams.has('empty') && !hasStateHash) {
           randomRack();  // Use the simplified rack function
         }
+        refreshEmptyTableHint();
       }, 100);
 
       // ============================================
@@ -7715,6 +7817,7 @@
         }
 
         updateCueGhostLine();
+        refreshEmptyTableHint();
       }
 
       // Load state from URL on page load
@@ -9840,6 +9943,9 @@
         } else {
           showToast('⭕ No balls pocketed');
         }
+
+        // A shot can pocket the last object balls; offer the rack shortcut again.
+        refreshEmptyTableHint();
       }
 
       // Animate cue stroke (time-based, so stroke speed is refresh-rate independent)
@@ -9878,6 +9984,50 @@
 
           requestAnimationFrame(animate);
         });
+      }
+
+      // Object balls are the numbered balls plus the generic 'gray' ball. The
+      // cue and ghost are aiming aids, so a felt with only a cue ball counts as
+      // empty and still offers the rack shortcut.
+      function hasObjectBallsOnTable() {
+        for (const id in ballPositions) {
+          if (ballPositions[id] && /^(?:\d+|gray)$/.test(id)) return true;
+        }
+        return false;
+      }
+
+      // Rack also moves the cue and overwrites spin/power, so a cue-only
+      // layout is still something to protect.
+      function hasAnyBallOnTable() {
+        for (const id in ballPositions) {
+          if (ballPositions[id] && (id === 'cue' || /^(?:\d+|gray)$/.test(id))) return true;
+        }
+        return false;
+      }
+
+      // Keep the empty-felt affordance in sync with the real ball state. Called
+      // wherever object balls can appear or disappear (rack, drop, shot, load).
+      function refreshEmptyTableHint() {
+        const hint = document.getElementById('btnEmptyRack');
+        if (hint) hint.hidden = hasObjectBallsOnTable();
+      }
+
+      // Rack is destructive: it clears every object ball, moves the cue back to
+      // the kitchen, and overwrites spin/power. Confirm only when there is a
+      // layout to lose, so the empty-felt shortcut stays a one-click action.
+      function requestRack() {
+        const fromEmptyHint = document.activeElement && document.activeElement.id === 'btnEmptyRack';
+        if (hasAnyBallOnTable() &&
+          !window.confirm('This will clear the current ball layout and reset cue position, spin and power. Set up a fresh rack?')) {
+          return;
+        }
+        randomRack();
+        // The empty-felt prompt disappears once balls are racked; keep keyboard
+        // users on the next useful action instead of dropping focus to <body>.
+        if (fromEmptyHint) {
+          const shoot = document.getElementById('btnShoot');
+          if (shoot) shoot.focus();
+        }
       }
 
       // Main break and rack function
@@ -9978,6 +10128,7 @@
         // updateShotGeometry();
 
         showToast('✅ Rack set - Click Shoot to break!');
+        refreshEmptyTableHint();
       }
 
       // ========== SHAPE ZONE VISUALIZATION ==========
@@ -10246,12 +10397,6 @@
             showDrawLine = e.target.checked;
             updateFollowDrawLines();
           });
-        }
-
-        // Random rack button
-        const btnRandomRack = document.getElementById('btnRandomRack');
-        if (btnRandomRack) {
-          btnRandomRack.addEventListener('click', randomRack);
         }
 
         // Shoot button
@@ -11069,6 +11214,7 @@
           positionBallOnTable(ball, x, y);
           ball.classList.add('on-table');
           updateShotGeometry();
+          refreshEmptyTableHint();
           return { success: true, position: { x, y } };
         },
 

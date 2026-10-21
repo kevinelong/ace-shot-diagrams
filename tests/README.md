@@ -28,6 +28,7 @@ tests/
 │   ├── mobile.spec.ts           # Mobile + tablet viewports
 │   ├── power-control.spec.ts
 │   ├── rack-start.spec.ts
+│   ├── rack-safety.spec.ts      # rack confirmation, empty-felt prompt, mode-switch preservation
 │   ├── safety-zones.spec.ts      # Snooker zones (roadmap 2.2)
 │   ├── shot-animation.spec.ts   # Records video on purpose (the artefact is its point)
 │   └── shot-types/
@@ -58,6 +59,9 @@ npm test:headed
 
 # Run in Playwright UI mode (recommended for development)
 npm test:ui
+
+# Run against an isolated port (worktrees, parallel agents)
+ACE_TEST_PORT=8091 npm test
 
 # Run specific browser
 npm test:chrome
@@ -207,6 +211,7 @@ The suite never loads the app from disk for the reason the old note gave. It is
 `file://` that is *not* the default: `playwright.config.ts` starts its own server
 (`npx http-server -p 8080 -c-1`) and every spec navigates to `/` on
 `http://localhost:8080`, so no manual server or `baseURL` edit is needed.
+Set `ACE_TEST_PORT` to move both the server and `baseURL` together.
 
 The app is one self-contained HTML file, so a `file://` URL is fine for a quick manual
 look (the `verify-*.js` / `verify-shots.cjs` harnesses do exactly that), just not for the
