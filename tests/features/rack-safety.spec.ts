@@ -80,9 +80,11 @@ test.describe('Rack safety', () => {
 
     expect(message).toMatch(/clear the current ball layout/i);
 
-    // No new rack toast, and the custom layout is untouched.
-    await expect(page.locator('#toastNotification')).toHaveText('SENTINEL');
+    // No re-rack: the custom layout is untouched and no Rack set toast.
+    // Do not assert the exact toast text: the standalone offline notice may
+    // legitimately overwrite the sentinel after the initial /me failure.
     expect(await readLayout(page)).toEqual(before);
+    await expect(page.locator('#toastNotification')).not.toContainText('Rack set');
   });
 
   test('Rack confirmation can be accepted and re-racks', async ({ page }) => {

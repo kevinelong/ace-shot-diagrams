@@ -44,6 +44,7 @@ local saves and URL sharing.
 | Export and save | PNG download, SVG download, copied share URL, local save survives reload | `tests/features/export-share.spec.ts` |
 | Share and account | Public OG/image; anonymous shared view opens Library; authenticated view keeps it minimized | `tests/features/share-account.spec.ts` |
 | Mobile | 390×844 layout and touch targets | `tests/features/mobile.spec.ts` |
+| Standalone / offline | Core works; Library hidden when backend absent; local save/export/hash links work | `tests/features/standalone.spec.ts` |
 | Shot animation and kick shots | Break/shot feedback and kick solver | `tests/features/shot-animation.spec.ts`, `tests/features/shot-types/kick-shots.spec.ts` |
 | Safety zones | Snooker zone shading and best-leave marker | `tests/features/safety-zones.spec.ts` |
 
@@ -83,6 +84,7 @@ Design notes, plans, and research for the project (start with `claude.md`):
 - **Export**: PNG (1600x1214), SVG (800x607), shareable URL links
 - **Save/Load**: Named diagrams stored in browser localStorage; optional PostgreSQL-backed My Diagrams library with Google/Facebook sign-in, unlisted shares, and collect-to-library
 - **Mobile layout**: 390×844 with touch-sized controls
+- **Standalone-first**: core editor, local saves, export and `#v…` links work without `aceweb`; the Library is hidden when the backend is unreachable
 - **Guided tour**: First-time user walkthrough
 
 ---
@@ -97,6 +99,12 @@ The editor works without an account. Signing in with Google or Facebook adds:
 - **Collect** — copy a shared diagram into your library. The copy is independent.
 - **Import local saves** — push existing `localStorage` diagrams into the cloud list.
 - Existing `#v…` editor links and local saves continue to work unchanged.
+
+**Standalone / offline.** The core editor is backend-independent: ball placement,
+aiming, Shot Info, local saves, PNG/SVG export and `#v…` share links work from any
+static host or `file://`. If `/ace/api/me` is unreachable, the Library/account/cloud
+entry is hidden and a toast reports that online features are unavailable — no dead
+sign-in links. The online share page (`/ace/s/<token>`) still requires `aceweb`.
 
 The service is `aceweb` (Django 5.2 + django-allauth + PostgreSQL) on loopback,
 proxied by nginx under `/ace/api/` and `/ace/accounts/`; the editor stays static at
@@ -382,10 +390,12 @@ ACE_TEST_PORT=8091 npx playwright test --project=chromium  # isolated worktree/a
 ```
 
 The suite starts its own local server, uses `/usr/bin/chromium` (configured in
-`playwright.config.ts`), and currently has **176 chromium tests**: critical path,
-aim/english/power, rack safety, export/save, share/account, mobile, shot animation,
-kick shots, safety zones, palette minimize and visual states. The known
-cross-resolution palette-minimize timing flakes retry green.
+`playwright.config.ts`), and currently has **177 chromium tests**: critical path,
+aim/english/power, rack safety, export/save, share/account, standalone/offline,
+mobile, shot animation, kick shots, safety zones, palette minimize and visual states.
+The known cross-resolution palette-minimize timing flakes retry green; a rack-safety
+toast/sentinel race found in the standalone work was fixed by asserting the layout
+and absence of a Rack toast.
 
 Screenshots are written to `test-results/` and `tests/ui-ux/screenshots/`; curated
 README images live in `docs/screenshots/`. See [tests/README.md](tests/README.md).

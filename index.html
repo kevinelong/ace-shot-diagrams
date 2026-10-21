@@ -8496,6 +8496,23 @@
         return data || {};
       }
 
+      let aceBackendAvailable = null;
+
+      function setBackendAvailable(available) {
+        aceBackendAvailable = available;
+        const library = aceEl('palette-save');
+        if (library) {
+          library.classList.toggle('hidden', !available);
+          if (!available) library.classList.add('minimized');
+        }
+        if (!available) {
+          const guest = aceEl('aceGuest');
+          const shared = aceEl('aceSharedBanner');
+          if (guest) guest.hidden = true;
+          if (shared) shared.hidden = true;
+        }
+      }
+
       function aceApplyMe(me) {
         aceMeUser = me.authenticated ? me.user : null;
         const guest = aceEl('aceGuest');
@@ -8521,6 +8538,10 @@
       function aceSyncLibraryPanel() {
         const palette = aceEl('palette-save');
         if (!palette) return;
+        if (aceBackendAvailable === false) {
+          palette.classList.add('hidden');
+          return;
+        }
         const open = Boolean(aceSharedToken) && !aceMeUser;
         palette.classList.toggle('minimized', !open);
         const btn = palette.querySelector('.palette-btn.minimize');
@@ -8831,11 +8852,14 @@
 
         try {
           const me = await aceFetch('/me');
+          setBackendAvailable(true);
           aceApplyMe(me);
           if (me.authenticated) await aceLoadCloud();
           await aceLoadSharedFromQuery();
         } catch (e) {
+          setBackendAvailable(false);
           console.warn('ACE library unavailable', e);
+          showToast('Offline: account and online share features are unavailable');
         }
       }
 

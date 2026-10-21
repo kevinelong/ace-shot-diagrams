@@ -26,6 +26,7 @@ tests/
 │   ├── english-controls.spec.ts
 │   ├── export-share.spec.ts     # Export PNG, Copy Link, Save/Load
 │   ├── share-account.spec.ts    # live share OG/image + Library/account states
+│   ├── standalone.spec.ts       # backend absent: core works, Library hidden
 │   ├── mobile.spec.ts           # Mobile + tablet viewports
 │   ├── power-control.spec.ts
 │   ├── rack-start.spec.ts
@@ -85,8 +86,10 @@ npm run report
 
 ### Current status
 
-The chromium suite has **176 tests**. Latest full run: **174 passed, 2 flaky**
-(the existing cross-resolution palette-minimize timing cases, both retried green).
+The chromium suite has **177 tests**. Latest full run: **176 passed, 1 flaky**
+(a rack-safety toast/sentinel race caused by the new standalone offline notice;
+the assertion now checks the layout and absence of a Rack toast instead of a
+sentinel). The existing cross-resolution palette-minimize timing cases retry green.
 The config uses the system Chromium at `/usr/bin/chromium` and supports an isolated
 port with `ACE_TEST_PORT=8091`. Screenshots are written to `test-results/` and
 `tests/ui-ux/screenshots/`; curated README images are in `docs/screenshots/`.
@@ -154,6 +157,10 @@ game-mode layout preservation (`rack-safety.spec.ts`).
 ### 🔗 Share / Account
 Live share-page Open Graph/image, anonymous Library open with sign-in, and
 authenticated Library-minimized state (`share-account.spec.ts`).
+
+### 📴 Standalone / Offline
+With the static server only (no `/ace/api`), the core editor, local save, export and
+hash sharing work; the Library/account/cloud entry is hidden (`standalone.spec.ts`).
 
 ### 🎨 Visual
 Screenshot comparisons and visual feedback verification.
