@@ -58,6 +58,10 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1920, height: 1080 },
+        launchOptions: {
+          executablePath: '/usr/bin/chromium',
+          args: ['--no-sandbox'],
+        },
       },
     },
 
@@ -83,6 +87,10 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1366, height: 768 },
+        launchOptions: {
+          executablePath: '/usr/bin/chromium',
+          args: ['--no-sandbox'],
+        },
       },
     },
 

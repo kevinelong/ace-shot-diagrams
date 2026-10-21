@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { shootAndWait } from '../setup/test-helpers';
 
+test.use({ screenshot: 'on' });
+
 // Mobile viewport tests
 test.describe('Mobile Responsiveness', () => {
 

@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { shootAndWait, waitForRackSet } from '../setup/test-helpers';
 
+test.use({ screenshot: 'on' });
+
 /**
  * Rack Start Behavior Tests
  *

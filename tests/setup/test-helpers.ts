@@ -104,11 +104,18 @@ export class AceShotHelper {
   }
 
   /**
-   * Minimize all palettes to prevent them from blocking table interactions
+   * Hide all palettes via the app's global panels toggle. This is the product
+   * control users have for revealing pockets that sit under a palette.
    */
   async minimizeAllPalettes() {
     await this.page.evaluate(() => {
-      // Minimize each palette by clicking its minimize button or setting minimized state
+      // @ts-ignore - exposed by the app for tests and the debug API
+      if (window.setPanelsHidden) {
+        // @ts-ignore
+        window.setPanelsHidden(true);
+        return;
+      }
+      // Fallback for older app builds without the global toggle.
       document.querySelectorAll('.tool-palette').forEach(palette => {
         const body = palette.querySelector('.palette-body') as HTMLElement;
         if (body) {
@@ -116,6 +123,17 @@ export class AceShotHelper {
           palette.classList.add('minimized');
         }
       });
+    });
+  }
+
+  /** Restore the palettes that were open before minimizeAllPalettes(). */
+  async showAllPanels() {
+    await this.page.evaluate(() => {
+      // @ts-ignore - exposed by the app for tests and the debug API
+      if (window.setPanelsHidden) {
+        // @ts-ignore
+        window.setPanelsHidden(false);
+      }
     });
   }
 

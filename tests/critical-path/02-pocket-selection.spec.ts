@@ -1,5 +1,7 @@
 import { test, expect, POCKETS } from '../setup/test-helpers';
 
+test.use({ screenshot: 'on' });
+
 /**
  * Critical Path Test: Pocket Selection
  *

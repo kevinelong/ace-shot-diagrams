@@ -2,6 +2,8 @@ import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
+test.use({ screenshot: 'on' });
+
 /**
  * Export, share and save - the three README features that had no spec at all.
  *

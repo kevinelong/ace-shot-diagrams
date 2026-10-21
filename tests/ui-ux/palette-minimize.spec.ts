@@ -231,6 +231,7 @@ test.describe('Palette Minimize - Cross Resolution Tests', () => {
 
 test.describe('Palette UI/UX Visual Regression', () => {
   test('Visual comparison of palette states across resolutions', async ({ page }) => {
+    test.setTimeout(120000);
     for (const resolution of RESOLUTIONS) {
       await page.setViewportSize({ 
         width: resolution.width, 
@@ -252,14 +253,22 @@ test.describe('Palette UI/UX Visual Regression', () => {
       // Take full page screenshot
       await page.screenshot({ 
         path: `tests/ui-ux/screenshots/full-page-${resolution.width}x${resolution.height}.png`,
-        fullPage: true
+        fullPage: true,
+        animations: 'disabled'
       });
 
-      // Screenshot each palette individually
+      // Screenshot each palette individually. Use a clipped page screenshot:
+      // element screenshots wait for the fixed palette's compositing layer to
+      // settle and were timing out on the wider Cue palette.
       for (const palette of PALETTES) {
         const paletteElement = page.locator(`#${palette.id}`);
-        await paletteElement.screenshot({
-          path: `tests/ui-ux/screenshots/${palette.id}-normal-${resolution.width}x${resolution.height}.png`
+
+        const normalBox = await paletteElement.boundingBox();
+        expect(normalBox).toBeTruthy();
+        await page.screenshot({
+          path: `tests/ui-ux/screenshots/${palette.id}-normal-${resolution.width}x${resolution.height}.png`,
+          clip: normalBox!,
+          animations: 'disabled'
         });
 
         // Minimize and screenshot
@@ -267,8 +276,12 @@ test.describe('Palette UI/UX Visual Regression', () => {
         await minimizeBtn.click();
         await expect(paletteElement.locator('.palette-body')).not.toBeVisible();
 
-        await paletteElement.screenshot({
-          path: `tests/ui-ux/screenshots/${palette.id}-minimized-${resolution.width}x${resolution.height}.png`
+        const minimizedBox = await paletteElement.boundingBox();
+        expect(minimizedBox).toBeTruthy();
+        await page.screenshot({
+          path: `tests/ui-ux/screenshots/${palette.id}-minimized-${resolution.width}x${resolution.height}.png`,
+          clip: minimizedBox!,
+          animations: 'disabled'
         });
 
         // Restore
