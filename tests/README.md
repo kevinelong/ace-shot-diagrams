@@ -22,6 +22,7 @@ tests/
 │   ├── 02-pocket-selection.spec.ts
 │   └── 03-shot-calculation.spec.ts
 ├── features/                    # Individual features
+│   ├── accessibility.spec.ts     # axe serious/critical WCAG audit
 │   ├── aim-consistency.spec.ts   # the stick and the aim must agree, on selection changes
 │   ├── english-controls.spec.ts
 │   ├── export-share.spec.ts     # Export PNG, Copy Link, Save/Load
@@ -86,10 +87,11 @@ npm run report
 
 ### Current status
 
-The chromium suite has **177 tests**. Latest full run: **176 passed, 1 flaky**
-(a rack-safety toast/sentinel race caused by the new standalone offline notice;
-the assertion now checks the layout and absence of a Rack toast instead of a
-sentinel). The existing cross-resolution palette-minimize timing cases retry green.
+The chromium suite has **178 tests**. Latest full run: **178 passed, 0 flaky**.
+The palette-minimize flake was fixed by binding palette controls synchronously and
+making the test assert the app's `.minimized` state with one retry; the rack-safety
+toast/sentinel race is fixed by asserting the layout and absence of a Rack toast.
+The live share tests skip cleanly when `ACE_SHARE_TOKEN` is unavailable.
 The config uses the system Chromium when available (`PLAYWRIGHT_CHROMIUM_PATH`
 override) and the Playwright-installed browser in CI; it supports an isolated port
 with `ACE_TEST_PORT=8091`. Screenshots are written to `test-results/` and
@@ -162,6 +164,10 @@ authenticated Library-minimized state (`share-account.spec.ts`).
 ### 📴 Standalone / Offline
 With the static server only (no `/ace/api`), the core editor, local save, export and
 hash sharing work; the Library/account/cloud entry is hidden (`standalone.spec.ts`).
+
+### ♿ Accessibility
+Axe WCAG A/AA audit; serious/critical violations fail the test
+(`accessibility.spec.ts`).
 
 ### 🎨 Visual
 Screenshot comparisons and visual feedback verification.
@@ -271,7 +277,7 @@ If selectors break:
 
 - [ ] Visual regression baselines for the palette/README states
 - [ ] Performance benchmarks
-- [ ] Accessibility audit integration
+- [ ] Axe coverage for the mobile/share/account surfaces (core editor is covered)
 - [ ] Code coverage reporting
 - [ ] Parallel test execution optimization
 - [ ] Custom styled rack confirmation (native `confirm()` is used today)

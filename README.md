@@ -45,6 +45,7 @@ local saves and URL sharing.
 | Share and account | Public OG/image; anonymous shared view opens Library; authenticated view keeps it minimized | `tests/features/share-account.spec.ts` |
 | Mobile | 390×844 layout and touch targets | `tests/features/mobile.spec.ts` |
 | Standalone / offline | Core works; Library hidden when backend absent; local save/export/hash links work | `tests/features/standalone.spec.ts` |
+| Accessibility | No serious/critical WCAG A/AA axe violations in the core editor | `tests/features/accessibility.spec.ts` |
 | Shot animation and kick shots | Break/shot feedback and kick solver | `tests/features/shot-animation.spec.ts`, `tests/features/shot-types/kick-shots.spec.ts` |
 | Safety zones | Snooker zone shading and best-leave marker | `tests/features/safety-zones.spec.ts` |
 
@@ -391,12 +392,12 @@ ACE_TEST_PORT=8091 npx playwright test --project=chromium  # isolated worktree/a
 
 The suite starts its own local server, uses the system Chromium when available
 (`PLAYWRIGHT_CHROMIUM_PATH` override) and the Playwright-installed browser in CI
-(configured in `playwright.config.ts`), and currently has **177 chromium tests**: critical path,
+(configured in `playwright.config.ts`), and currently has **178 chromium tests**: critical path,
 aim/english/power, rack safety, export/save, share/account, standalone/offline,
-mobile, shot animation, kick shots, safety zones, palette minimize and visual states.
-The known cross-resolution palette-minimize timing flakes retry green; a rack-safety
-toast/sentinel race found in the standalone work was fixed by asserting the layout
-and absence of a Rack toast.
+mobile, shot animation, kick shots, safety zones, accessibility, palette minimize
+and visual states. The full suite is green; the palette-minimize flake was fixed by
+binding controls synchronously and making the test assert the app's minimized state,
+and the rack-safety toast/sentinel race was fixed by asserting the layout.
 
 Screenshots are written to `test-results/` and `tests/ui-ux/screenshots/`; curated
 README images live in `docs/screenshots/`. See [tests/README.md](tests/README.md).

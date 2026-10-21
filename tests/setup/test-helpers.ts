@@ -460,7 +460,13 @@ export const test = base.extend<{ aceHelper: AceShotHelper }>({
 
     // Auto-dismiss any confirm/alert dialogs (like the tour prompt)
     page.on('dialog', async dialog => {
-      await dialog.dismiss();
+      // A dialog can arrive as the test is tearing down; the dismiss then throws
+      // "Test ended". That is not a product failure.
+      try {
+        await dialog.dismiss();
+      } catch {
+        // page/test already closed
+      }
     });
 
     const helper = new AceShotHelper(page);

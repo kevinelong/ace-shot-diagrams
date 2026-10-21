@@ -15,6 +15,7 @@ test.use({ screenshot: 'on' });
 test.describe('Share and account surfaces', () => {
   test('share page exposes an OG preview and PNG image', async ({ request }) => {
     const pageRes = await request.get(`${LIVE}/s/${SHARE_TOKEN}`);
+    test.skip(!pageRes.ok(), `Share token ${SHARE_TOKEN} is unavailable; set ACE_SHARE_TOKEN`);
     expect(pageRes.ok()).toBeTruthy();
 
     const html = await pageRes.text();
@@ -32,6 +33,9 @@ test.describe('Share and account surfaces', () => {
     expect(me.ok()).toBeTruthy();
     expect((await me.json()).authenticated).toBe(false);
 
+    const shared = await request.get(`${LIVE}/s/${SHARE_TOKEN}`);
+    test.skip(!shared.ok(), `Share token ${SHARE_TOKEN} is unavailable; set ACE_SHARE_TOKEN`);
+
     await page.goto(`${LIVE}/?d=${SHARE_TOKEN}`);
 
     await expect(page.locator('#aceSharedBanner')).toBeVisible({ timeout: 10000 });
@@ -45,7 +49,10 @@ test.describe('Share and account surfaces', () => {
     await page.screenshot({ path: 'test-results/share-anonymous.png' });
   });
 
-  test('authenticated share keeps Library minimized', async ({ page }) => {
+  test('authenticated share keeps Library minimized', async ({ page, request }) => {
+    const shared = await request.get(`${LIVE}/s/${SHARE_TOKEN}`);
+    test.skip(!shared.ok(), `Share token ${SHARE_TOKEN} is unavailable; set ACE_SHARE_TOKEN`);
+
     await page.route('**/ace/api/me', (route) => route.fulfill({
       status: 200,
       contentType: 'application/json',

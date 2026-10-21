@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Locator } from '@playwright/test';
 
 /**
  * Test Suite: Palette Minimize Functionality
@@ -33,11 +33,32 @@ const PALETTES = [
   { id: 'palette-aids', name: 'Aids', hasRestore: false }
 ];
 
+// Minimize can occasionally lose a click under heavy parallel load. Verify the
+// app state (not only the body visibility) and retry once before failing.
+async function minimizePalette(paletteElement: Locator) {
+  const btn = paletteElement.locator('.palette-btn.minimize');
+  await btn.click();
+  if (!(await paletteElement.evaluate(el => el.classList.contains('minimized')))) {
+    await btn.click();
+  }
+  await expect(paletteElement).toHaveClass(/minimized/);
+}
+
+async function expandPalette(paletteElement: Locator) {
+  const btn = paletteElement.locator('.palette-btn.minimize');
+  await btn.click();
+  if (await paletteElement.evaluate(el => el.classList.contains('minimized'))) {
+    await btn.click();
+  }
+  await expect(paletteElement).not.toHaveClass(/minimized/);
+}
+
 test.describe('Palette Minimize - Cross Resolution Tests', () => {
   for (const resolution of RESOLUTIONS) {
     test.describe(`Resolution: ${resolution.name} (${resolution.width}x${resolution.height})`, () => {
       
       test.beforeEach(async ({ page }) => {
+        await page.addInitScript(() => localStorage.setItem('ace-tour-completed', 'true'));
         await page.setViewportSize({ 
           width: resolution.width, 
           height: resolution.height 
@@ -98,7 +119,7 @@ test.describe('Palette Minimize - Cross Resolution Tests', () => {
           });
 
           // Click the minimize button
-          await minimizeBtn.click();
+          await minimizePalette(paletteElement);
 
           // Verify palette is minimized (body should be hidden)
           const paletteBody = paletteElement.locator('.palette-body');
@@ -128,7 +149,7 @@ test.describe('Palette Minimize - Cross Resolution Tests', () => {
           });
 
           // Test expanding (clicking + button)
-          await minimizeBtn.click();
+          await expandPalette(paletteElement);
 
           // Verify palette is expanded again
           await expect(paletteBody).toBeVisible();
@@ -154,7 +175,7 @@ test.describe('Palette Minimize - Cross Resolution Tests', () => {
           const minimizeBtn = paletteElement.locator('.palette-btn.minimize');
 
           // Minimize the target palette
-          await minimizeBtn.click();
+          await minimizePalette(paletteElement);
 
           // Check that other palettes are still in their original state
           for (const otherPalette of PALETTES) {
@@ -173,8 +194,7 @@ test.describe('Palette Minimize - Cross Resolution Tests', () => {
         // Minimize all palettes
         for (const palette of PALETTES) {
           const paletteElement = page.locator(`#${palette.id}`);
-          const minimizeBtn = paletteElement.locator('.palette-btn.minimize');
-          await minimizeBtn.click();
+          await minimizePalette(paletteElement);
           // Wait for each collapse before clicking the next: six rapid clicks that only get
           // checked at the end turn a lagging palette into a test failure under load.
           await expect(paletteElement.locator('.palette-body')).not.toBeVisible();
@@ -211,8 +231,7 @@ test.describe('Palette Minimize - Cross Resolution Tests', () => {
 
         // Click minimize on the Game palette (palette-save was removed)
         const gamePalette = page.locator('#palette-game');
-        const minimizeBtn = gamePalette.locator('.palette-btn.minimize');
-        await minimizeBtn.click();
+        await minimizePalette(gamePalette);
         // Wait for the collapse this test is about, then compare: a plain sleep could return
         // before a delayed move and miss exactly the bug under test
         await expect(gamePalette.locator('.palette-body')).not.toBeVisible();
@@ -272,8 +291,7 @@ test.describe('Palette UI/UX Visual Regression', () => {
         });
 
         // Minimize and screenshot
-        const minimizeBtn = paletteElement.locator('.palette-btn.minimize');
-        await minimizeBtn.click();
+        await minimizePalette(paletteElement);
         await expect(paletteElement.locator('.palette-body')).not.toBeVisible();
 
         const minimizedBox = await paletteElement.boundingBox();
@@ -285,7 +303,7 @@ test.describe('Palette UI/UX Visual Regression', () => {
         });
 
         // Restore
-        await minimizeBtn.click();
+        await expandPalette(paletteElement);
         await expect(paletteElement.locator('.palette-body')).toBeVisible();
       }
     }

@@ -7123,6 +7123,7 @@
         // Update visualizations
         updateCueGhostLine();
         highlightLegalBalls();
+        showToast('Mode changed — Rack to start a fresh layout');
 
         // Highlight scoring pockets for One Pocket mode
         if (currentGameMode.pocketRestriction) {
@@ -7526,12 +7527,15 @@
         updatePaletteDisplays(shotData);
       };
 
-      // Initialize palettes
+      // Bind controls immediately so an early click cannot beat the 150ms boot
+      // timer (the cross-resolution minimize flake). State/sync initialization
+      // remains deferred because it depends on the rack and network.
+      createPaletteBalls();
+      setupPaletteControls();
+      setupPanelsToggle();
+      setupPaletteDragging();
+
       setTimeout(() => {
-        createPaletteBalls();
-        setupPaletteControls();
-        setupPanelsToggle();
-        setupPaletteDragging();
         setupPaletteSync();
         setupSharePalette();
         loadStateFromURL();
