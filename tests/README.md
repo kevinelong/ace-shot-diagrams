@@ -90,8 +90,9 @@ The chromium suite has **177 tests**. Latest full run: **176 passed, 1 flaky**
 (a rack-safety toast/sentinel race caused by the new standalone offline notice;
 the assertion now checks the layout and absence of a Rack toast instead of a
 sentinel). The existing cross-resolution palette-minimize timing cases retry green.
-The config uses the system Chromium at `/usr/bin/chromium` and supports an isolated
-port with `ACE_TEST_PORT=8091`. Screenshots are written to `test-results/` and
+The config uses the system Chromium when available (`PLAYWRIGHT_CHROMIUM_PATH`
+override) and the Playwright-installed browser in CI; it supports an isolated port
+with `ACE_TEST_PORT=8091`. Screenshots are written to `test-results/` and
 `tests/ui-ux/screenshots/`; curated README images are in `docs/screenshots/`.
 
 The suite now includes the live share/account checks (`share-account.spec.ts`) and

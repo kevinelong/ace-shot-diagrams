@@ -1,4 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
+import { existsSync } from 'node:fs';
+
+// Locally the OS Chromium is used; CI installs and uses the Playwright browser.
+const chromiumExecutable = process.env.PLAYWRIGHT_CHROMIUM_PATH ||
+  (existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined);
 
 // Isolated runs (worktrees, parallel agents) can move both the app and the
 // Playwright base URL together: ACE_TEST_PORT=8091 npx playwright test
@@ -62,10 +67,10 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1920, height: 1080 },
-        launchOptions: {
-          executablePath: '/usr/bin/chromium',
+        launchOptions: chromiumExecutable ? {
+          executablePath: chromiumExecutable,
           args: ['--no-sandbox'],
-        },
+        } : undefined,
       },
     },
 
@@ -91,10 +96,10 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1366, height: 768 },
-        launchOptions: {
-          executablePath: '/usr/bin/chromium',
+        launchOptions: chromiumExecutable ? {
+          executablePath: chromiumExecutable,
           args: ['--no-sandbox'],
-        },
+        } : undefined,
       },
     },
 

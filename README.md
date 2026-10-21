@@ -389,8 +389,9 @@ npx playwright test --project=chromium
 ACE_TEST_PORT=8091 npx playwright test --project=chromium  # isolated worktree/agent
 ```
 
-The suite starts its own local server, uses `/usr/bin/chromium` (configured in
-`playwright.config.ts`), and currently has **177 chromium tests**: critical path,
+The suite starts its own local server, uses the system Chromium when available
+(`PLAYWRIGHT_CHROMIUM_PATH` override) and the Playwright-installed browser in CI
+(configured in `playwright.config.ts`), and currently has **177 chromium tests**: critical path,
 aim/english/power, rack safety, export/save, share/account, standalone/offline,
 mobile, shot animation, kick shots, safety zones, palette minimize and visual states.
 The known cross-resolution palette-minimize timing flakes retry green; a rack-safety
