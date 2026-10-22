@@ -35,6 +35,15 @@
     library; copies collected by other users remain theirs.
   </p>
 
+  <h2>Server logs and login audit</h2>
+  <p>
+    The web server records request metadata (IP address, timestamp, path, response status, referer
+    and user agent). The ACE service also records sign-in, sign-out and failed sign-in events
+    (account identifier, provider, IP, user agent, path and time) for security and abuse prevention.
+    Passwords are never recorded. Access logs are retained for up to 30 days and login events for up
+    to 90 days, after which they are removed or aggregated.
+  </p>
+
   <h2>Cookies</h2>
   <p>
     ACE uses a session cookie for sign-in and a CSRF cookie for API protection. There are no advertising
