@@ -87,7 +87,7 @@ npm run report
 
 ### Current status
 
-The chromium suite has **178 tests**. Latest full run: **178 passed, 0 flaky**.
+The chromium suite has **183 tests**. Latest full run: **183 passed, 0 flaky**.
 The palette-minimize flake was fixed by binding palette controls synchronously and
 making the test assert the app's `.minimized` state with one retry; the rack-safety
 toast/sentinel race is fixed by asserting the layout and absence of a Rack toast.

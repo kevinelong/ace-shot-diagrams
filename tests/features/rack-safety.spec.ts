@@ -70,15 +70,12 @@ test.describe('Rack safety', () => {
     });
     const before = await readLayout(page);
 
-    let message = '';
-    page.once('dialog', async dialog => {
-      message = dialog.message();
-      await dialog.dismiss();
-    });
-
     await page.locator('#btnRandomRack').click();
-
-    expect(message).toMatch(/clear the current ball layout/i);
+    const rackDialog = page.locator('#rackConfirm');
+    await expect(rackDialog).toBeVisible();
+    await expect(rackDialog).toContainText(/clear the current ball layout/i);
+    await page.locator('#rackConfirmCancel').click();
+    await expect(rackDialog).toBeHidden();
 
     // No re-rack: the custom layout is untouched and no Rack set toast.
     // Do not assert the exact toast text: the standalone offline notice may
@@ -95,8 +92,8 @@ test.describe('Rack safety', () => {
       window.DEBUG.placeBall('1', 30, 10);
     });
 
-    page.once('dialog', dialog => dialog.accept());
     await page.locator('#btnRandomRack').click();
+    await page.locator('#rackConfirmAccept').click();
     await waitForRackSet(page);
 
     // The 1-ball is back in the rack (right half of the table).
@@ -113,16 +110,9 @@ test.describe('Rack safety', () => {
     await expect(hint).toBeVisible();
     await expect(hint).toContainText('Auto-Rack Layout');
 
-    let dialogs = 0;
-    page.on('dialog', async dialog => {
-      dialogs++;
-      await dialog.accept();
-    });
-
     await hint.click();
+    await expect(page.locator('#rackConfirm')).toBeHidden();
     await waitForRackSet(page);
-
-    expect(dialogs).toBe(0);
     await expect(hint).toBeHidden();
     await expect(page.locator('#ball-1')).toBeVisible();
   });
@@ -172,13 +162,12 @@ test.describe('Rack safety', () => {
     await expect(hint).toBeVisible();
 
     // ...but racking would move the cue, so it asks first.
-    let message = '';
-    page.once('dialog', async dialog => {
-      message = dialog.message();
-      await dialog.dismiss();
-    });
     await hint.click();
-    expect(message).toMatch(/clear the current ball layout/i);
+    const rackDialog = page.locator('#rackConfirm');
+    await expect(rackDialog).toBeVisible();
+    await expect(rackDialog).toContainText(/clear the current ball layout/i);
+    await page.locator('#rackConfirmCancel').click();
+    await expect(rackDialog).toBeHidden();
     expect(await page.evaluate(() => window.DEBUG.cue())).toEqual({ x: 50, y: 25 });
 
     // The first object ball means the felt is no longer empty.

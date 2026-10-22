@@ -147,11 +147,9 @@ test.describe('Rack Start Behavior', () => {
     // First, shoot to scatter balls
     await shootAndWait(page);
 
-    // Rack is destructive, so it asks before clearing the layout.
-    page.once('dialog', dialog => dialog.accept());
-
-    // Click Rack button
+    // Click Rack and accept the styled confirmation dialog
     await page.locator('#btnRandomRack').click();
+    await page.locator('#rackConfirmAccept').click();
     await waitForRackSet(page);
 
     // All 15 balls should be back on table

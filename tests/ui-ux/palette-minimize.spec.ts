@@ -270,10 +270,10 @@ test.describe('Palette UI/UX Visual Regression', () => {
       });
 
       // Take full page screenshot
-      await page.screenshot({ 
-        path: `tests/ui-ux/screenshots/full-page-${resolution.width}x${resolution.height}.png`,
+      await expect(page).toHaveScreenshot(`full-page-${resolution.width}x${resolution.height}.png`, {
         fullPage: true,
-        animations: 'disabled'
+        animations: 'disabled',
+        maxDiffPixelRatio: 0.01
       });
 
       // Screenshot each palette individually. Use a clipped page screenshot:
@@ -284,10 +284,10 @@ test.describe('Palette UI/UX Visual Regression', () => {
 
         const normalBox = await paletteElement.boundingBox();
         expect(normalBox).toBeTruthy();
-        await page.screenshot({
-          path: `tests/ui-ux/screenshots/${palette.id}-normal-${resolution.width}x${resolution.height}.png`,
+        await expect(page).toHaveScreenshot(`${palette.id}-normal-${resolution.width}x${resolution.height}.png`, {
           clip: normalBox!,
-          animations: 'disabled'
+          animations: 'disabled',
+          maxDiffPixelRatio: 0.01
         });
 
         // Minimize and screenshot
@@ -296,10 +296,10 @@ test.describe('Palette UI/UX Visual Regression', () => {
 
         const minimizedBox = await paletteElement.boundingBox();
         expect(minimizedBox).toBeTruthy();
-        await page.screenshot({
-          path: `tests/ui-ux/screenshots/${palette.id}-minimized-${resolution.width}x${resolution.height}.png`,
+        await expect(page).toHaveScreenshot(`${palette.id}-minimized-${resolution.width}x${resolution.height}.png`, {
           clip: minimizedBox!,
-          animations: 'disabled'
+          animations: 'disabled',
+          maxDiffPixelRatio: 0.01
         });
 
         // Restore

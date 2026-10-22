@@ -341,10 +341,11 @@ test.describe('Rack Button Functionality', () => {
         // First, execute a shot to scatter balls
         await shootAndWait(page);
 
-        // Rack is destructive: accept its confirmation before clicking
         const rackButton = page.locator('#btnRandomRack');
-        page.once('dialog', dialog => dialog.accept());
         await rackButton.click();
+        if (await page.locator('#rackConfirm').isVisible()) {
+          await page.locator('#rackConfirmAccept').click();
+        }
 
         // The rack announces itself with its own toast
         await expect(page.locator('#toastNotification')).toContainText('Rack set', { timeout: 15000 });
@@ -363,10 +364,12 @@ test.describe('Rack Button Functionality', () => {
     test('should show rack setup message when Rack clicked', async ({ page }) => {
         // USER INTENT: "I want to set up a new rack for breaking"
 
-        // Click Rack button (accept its destructive-action confirmation)
+        // Click Rack button and accept the styled confirmation dialog
         const rackButton = page.locator('#btnRandomRack');
-        page.once('dialog', dialog => dialog.accept());
         await rackButton.click();
+        if (await page.locator('#rackConfirm').isVisible()) {
+          await page.locator('#rackConfirmAccept').click();
+        }
 
         // Should show toast notification
         const toast = page.locator('#toastNotification');

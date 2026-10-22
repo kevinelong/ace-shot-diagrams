@@ -110,6 +110,46 @@
       display: none;
     }
 
+    /* Rack confirmation dialog */
+    .rack-confirm {
+      border: 0;
+      padding: 0;
+      background: transparent;
+      color: #dff;
+    }
+    .rack-confirm::backdrop {
+      background: rgba(0, 0, 0, .62);
+      -webkit-backdrop-filter: blur(3px);
+      backdrop-filter: blur(3px);
+    }
+    .rack-confirm-card {
+      width: min(92vw, 380px);
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, .16);
+      background: #121622;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .55);
+      font: inherit;
+    }
+    .rack-confirm-card h2 { margin: 0 0 8px; font-size: 18px; color: #fff; }
+    .rack-confirm-card p { margin: 0 0 18px; font-size: 13px; line-height: 1.45; color: #b7c4cf; }
+    .rack-confirm-actions { display: flex; justify-content: flex-end; gap: 8px; }
+    .rack-confirm-btn {
+      min-height: 38px;
+      padding: 8px 16px;
+      border-radius: 7px;
+      border: 1px solid rgba(255, 255, 255, .18);
+      background: rgba(255, 255, 255, .06);
+      color: #dff;
+      font: inherit;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .rack-confirm-btn:hover { background: rgba(255, 255, 255, .12); }
+    .rack-confirm-btn.primary { background: #0066cc; border-color: #0066cc; color: #fff; }
+    .rack-confirm-btn:focus-visible { outline: 2px solid #0fa; outline-offset: 2px; }
+    .rack-confirm-btn.ghost { color: #b7c4cf; }
+
     /* Connection overlay must match table size */
     .table-wrapper #connection-overlay {
       position: absolute;
@@ -188,7 +228,7 @@
       border: none;
       outline: none;
       background: rgba(255, 255, 255, 0.1);
-      color: #888;
+      color: #b7c4cf;
       font-size: 14px;
       font-weight: bold;
       line-height: 1;
@@ -480,7 +520,7 @@
 
     #palette-cue .power-row .control-label {
       font-size: 11px;
-      color: #888;
+      color: #b7c4cf;
       min-width: 40px;
     }
 
@@ -676,7 +716,7 @@
     .ace-avatar { width: 28px; height: 28px; border-radius: 50%; }
     .ace-user-meta { display: flex; flex-direction: column; flex: 1; min-width: 0; }
     .ace-user-meta strong { color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .ace-user-meta span { color: #888; font-size: 10px; }
+    .ace-user-meta span { color: #b7c4cf; font-size: 10px; }
     .ace-link { color: #0fa; font-size: 11px; }
     .ace-cloud { display: flex; flex-direction: column; gap: 6px; }
     .ace-mini-btn { width: 100%; padding: 7px 8px; border-radius: 5px; border: 1px solid rgba(0,255,136,.3); background: rgba(0,255,136,.12); color: #0f8; font-size: 11px; cursor: pointer; }
@@ -842,7 +882,7 @@
     }
 
     #palette-game .save-input-row input::placeholder {
-      color: #666;
+      color: #9ab;
     }
 
     #palette-game .save-input-row input:focus {
@@ -918,7 +958,7 @@
 
     #palette-game .saved-item-date {
       font-size: 10px;
-      color: #666;
+      color: #9ab;
       margin-top: 2px;
     }
 
@@ -934,7 +974,7 @@
       border-radius: 4px;
       border: none;
       background: rgba(255, 255, 255, 0.1);
-      color: #888;
+      color: #b7c4cf;
       font-size: 12px;
       cursor: pointer;
       display: flex;
@@ -1112,7 +1152,7 @@
 
     .tour-btn-skip {
       background: transparent;
-      color: #888;
+      color: #b7c4cf;
     }
 
     .tour-btn-skip:hover {
@@ -1142,7 +1182,7 @@
 
     .tour-btn-next:disabled {
       background: #444;
-      color: #888;
+      color: #b7c4cf;
       cursor: not-allowed;
       transform: none;
     }
@@ -1515,7 +1555,7 @@
     }
 
     .info-label {
-      color: #888;
+      color: #b7c4cf;
       font-size: 11px;
     }
 
@@ -1568,7 +1608,7 @@
 
     .control-label {
       font-size: 14px;
-      color: #888;
+      color: #b7c4cf;
       text-align: center;
       margin-bottom: 10px;
     }
@@ -1618,7 +1658,7 @@
 
     .overlap-percent {
       font-size: 12px;
-      color: #888;
+      color: #b7c4cf;
     }
 
     .overlap-percent span {
@@ -1715,7 +1755,7 @@
       display: flex;
       justify-content: space-between;
       font-size: 10px;
-      color: #666;
+      color: #9ab;
       margin-top: 4px;
     }
 
@@ -1777,7 +1817,7 @@
       padding-top: 8px;
       border-top: 1px solid #3a4a5a;
       font-size: 11px;
-      color: #888;
+      color: #b7c4cf;
       cursor: pointer;
     }
 
@@ -2023,7 +2063,7 @@
 
     .shot-verdict.setup-needed {
       background: linear-gradient(135deg, #2a2a3a, #1a1a2a);
-      color: #888;
+      color: #b7c4cf;
       border: 1px solid #3a3a4a;
     }
 
@@ -2808,6 +2848,17 @@
         <span>Auto-Rack Layout</span>
         <span class="empty-hint-sub">Start from a standard break</span>
       </button>
+
+      <dialog id="rackConfirm" class="rack-confirm" aria-labelledby="rackConfirmTitle" aria-describedby="rackConfirmText">
+        <form method="dialog" class="rack-confirm-card">
+          <h2 id="rackConfirmTitle">Set up a fresh rack?</h2>
+          <p id="rackConfirmText">This will clear the current ball layout and reset cue position, spin and power.</p>
+          <div class="rack-confirm-actions">
+            <button type="submit" value="cancel" class="rack-confirm-btn ghost" id="rackConfirmCancel" autofocus>Cancel</button>
+            <button type="submit" value="confirm" class="rack-confirm-btn primary" id="rackConfirmAccept">Rack</button>
+          </div>
+        </form>
+      </dialog>
     </div>
 
     <!-- Ball Rack -->
@@ -2928,7 +2979,7 @@
       <!-- Solver Options -->
       <div class="solver-options">
         <div class="control-label">Shot Preference:</div>
-        <div class="solver-instructions" style="font-size:12px;color:#666;margin-bottom:8px;">Select an object ball and
+        <div class="solver-instructions" style="font-size:12px;color:#9ab;margin-bottom:8px;">Select an object ball and
           pocket</div>
         <div class="solver-radio-group">
           <label>
@@ -3180,7 +3231,7 @@
         <!-- Solver Options -->
         <div class="solver-options" style="min-width:0;">
           <div class="control-label" id="solver-label">Shot Preference:</div>
-          <div class="solver-instructions" style="font-size:12px;color:#666;margin-bottom:8px;">Select an object ball
+          <div class="solver-instructions" style="font-size:12px;color:#9ab;margin-bottom:8px;">Select an object ball
             and pocket</div>
           <div class="solver-radio-group" role="radiogroup" aria-labelledby="solver-label">
             <label><input type="radio" name="solver-mode-palette" value="auto" checked><span>Standard</span></label>
@@ -10043,11 +10094,39 @@
       // Rack is destructive: it clears every object ball, moves the cue back to
       // the kitchen, and overwrites spin/power. Confirm only when there is a
       // layout to lose, so the empty-felt shortcut stays a one-click action.
-      function requestRack() {
+      let rackConfirmResolver = null;
+
+      function showRackConfirm() {
+        const dialog = document.getElementById('rackConfirm');
+        if (!dialog || typeof dialog.showModal !== 'function') {
+          return Promise.resolve(window.confirm(
+            'This will clear the current ball layout and reset cue position, spin and power. Set up a fresh rack?'
+          ));
+        }
+        if (rackConfirmResolver) return Promise.resolve(false);
+        return new Promise((resolve) => {
+          rackConfirmResolver = resolve;
+          dialog.returnValue = '';
+          dialog.showModal();
+          const cancel = document.getElementById('rackConfirmCancel');
+          if (cancel) cancel.focus();
+        });
+      }
+
+      const rackConfirmDialog = document.getElementById('rackConfirm');
+      if (rackConfirmDialog) {
+        rackConfirmDialog.addEventListener('close', () => {
+          const resolve = rackConfirmResolver;
+          rackConfirmResolver = null;
+          if (resolve) resolve(rackConfirmDialog.returnValue === 'confirm');
+        });
+      }
+
+      async function requestRack() {
         const fromEmptyHint = document.activeElement && document.activeElement.id === 'btnEmptyRack';
-        if (hasAnyBallOnTable() &&
-          !window.confirm('This will clear the current ball layout and reset cue position, spin and power. Set up a fresh rack?')) {
-          return;
+        if (hasAnyBallOnTable()) {
+          const confirmed = await showRackConfirm();
+          if (!confirmed) return;
         }
         randomRack();
         // The empty-felt prompt disappears once balls are racked; keep keyboard
@@ -11174,7 +11253,7 @@
           // Print summary
           console.log('─'.repeat(50));
           console.log(`%c✓ Passed: ${this.passed}`, 'color:#0f0;font-weight:bold;');
-          console.log(`%c✗ Failed: ${this.failed}`, this.failed > 0 ? 'color:#f00;font-weight:bold;' : 'color:#888;');
+          console.log(`%c✗ Failed: ${this.failed}`, this.failed > 0 ? 'color:#f00;font-weight:bold;' : 'color:#b7c4cf;');
           console.log(`Total: ${this.passed + this.failed} tests`);
 
           if (this.failed === 0) {

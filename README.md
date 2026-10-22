@@ -392,7 +392,7 @@ ACE_TEST_PORT=8091 npx playwright test --project=chromium  # isolated worktree/a
 
 The suite starts its own local server, uses the system Chromium when available
 (`PLAYWRIGHT_CHROMIUM_PATH` override) and the Playwright-installed browser in CI
-(configured in `playwright.config.ts`), and currently has **178 chromium tests**: critical path,
+(configured in `playwright.config.ts`), and currently has **183 chromium tests**: critical path,
 aim/english/power, rack safety, export/save, share/account, standalone/offline,
 mobile, shot animation, kick shots, safety zones, accessibility, palette minimize
 and visual states. The full suite is green; the palette-minimize flake was fixed by
