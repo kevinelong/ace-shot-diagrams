@@ -2960,7 +2960,7 @@
           <option value="10ball">10-Ball</option>
           <option value="14.1">Straight Pool</option>
           <option value="1pocket">One Pocket</option>
-          <option value="kball">15-Ball Rotation (K-Ball)</option>
+          <option value="15ball">15-Ball Rotation</option>
         </select>
         <div class="game-mode-description" id="gameModeDescription">Hit lowest ball first. Pocket 9 to win.</div>
         <!-- 8-Ball suit selector (hidden by default) -->
@@ -3215,7 +3215,7 @@
             <option value="10ball">10-Ball</option>
             <option value="14.1">Straight Pool</option>
             <option value="1pocket">One Pocket</option>
-            <option value="kball">K-Ball</option>
+            <option value="15ball">15-Ball Rotation</option>
           </select>
           <div class="game-mode-description" id="gameModeDescription-palette" aria-live="polite">Hit lowest ball first</div>
           <div class="suit-selector" id="suitSelector-palette" style="display: none;" role="radiogroup" aria-label="Select your suit">
@@ -3680,9 +3680,9 @@
           comboAnyBall: true,
           description: 'Any ball into YOUR pocket only. First to 8 wins.'
         },
-        KBALL: {
-          // 15-Ball Rotation ("K-Ball") — Columbia Cue Club house rules.
-          // Reference: rules poster in Columbia Cue Club; the club calls it K-Ball.
+        FIFTEEN_BALL: {
+          // 15-Ball Rotation — Columbia Cue Club house rules.
+          // Reference: rules poster in Columbia Cue Club.
           // Summary: standard 15-ball rack, alternating solids/stripes like 8-ball,
           // 1-ball at apex and 15-ball on the foot-spot back center. Rotation
           // order (must hit lowest ball first). Every pocket must be called
@@ -3690,19 +3690,19 @@
           // Safety play is explicitly prohibited ("No Safety Play").
           // Scoring: 1 point per pocketed ball; matches typically played to a
           // target score line (25 rec / 35 pro).
-          id: 'kball',
-          name: '15-Ball Rotation (K-Ball)',
+          id: '15ball',
+          name: '15-Ball Rotation',
           balls: 15,
           ballIds: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15'],
           targetRule: 'rotation',   // Must hit lowest ball first
           callPocket: true,         // Every pocket must be called explicitly
-          noSafetyPlay: true,       // K-Ball rule: safety play is prohibited
+          noSafetyPlay: true,       // 15-Ball rule: safety play is prohibited
           missPenalty: 'ball-in-hand-anywhere',
           scoring: 'one-point-per-ball',
           targetScore: { recreational: 25, professional: 35 },
           comboAllowed: true,
           comboMustHitLowestFirst: true,
-          description: 'K-Ball: 15-ball rotation, call every pocket, no safety, 1 pt per ball.'
+          description: '15-Ball Rotation: call every pocket, no safety, 1 point per ball.'
         }
       };
 
@@ -9238,7 +9238,7 @@
         const ROW_SPACING = BALL_D * Math.sin(Math.PI / 3); // Equilateral triangle spacing
         const positions = {};
 
-        // K-Ball rack: standard 15-ball triangle with a fixed rotation-friendly
+        // 15-Ball Rotation rack: standard 15-ball triangle with a fixed rotation-friendly
         // layout. Columbia Cue Club convention on the wall poster:
         //   - 1-ball on the apex (head ball, on the foot spot)
         //   - 8-ball in the geometric CENTER of the rack (row 2 middle)
@@ -9247,7 +9247,7 @@
         //     with the 8-ball preset)
         //   - Remaining balls alternate solids and stripes down the rack
         // Fixed canonical layout so recorded scenarios are reproducible.
-        if (typeof currentGameMode !== 'undefined' && currentGameMode && currentGameMode.id === 'kball' && gameBalls.length === 15) {
+        if (typeof currentGameMode !== 'undefined' && currentGameMode && currentGameMode.id === '15ball' && gameBalls.length === 15) {
           const trianglePattern = [
             [0],                          // Row 0: 1 ball (apex)
             [-0.5, 0.5],                  // Row 1: 2 balls
@@ -9262,7 +9262,7 @@
           //          Row 4  LL, L, C, R, RR   -> 6, 13, 15, 7, 14  (15 back-center)
           //                                     back-left corner: 6  (solid)
           //                                     back-right corner: 14 (stripe)
-          const kballLayout = [
+          const fifteenBallLayout = [
             '1',
             '9', '2',
             '3', '8', '10',
@@ -9274,7 +9274,7 @@
             for (let col = 0; col < trianglePattern[row].length; col++) {
               const x = FOOT_SPOT.x + row * ROW_SPACING;
               const y = FOOT_SPOT.y + trianglePattern[row][col] * BALL_D;
-              const ballId = kballLayout[idx++];
+              const ballId = fifteenBallLayout[idx++];
               if (ballId && gameBalls.includes(ballId)) {
                 positions[ballId] = { x, y };
               }

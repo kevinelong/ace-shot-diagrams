@@ -1,12 +1,12 @@
 // record-video.cjs \u2014 Render a scenarios file into a full narrated video.
 //
-// Reads a scenarios JSON (e.g. kball-scenarios.json), walks each scene, records
+// Reads a scenarios JSON (e.g. 15ball-scenarios.json), walks each scene, records
 // deterministic PNG frames using the same virtualized-rAF trick as record-shot.cjs,
 // overlays scene titles + annotations, and stitches everything with ffmpeg into
 // a single mp4. Optional voiceover MP3s per scene can be supplied via ./voice/<name>.mp3.
 //
-//   node record-video.cjs                              # all scenes -> out/kball-full.mp4
-//   SCENARIOS=kball-scenarios.json OUT=out/kball.mp4 node record-video.cjs
+//   node record-video.cjs                              # all scenes -> out/15ball-full.mp4
+//   SCENARIOS=15ball-scenarios.json OUT=out/15ball.mp4 node record-video.cjs
 //   SCENE=03-break-results node record-video.cjs        # render one scene only
 //
 // Requires: playwright-core (via harness-browser.cjs), ffmpeg on PATH.
@@ -17,8 +17,8 @@ const { pathToFileURL } = require('url');
 const fs = require('fs');
 const { execFileSync } = require('child_process');
 
-const SCENARIOS = process.env.SCENARIOS || 'kball-scenarios.json';
-const OUT       = process.env.OUT || join('out', 'kball-full.mp4');
+const SCENARIOS = process.env.SCENARIOS || '15ball-scenarios.json';
+const OUT       = process.env.OUT || join('out', '15ball-full.mp4');
 const ONLY      = process.env.SCENE || null;
 const FPS       = +(process.env.FPS || 30);
 

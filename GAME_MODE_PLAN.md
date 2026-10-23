@@ -6,7 +6,7 @@
 
 
 > **Status (2026-09-29):** five modes ship (9-Ball, 8-Ball, 10-Ball, Straight Pool, One
-> Pocket) plus the K-Ball rotation preset merged from `kball-preset`. The 29 checkboxes below
+> Pocket) plus the 15-Ball Rotation preset (merged from a branch since deleted). The 29 checkboxes below
 > are unmaintained. See `NEXT_STEPS.md`.
 
 ## Research Summary

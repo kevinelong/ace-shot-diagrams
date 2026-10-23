@@ -32,7 +32,7 @@ test green by relaxing the test — `verify-spin.js` below is the worked example
 - [x] **Duplicate screenshot removed.** `screenshot-kick.png` was md5-identical to
       `screenshot-english-diff.png` and referenced nowhere.
 - [x] **Merged branch pruned.** `origin/physics-two-phase-friction` was fully merged.
-- [x] **`kball-preset` merged.** It was the newest work in the repo (2026-08-16) and main had
+- [x] **15-Ball Rotation preset merged.** It was the newest work in the repo (2026-08-16) and main had
       stopped 2026-07-07.
 - [x] **Roadmap reconciled.** `FEATURE_ROADMAP.md` Phase 1 marked against the code.
 - [x] **Dead npm script replaced.** `test:unit` pointed at `tests/unit/*`, which exist in no
@@ -342,7 +342,7 @@ gaps, both now closed, and one user-facing trap.
       core, the palette fix and the single engine.
 - [x] **Release + discovery - done.** **v1.0.0** tagged and pushed (annotated: what ships, the
       verified numbers, the two known-red harnesses); the repo homepage set to the demo URL and
-      verified through the API; the two merged remote branches (`kball-preset`,
+      verified through the API; the two merged remote branches (the 15-Ball Rotation preset branch,
       `lineart-print-tooling`) deleted. Remote holds `main` plus the two out-of-scope `claude/*`
       branches, recorded as such above.
 - [x] **A trustworthy exit code for the battery.** `verify-rust-parity.js` prints its verdict

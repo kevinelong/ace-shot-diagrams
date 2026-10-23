@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>15-Ball Rotation (K-Ball) \u2014 Interactive Score Sheet</title>
+<title>15-Ball Rotation — Interactive Score Sheet</title>
 <style>
   :root {
     --ink:#111; --paper:#fafaf7; --line:#111; --accent:#c62828; --dim:#666; --hit:#2b7a2b;
@@ -63,7 +63,7 @@
 <div class="wrap">
   <header>
     <div class="stars">\u2605\u2605\u2605\u2605\u2605</div>
-    <h1>15-Ball Rotation (K-Ball)</h1>
+    <h1>15-Ball Rotation</h1>
     <div class="sub">SCORE SHEET</div>
   </header>
 
@@ -127,7 +127,7 @@
     <button onclick="exportJson()">Export JSON</button>
   </div>
 
-  <footer>ColumbiaCueClub.com \u2014 K-Ball Score Sheet</footer>
+  <footer>ColumbiaCueClub.com \u2014 15-Ball Score Sheet</footer>
 </div>
 
 <script>
@@ -195,12 +195,12 @@
 
   function saveLocal() {
     const data = collect();
-    localStorage.setItem('kball-scoresheet', JSON.stringify(data));
+    localStorage.setItem('15ball-scoresheet', JSON.stringify(data));
     alert('Saved to browser storage.');
   }
 
   function loadLocal() {
-    const raw = localStorage.getItem('kball-scoresheet');
+    const raw = localStorage.getItem('15ball-scoresheet');
     if (!raw) return alert('No saved sheet found.');
     apply(JSON.parse(raw));
   }
@@ -209,7 +209,7 @@
     const blob = new Blob([JSON.stringify(collect(), null, 2)], {type:'application/json'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'kball-scoresheet.json';
+    a.download = '15ball-scoresheet.json';
     a.click();
   }
 
